@@ -1,0 +1,216 @@
+name: Container Deployment Pipeline
+
+on:
+  workflow_call:
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Build and push Docker image for Dev
+        run: |
+          # Your commands to build and push the Docker image for the Dev environment
+      - name: Set Dist Version
+        run: |
+          BUILD_NUMBER="${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}"
+          echo "${BUILD_NUMBER}"
+          echo "DIST_VERSION=${BUILD_NUMBER}" >> $GITHUB_ENV
+      - name: Create Tag
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const {DIST_VERSION} = process.env          
+            github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/${DIST_VERSION}`,
+                sha: context.sha
+            })
+  security_scans:
+    name: Security Scans
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Build and push Docker image for Dev
+        run: |
+          # Your commands to build and push the Docker image for the Dev environment
+  verify_toggles:
+    name: Verify Toggles
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Build and push Docker image for Dev
+        run: |
+          # Your commands to build and push the Docker image for the Dev environment
+  create_release_notes:
+    name: Create Release Notes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Build and push Docker image for Dev
+        run: |
+          # Your commands to build and push the Docker image for the Dev environment
+  deploy_dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    needs: 
+      - build
+      - verify_toggles
+      - security_scans
+    environment: Dev
+    steps:
+      - name: Deploy to Dev Environment
+        run: |
+          # Your commands to deploy the Docker image to the Dev environment
+
+  smoke_test_dev:
+    name: Smoke Test for Dev
+    needs: deploy_dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Smoke Tests for Dev Environment
+        run: |
+          # Your commands to run smoke tests for the Dev environment
+
+  deploy_test:
+    name: Deploy to Test
+    needs: smoke_test_dev
+    runs-on: ubuntu-latest
+    environment: Test
+    steps:
+      - name: Deploy to Test Environment
+        run: |
+          # Your commands to deploy the Docker image to the Test environment
+  smoke_test_test:
+    name: Smoke Test for Test
+    needs: deploy_test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Smoke Tests for Test Environment
+        run: |
+          # Your commands to run smoke tests for the Test environment
+  integration_tests:
+    name: Integration Tests
+    needs: smoke_test_test
+    runs-on: ubuntu-latest
+    environment: Test
+    steps:
+      - name: Deploy to Test Environment
+        run: |
+          # Your commands to deploy the Docker image to the Test environment
+  deploy_stage:
+    name: Deploy to Stage
+    needs: integration_tests
+    runs-on: ubuntu-latest
+    environment: Stage
+    steps:
+      - name: Deploy to Stage Environment
+        run: |
+          # Your commands to deploy the Docker image to the Stage environment
+
+  smoke_test_stage:
+    name: Smoke Test for Stage
+    needs: deploy_stage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Smoke Tests for Stage Environment
+        run: |
+          # Your commands to run smoke tests for the Stage environment
+  performance_test:
+    name: Performance tests
+    needs: deploy_stage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Smoke Tests for Stage Environment
+        run: |
+          # Your commands to run smoke tests for the Stage environment
+  qa_certified:
+    name: Certify QA Regression Testing
+    needs: 
+      - smoke_test_stage
+      - performance_test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: brandong-kr
+          minimum-approvals: 1
+          issue-title: "Certify that all neccessary Quality Testing has been performed"
+          issue-body: "Please approve or deny the deployment of version v1.3.5."
+          exclude-workflow-initiator-as-approver: false
+          additional-approved-words: ''
+          additional-denied-words: ''
+  verify_jira:
+    name: Verify Jira Stories closed
+    needs: performance_test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Smoke Tests for Stage Environment
+        run: |
+          # Your commands to run smoke tests for the Stage environment
+  create_cr:
+    name: Create Change Request
+    needs: 
+      - verify_jira
+      - qa_certified
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Production Environment
+        run: |
+          # Your commands to deploy the Docker image to the Production environment
+  stage_production_build:
+    name: Stage Production Build
+    needs: 
+      - create_cr
+    runs-on: ubuntu-latest
+    steps:
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.TOKEN }}
+          approvers: brandong-kr
+          minimum-approvals: 1
+          issue-title: "Stage this build for Production Release"
+          issue-body: "Please approve or deny the deployment of version v1.3.5."
+          exclude-workflow-initiator-as-approver: false
+          additional-approved-words: ''
+          additional-denied-words: ''
+  deploy_production:
+    name: Deploy to Production
+    needs: stage_production_build
+    runs-on: ubuntu-latest
+    environment: Production
+    steps:
+      - name: Deploy to Production Environment
+        run: |
+          # Your commands to deploy the Docker image to the Production environment
+
+  smoke_test_production:
+    name: Smoke Test for Production
+    needs: deploy_production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Smoke Tests for Production Environment
+        run: |
+          # Your commands to run smoke tests for
+  notify_prod_release:
+    name: Send Notifications of Prod release completed
+    needs: deploy_production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Smoke Tests for Production Environment
+        run: |
+          # Your commands to run smoke tests for
+  create_hotfix_branch:
+    name: Create Hotfix Branch
+    needs: deploy_production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run Smoke Tests for Production Environment
+        run: |
+          # Your commands to run smoke tests for
