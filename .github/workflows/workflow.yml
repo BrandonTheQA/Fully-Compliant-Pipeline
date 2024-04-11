@@ -2,6 +2,10 @@ name: Container Deployment Pipeline
 
 on:
   workflow_call:
+  secrets:
+      AZURE_CREDENTIALS:
+        description: 'A token passed from the caller workflow'
+        required: true
 jobs:
   build:
     name: Build
