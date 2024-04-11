@@ -57,6 +57,8 @@ jobs:
       - security_scans
     environment: Dev
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
       - name: Azure login
         uses: azure/login@v2
         with:
