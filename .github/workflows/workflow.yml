@@ -57,16 +57,23 @@ jobs:
       - security_scans
     environment: Dev
     steps:
-    - name: Azure login
-      uses: azure/login@v2
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
-    - name: Azure CLI script
-      uses: azure/CLI@v1
-      with:
-        azcliversion: latest
-        inlineScript: |
-          az account show
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure CLI script
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az account show
+      - name: Deploy to dev Environment
+        working-directory: ./api/functionapp/helloworld
+        run: |
+          mvn -DappName=joaz-func-helloworld-9021 \
+          -DresourceGroup=brandon \
+          -Dregion=eastus2 \
+          clean package azure-functions:deploy
   smoke_test_dev:
     name: Smoke Test for Dev
     needs: deploy_dev
