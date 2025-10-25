@@ -43,13 +43,7 @@ jobs:
       - name: Run security scan
         working-directory: ./api/functionapp/helloworld
         run: |
-          if [ -n "${{ secrets.NVD_API_KEY }}" ]; then
-            mvn org.owasp:dependency-check-maven:check \
-              -Ddependency-check.nvd.apiKey=${{ secrets.NVD_API_KEY }}
-          else
-            echo "NVD_API_KEY not set, running without API key (may be slower)"
-            mvn org.owasp:dependency-check-maven:check
-          fi
+          mvn org.owasp:dependency-check-maven:check
 
   verify_toggles:
     name: Verify Toggles
