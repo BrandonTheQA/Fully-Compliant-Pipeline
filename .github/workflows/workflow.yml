@@ -47,7 +47,7 @@ jobs:
         run: |
           if [ -n "$NVD_API_KEY" ]; then
             mvn org.owasp:dependency-check-maven:check \
-              -Ddependency-check.nvd.apiKey=$NVD_API_KEY
+              -Dnvd.api.key=$NVD_API_KEY
           else
             echo "NVD_API_KEY not set, running without API key (may be slower)"
           fi
