@@ -42,8 +42,11 @@ jobs:
           distribution: 'temurin'
       - name: Run security scan
         working-directory: ./api/functionapp/helloworld
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
-          mvn org.owasp:dependency-check-maven:check
+          mvn org.owasp:dependency-check-maven:check \
+            -Ddependency-check.nvd.apiKey=${{ secrets.NVD_API_KEY }}
 
   verify_toggles:
     name: Verify Toggles
