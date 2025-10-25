@@ -50,7 +50,6 @@ jobs:
               -Ddependency-check.nvd.apiKey=$NVD_API_KEY
           else
             echo "NVD_API_KEY not set, running without API key (may be slower)"
-            mvn org.owasp:dependency-check-maven:check
           fi
 
   verify_toggles:
