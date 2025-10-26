@@ -262,7 +262,7 @@
 							"});",
 							"",
 							"pm.test(\"Response body contains expected greeting\", function () {",
-							"    pm.expect(pm.response.text()).to.include(\"Hello, JSONUser! Welcome to Azure Functions!\");",
+							"    pm.expect(pm.response.text()).to.include(\"Hello, \\\"JSONUser\\\"! Welcome to Azure Functions!\");",
 							"});",
 							"",
 							"pm.test(\"Response time is less than 2000ms\", function () {",
