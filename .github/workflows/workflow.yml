@@ -130,7 +130,7 @@ jobs:
       uses: github/codeql-action/analyze@v4
       with:
         category: "/language:${{matrix.language}}"
-        
+
   verify_toggles:
     name: Verify Toggles
     runs-on: ubuntu-latest
@@ -184,7 +184,7 @@ jobs:
         run: |
           mvn -DappName=joaz-func-helloworld-9021 \
           -DresourceGroup=brandon \
-          -Dregion=eastus2 \
+          -Dregion=westus3 \
           clean package azure-functions:deploy
 
   smoke_test_dev:
