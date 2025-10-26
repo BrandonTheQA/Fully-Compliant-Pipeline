@@ -19,7 +19,7 @@
         <azure.functions.java.library.version>3.0.0</azure.functions.java.library.version>
         <azure.functions.maven.plugin.version>1.20.0</azure.functions.maven.plugin.version>
         <functionAppName>joaz-func-helloworld-9021</functionAppName>
-        <functionAppRegion>eastus2</functionAppRegion>
+        <functionAppRegion>westus3</functionAppRegion>
         <functionResourceGroup>brandon</functionResourceGroup>
         <stagingDirectory>${project.build.directory}/azure-functions/${functionAppName}</stagingDirectory>
     </properties>
