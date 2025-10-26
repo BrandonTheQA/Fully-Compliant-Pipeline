@@ -160,7 +160,9 @@ jobs:
       - build
       - verify_toggles
       - security_scans
-    environment: Dev
+    environment: 
+      name: Dev
+      url: https://joaz-func-helloworld-9021.azurewebsites.net
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -202,7 +204,9 @@ jobs:
     name: Deploy to Test
     needs: smoke_test_dev
     runs-on: ubuntu-latest
-    environment: Test
+    environment: 
+      name: Test
+      url: https://joaz-func-helloworld-test-9021.azurewebsites.net
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -248,7 +252,9 @@ jobs:
     name: Deploy to Stage
     needs: integration_tests
     runs-on: ubuntu-latest
-    environment: Stage
+    environment: 
+      name: Stage
+      url: https://joaz-func-helloworld-stage-9021.azurewebsites.net
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -342,7 +348,9 @@ jobs:
     name: Deploy to Production
     needs: stage_production_build
     runs-on: ubuntu-latest
-    environment: Production
+    environment: 
+      name: Production
+      url: https://joaz-func-helloworld-prod-9021.azurewebsites.net
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
