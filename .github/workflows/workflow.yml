@@ -194,11 +194,20 @@ jobs:
     needs: deploy_dev
     runs-on: ubuntu-latest
     steps:
-      - name: Run Smoke Tests for Dev Environment
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Newman
+        run: npm install -g newman
+      - name: Run Newman Tests for Dev Environment
         run: |
-          echo "Running smoke tests for Azure Function in Dev environment..."
-          # Add Azure Function smoke test commands here
-          # Example: curl -f https://joaz-func-helloworld-9021.azurewebsites.net/api/hello?name=test
+          echo "Running Newman smoke tests for Azure Function in Dev environment..."
+          newman run postman/HelloWorldFunction.postman_collection.json \
+            --reporters cli \
+            --env-var "baseUrl=https://joaz-func-helloworld-9021.azurewebsites.net/api/hello"
 
   deploy_test:
     name: Deploy to Test
@@ -232,10 +241,20 @@ jobs:
     needs: deploy_test
     runs-on: ubuntu-latest
     steps:
-      - name: Run Smoke Tests for Test Environment
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Newman
+        run: npm install -g newman
+      - name: Run Newman Tests for Test Environment
         run: |
-          echo "Running smoke tests for Azure Function in Test environment..."
-          # Add Azure Function smoke test commands here
+          echo "Running Newman smoke tests for Azure Function in Test environment..."
+          newman run postman/HelloWorldFunction.postman_collection.json \
+            --reporters cli \
+            --env-var "baseUrl=https://joaz-func-helloworld-test-9021.azurewebsites.net/api/hello"
 
   integration_tests:
     name: Integration Tests
@@ -280,10 +299,20 @@ jobs:
     needs: deploy_stage
     runs-on: ubuntu-latest
     steps:
-      - name: Run Smoke Tests for Stage Environment
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Newman
+        run: npm install -g newman
+      - name: Run Newman Tests for Stage Environment
         run: |
-          echo "Running smoke tests for Azure Function in Stage environment..."
-          # Add Azure Function smoke test commands here
+          echo "Running Newman smoke tests for Azure Function in Stage environment..."
+          newman run postman/HelloWorldFunction.postman_collection.json \
+            --reporters cli \
+            --env-var "baseUrl=https://joaz-func-helloworld-stage-9021.azurewebsites.net/api/hello"
 
   performance_test:
     name: Performance tests
@@ -376,10 +405,20 @@ jobs:
     needs: deploy_production
     runs-on: ubuntu-latest
     steps:
-      - name: Run Smoke Tests for Production Environment
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Newman
+        run: npm install -g newman
+      - name: Run Newman Tests for Production Environment
         run: |
-          echo "Running smoke tests for Azure Function in Production environment..."
-          # Add Azure Function smoke test commands here
+          echo "Running Newman smoke tests for Azure Function in Production environment..."
+          newman run postman/HelloWorldFunction.postman_collection.json \
+            --reporters cli \
+            --env-var "baseUrl=https://joaz-func-helloworld-prod-9021.azurewebsites.net/api/hello"
 
   notify_prod_release:
     name: Send Notifications of Prod release completed
