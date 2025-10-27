@@ -22,6 +22,8 @@
         <functionAppName>joaz-func-helloworld2-9021</functionAppName>
         <functionAppRegion>westus3</functionAppRegion>
         <functionResourceGroup>brandon</functionResourceGroup>
+        <!-- Default value if not overridden by -DappServicePlanName -->
+        <appServicePlanName>asp-joaz-func-helloworld-9021-dev</appServicePlanName>
         <stagingDirectory>${project.build.directory}/azure-functions/${functionAppName}</stagingDirectory>
     </properties>
 
@@ -52,7 +54,7 @@
                 <configuration>
                     <resourceGroup>${functionResourceGroup}</resourceGroup>
                     <appName>${functionAppName}</appName>
-                    <appServicePlanName>asp-joaz-func-helloworld-9021-dev</appServicePlanName>
+                    <appServicePlanName>${appServicePlanName}</appServicePlanName>
                     <region>${functionAppRegion}</region>
                     <runtime>
                         <os>windows</os>
