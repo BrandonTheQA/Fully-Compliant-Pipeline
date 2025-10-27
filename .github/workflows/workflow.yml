@@ -219,6 +219,7 @@ jobs:
         run: |
           mvn -DfunctionAppName=joaz-func-helloworld-9021-dev \
           -DappName=joaz-func-helloworld-9021-dev \
+          -DappServicePlanName=asp-joaz-func-helloworld-9021-dev \
           -DresourceGroup=brandon \
           -Dregion=westus3 \
           clean package azure-functions:deploy
@@ -227,6 +228,7 @@ jobs:
         run: |
           mvn -DfunctionAppName=joaz-func-helloworld2-9021-dev \
           -DappName=joaz-func-helloworld2-9021-dev \
+          -DappServicePlanName=asp-joaz-func-helloworld-9021-dev \
           -DresourceGroup=brandon \
           -Dregion=westus3 \
           clean package azure-functions:deploy
@@ -281,6 +283,7 @@ jobs:
         run: |
           mvn -DfunctionAppName=joaz-func-helloworld-9021-test \
           -DappName=joaz-func-helloworld-9021-test \
+          -DappServicePlanName=asp-joaz-func-helloworld-9021-test \
           -DresourceGroup=brandon-test \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
@@ -289,6 +292,7 @@ jobs:
         run: |
           mvn -DfunctionAppName=joaz-func-helloworld2-9021-test \
           -DappName=joaz-func-helloworld2-9021-test \
+          -DappServicePlanName=asp-joaz-func-helloworld-9021-test \
           -DresourceGroup=brandon-test \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
@@ -354,6 +358,7 @@ jobs:
         run: |
           mvn -DfunctionAppName=joaz-func-helloworld-9021-stage \
           -DappName=joaz-func-helloworld-9021-stage \
+          -DappServicePlanName=asp-joaz-func-helloworld-9021-stage \
           -DresourceGroup=brandon-stage \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
@@ -362,6 +367,7 @@ jobs:
         run: |
           mvn -DfunctionAppName=joaz-func-helloworld2-9021-stage \
           -DappName=joaz-func-helloworld2-9021-stage \
+          -DappServicePlanName=asp-joaz-func-helloworld-9021-stage \
           -DresourceGroup=brandon-stage \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
@@ -475,6 +481,7 @@ jobs:
         run: |
           mvn -DfunctionAppName=joaz-func-helloworld-9021-prod \
           -DappName=joaz-func-helloworld-9021-prod \
+          -DappServicePlanName=asp-joaz-func-helloworld-9021-prod \
           -DresourceGroup=brandon-prod \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
@@ -483,6 +490,7 @@ jobs:
         run: |
           mvn -DfunctionAppName=joaz-func-helloworld2-9021-prod \
           -DappName=joaz-func-helloworld2-9021-prod \
+          -DappServicePlanName=asp-joaz-func-helloworld-9021-prod \
           -DresourceGroup=brandon-prod \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
