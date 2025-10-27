@@ -31,7 +31,11 @@ jobs:
             "app-service-plan-test": "asp-joaz-func-helloworld-9021-test",
             "app-service-plan-stage": "asp-joaz-func-helloworld-9021-stage",
             "app-service-plan-prod": "asp-joaz-func-helloworld-9021-prod",
-            collection: ("postman/" + (. | ascii_upcase[:1] + .[1:]) + "Function.postman_collection.json")
+            collection: ("postman/" + (. | 
+              if . == "helloworld" then "HelloWorld"
+              elif . == "helloworld2" then "HelloWorld2" 
+              else (. | ascii_upcase[:1] + .[1:])
+              end) + "Function.postman_collection.json")
           }]}')
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
