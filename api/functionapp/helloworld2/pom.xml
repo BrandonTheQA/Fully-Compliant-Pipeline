@@ -52,6 +52,7 @@
                 <configuration>
                     <resourceGroup>${functionResourceGroup}</resourceGroup>
                     <appName>${functionAppName}</appName>
+                    <appServicePlanName>asp-joaz-func-helloworld-9021-dev</appServicePlanName>
                     <region>${functionAppRegion}</region>
                     <runtime>
                         <os>windows</os>
