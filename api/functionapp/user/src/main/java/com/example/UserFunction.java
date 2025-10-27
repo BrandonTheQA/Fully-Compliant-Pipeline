@@ -9,6 +9,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.RuntimeMXBean;
 
 /**
  * Azure Functions for User Management.
@@ -207,6 +210,108 @@ public class UserFunction {
             return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Internal server error")
                     .build();
+        }
+    }
+    
+    /**
+     * Health check endpoint for monitoring and actuator purposes
+     * GET /api/health - Returns application health status
+     */
+    @FunctionName("health")
+    public HttpResponseMessage health(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.GET},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "health")
+                HttpRequestMessage<Optional<String>> request,
+            final ExecutionContext context) {
+        context.getLogger().info("Health check endpoint accessed");
+        
+        try {
+            // Get system information
+            RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+            MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+            
+            long uptime = runtimeBean.getUptime();
+            long maxMemory = memoryBean.getHeapMemoryUsage().getMax();
+            long usedMemory = memoryBean.getHeapMemoryUsage().getUsed();
+            long freeMemory = maxMemory - usedMemory;
+            
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String uptimeFormatted = formatUptime(uptime);
+            
+            String responseBody = String.format(
+                "{\n" +
+                "  \"status\": \"UP\",\n" +
+                "  \"app\": \"User\",\n" +
+                "  \"version\": \"%s\",\n" +
+                "  \"buildDate\": \"%s\",\n" +
+                "  \"timestamp\": \"%s\",\n" +
+                "  \"uptime\": \"%s\",\n" +
+                "  \"memory\": {\n" +
+                "    \"used\": %d,\n" +
+                "    \"free\": %d,\n" +
+                "    \"max\": %d,\n" +
+                "    \"usagePercent\": %.2f\n" +
+                "  },\n" +
+                "  \"jvm\": {\n" +
+                "    \"name\": \"%s\",\n" +
+                "    \"version\": \"%s\",\n" +
+                "    \"vendor\": \"%s\"\n" +
+                "  },\n" +
+                "  \"users\": {\n" +
+                "    \"total\": %d,\n" +
+                "    \"active\": %d\n" +
+                "  }\n" +
+                "}",
+                VERSION, BUILD_DATE, timestamp, uptimeFormatted,
+                usedMemory, freeMemory, maxMemory, (double) usedMemory / maxMemory * 100,
+                runtimeBean.getVmName(), runtimeBean.getVmVersion(), runtimeBean.getVmVendor(),
+                users.size(), users.size() // For demo purposes, all users are considered active
+            );
+            
+            return request.createResponseBuilder(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(responseBody)
+                    .build();
+                    
+        } catch (Exception e) {
+            context.getLogger().severe("Error in health check: " + e.getMessage());
+            String errorResponse = String.format(
+                "{\n" +
+                "  \"status\": \"DOWN\",\n" +
+                "  \"app\": \"User\",\n" +
+                "  \"error\": \"%s\",\n" +
+                "  \"timestamp\": \"%s\"\n" +
+                "}",
+                e.getMessage(), LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            );
+            
+            return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(errorResponse)
+                    .build();
+        }
+    }
+    
+    /**
+     * Helper method to format uptime in human-readable format
+     */
+    private String formatUptime(long uptimeMs) {
+        long seconds = uptimeMs / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        long days = hours / 24;
+        
+        if (days > 0) {
+            return String.format("%dd %dh %dm %ds", days, hours % 24, minutes % 60, seconds % 60);
+        } else if (hours > 0) {
+            return String.format("%dh %dm %ds", hours, minutes % 60, seconds % 60);
+        } else if (minutes > 0) {
+            return String.format("%dm %ds", minutes, seconds % 60);
+        } else {
+            return String.format("%ds", seconds);
         }
     }
     

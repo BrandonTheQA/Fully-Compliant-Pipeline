@@ -185,6 +185,25 @@
 				"description": "Test invalid login credentials"
 			},
 			"response": []
+		},
+		{
+			"name": "Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/health",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"health"
+					]
+				},
+				"description": "Check application health status and system metrics"
+			},
+			"response": []
 		}
 	],
 	"event": [
