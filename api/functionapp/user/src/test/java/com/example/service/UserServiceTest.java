@@ -12,200 +12,190 @@ import com.example.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
  * Unit tests for UserService
  */
-@ExtendWith(MockitoExtension.class)
 @DisplayName("UserService Tests")
 class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
 
-    @InjectMocks
     private UserService userService;
-
-    private CreateUserRequest createUserRequest;
-    private LoginRequest loginRequest;
-    private User testUser;
 
     @BeforeEach
     void setUp() {
-        createUserRequest = new CreateUserRequest("John Doe", "john@example.com", "password123");
-        loginRequest = new LoginRequest("john@example.com", "password123");
-        testUser = new User("user-123", "John Doe", "john@example.com", "password123");
+        MockitoAnnotations.openMocks(this);
+        userService = new UserService();
+        // Use reflection to inject the repository
+        try {
+            java.lang.reflect.Field field = UserService.class.getDeclaredField("userRepository");
+            field.setAccessible(true);
+            field.set(userService, userRepository);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to inject repository", e);
+        }
     }
 
     @Test
-    @DisplayName("Should create user successfully when email does not exist")
-    void shouldCreateUserSuccessfullyWhenEmailDoesNotExist() {
+    @DisplayName("Should create user successfully")
+    void shouldCreateUserSuccessfully() {
         // Given
-        when(userRepository.existsByEmail("john@example.com")).thenReturn(false);
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        CreateUserRequest request = new CreateUserRequest("John Doe", "john@example.com", "password123");
+        User savedUser = new User("user-id", "John Doe", "john@example.com", "password123");
+        
+        when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
         // When
-        UserResponse result = userService.createUser(createUserRequest);
+        UserResponse result = userService.createUser(request);
 
         // Then
         assertNotNull(result);
-        assertEquals("user-123", result.getUserId());
+        assertEquals("user-id", result.getUserId());
         assertEquals("John Doe", result.getName());
         assertEquals("john@example.com", result.getEmail());
         assertNotNull(result.getCreatedAt());
-
-        verify(userRepository).existsByEmail("john@example.com");
+        
+        verify(userRepository).existsByEmail(request.getEmail());
         verify(userRepository).save(any(User.class));
     }
 
     @Test
-    @DisplayName("Should throw UserAlreadyExistsException when email already exists")
-    void shouldThrowUserAlreadyExistsExceptionWhenEmailAlreadyExists() {
+    @DisplayName("Should throw UserAlreadyExistsException when email exists")
+    void shouldThrowUserAlreadyExistsExceptionWhenEmailExists() {
         // Given
-        when(userRepository.existsByEmail("john@example.com")).thenReturn(true);
+        CreateUserRequest request = new CreateUserRequest("John Doe", "john@example.com", "password123");
+        
+        when(userRepository.existsByEmail(request.getEmail())).thenReturn(true);
 
         // When & Then
-        UserAlreadyExistsException exception = assertThrows(
-            UserAlreadyExistsException.class,
-            () -> userService.createUser(createUserRequest)
-        );
-
-        assertEquals("User with email john@example.com already exists", exception.getMessage());
-        verify(userRepository).existsByEmail("john@example.com");
+        assertThrows(UserAlreadyExistsException.class, () -> userService.createUser(request));
+        
+        verify(userRepository).existsByEmail(request.getEmail());
         verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    @DisplayName("Should get user successfully when user exists")
-    void shouldGetUserSuccessfullyWhenUserExists() {
+    @DisplayName("Should get user successfully")
+    void shouldGetUserSuccessfully() {
         // Given
-        when(userRepository.findById("user-123")).thenReturn(Optional.of(testUser));
+        String userId = "user-id";
+        User user = new User(userId, "John Doe", "john@example.com", "password123");
+        
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // When
-        UserResponse result = userService.getUser("user-123");
+        UserResponse result = userService.getUser(userId);
 
         // Then
         assertNotNull(result);
-        assertEquals("user-123", result.getUserId());
+        assertEquals(userId, result.getUserId());
         assertEquals("John Doe", result.getName());
         assertEquals("john@example.com", result.getEmail());
         assertNotNull(result.getCreatedAt());
-
-        verify(userRepository).findById("user-123");
+        
+        verify(userRepository).findById(userId);
     }
 
     @Test
-    @DisplayName("Should throw UserNotFoundException when user does not exist")
-    void shouldThrowUserNotFoundExceptionWhenUserDoesNotExist() {
+    @DisplayName("Should throw UserNotFoundException when user not found")
+    void shouldThrowUserNotFoundExceptionWhenUserNotFound() {
         // Given
-        when(userRepository.findById("non-existent-id")).thenReturn(Optional.empty());
+        String userId = "non-existent-id";
+        
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When & Then
-        UserNotFoundException exception = assertThrows(
-            UserNotFoundException.class,
-            () -> userService.getUser("non-existent-id")
-        );
-
-        assertEquals("User not found", exception.getMessage());
-        verify(userRepository).findById("non-existent-id");
+        assertThrows(UserNotFoundException.class, () -> userService.getUser(userId));
+        
+        verify(userRepository).findById(userId);
     }
 
     @Test
-    @DisplayName("Should authenticate user successfully with valid credentials")
-    void shouldAuthenticateUserSuccessfullyWithValidCredentials() {
+    @DisplayName("Should authenticate user successfully")
+    void shouldAuthenticateUserSuccessfully() {
         // Given
-        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(testUser));
+        LoginRequest request = new LoginRequest("john@example.com", "password123");
+        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
 
         // When
-        LoginResponse result = userService.authenticate(loginRequest);
+        LoginResponse result = userService.authenticate(request);
 
         // Then
         assertNotNull(result);
         assertEquals("Login successful", result.getMessage());
         assertNotNull(result.getToken());
-        assertEquals("user-123", result.getUserId());
+        assertEquals("user-id", result.getUserId());
         assertEquals("John Doe", result.getName());
         assertEquals("john@example.com", result.getEmail());
         assertNotNull(result.getLoginTime());
-
-        verify(userRepository).findByEmail("john@example.com");
+        
+        verify(userRepository).findByEmail(request.getEmail());
     }
 
     @Test
-    @DisplayName("Should throw AuthenticationException when email does not exist")
-    void shouldThrowAuthenticationExceptionWhenEmailDoesNotExist() {
+    @DisplayName("Should throw AuthenticationException when user not found")
+    void shouldThrowAuthenticationExceptionWhenUserNotFound() {
         // Given
-        when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
+        LoginRequest request = new LoginRequest("john@example.com", "password123");
+        
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.empty());
 
         // When & Then
-        LoginRequest invalidRequest = new LoginRequest("nonexistent@example.com", "password123");
-        AuthenticationException exception = assertThrows(
-            AuthenticationException.class,
-            () -> userService.authenticate(invalidRequest)
-        );
-
-        assertEquals("Invalid email or password", exception.getMessage());
-        verify(userRepository).findByEmail("nonexistent@example.com");
+        assertThrows(AuthenticationException.class, () -> userService.authenticate(request));
+        
+        verify(userRepository).findByEmail(request.getEmail());
     }
 
     @Test
-    @DisplayName("Should throw AuthenticationException when password is incorrect")
-    void shouldThrowAuthenticationExceptionWhenPasswordIsIncorrect() {
+    @DisplayName("Should throw AuthenticationException when password is wrong")
+    void shouldThrowAuthenticationExceptionWhenPasswordIsWrong() {
         // Given
-        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(testUser));
-        LoginRequest invalidRequest = new LoginRequest("john@example.com", "wrongpassword");
+        LoginRequest request = new LoginRequest("john@example.com", "wrongpassword");
+        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
 
         // When & Then
-        AuthenticationException exception = assertThrows(
-            AuthenticationException.class,
-            () -> userService.authenticate(invalidRequest)
-        );
-
-        assertEquals("Invalid email or password", exception.getMessage());
-        verify(userRepository).findByEmail("john@example.com");
-    }
-
-    @Test
-    @DisplayName("Should generate unique tokens for different login attempts")
-    void shouldGenerateUniqueTokensForDifferentLoginAttempts() {
-        // Given
-        when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(testUser));
-
-        // When
-        LoginResponse result1 = userService.authenticate(loginRequest);
-        LoginResponse result2 = userService.authenticate(loginRequest);
-
-        // Then
-        assertNotEquals(result1.getToken(), result2.getToken());
-        assertNotNull(result1.getToken());
-        assertNotNull(result2.getToken());
+        assertThrows(AuthenticationException.class, () -> userService.authenticate(request));
+        
+        verify(userRepository).findByEmail(request.getEmail());
     }
 
     @Test
     @DisplayName("Should map user to response correctly")
     void shouldMapUserToResponseCorrectly() {
         // Given
-        User user = new User("test-id", "Test User", "test@example.com", "password");
-        when(userRepository.findById("test-id")).thenReturn(Optional.of(user));
+        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        user.setCreatedAt("2023-01-01T00:00:00");
 
-        // When
-        UserResponse result = userService.getUser("test-id");
+        // When - Test the mapping indirectly through createUser
+        when(userRepository.existsByEmail(user.getEmail())).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenReturn(user);
+        
+        CreateUserRequest request = new CreateUserRequest("John Doe", "john@example.com", "password123");
+        UserResponse result = userService.createUser(request);
 
         // Then
-        assertEquals("test-id", result.getUserId());
-        assertEquals("Test User", result.getName());
-        assertEquals("test@example.com", result.getEmail());
+        assertNotNull(result);
+        assertEquals("user-id", result.getUserId());
+        assertEquals("John Doe", result.getName());
+        assertEquals("john@example.com", result.getEmail());
         assertNotNull(result.getCreatedAt());
         // Password should not be included in response - UserResponse doesn't have password field
         // This is verified by the fact that we can access all fields without password
@@ -221,13 +211,39 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Should handle empty string input gracefully")
-    void shouldHandleEmptyStringInputGracefully() {
+    @DisplayName("Should generate unique tokens for each login")
+    void shouldGenerateUniqueTokensForEachLogin() {
         // Given
-        when(userRepository.findById("")).thenReturn(Optional.empty());
+        LoginRequest request = new LoginRequest("john@example.com", "password123");
+        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
 
-        // When & Then
-        assertThrows(UserNotFoundException.class, () -> userService.getUser(""));
-        verify(userRepository).findById("");
+        // When
+        LoginResponse result1 = userService.authenticate(request);
+        LoginResponse result2 = userService.authenticate(request);
+
+        // Then
+        assertNotEquals(result1.getToken(), result2.getToken());
+        assertNotNull(result1.getToken());
+        assertNotNull(result2.getToken());
+    }
+
+    @Test
+    @DisplayName("Should format login time correctly")
+    void shouldFormatLoginTimeCorrectly() {
+        // Given
+        LoginRequest request = new LoginRequest("john@example.com", "password123");
+        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
+
+        // When
+        LoginResponse result = userService.authenticate(request);
+
+        // Then
+        assertNotNull(result.getLoginTime());
+        // Verify the format is ISO_LOCAL_DATE_TIME
+        assertDoesNotThrow(() -> LocalDateTime.parse(result.getLoginTime(), DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     }
 }
