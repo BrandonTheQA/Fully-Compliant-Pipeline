@@ -222,15 +222,11 @@ jobs:
           -DresourceGroup=brandon \
           -Dregion=westus3 \
           clean package azure-functions:deploy
-      - name: Wait 5 minutes for Azure throttling
-        run: |
-          echo "Waiting 5 minutes between deployments to avoid Azure throttling..."
-          sleep 300
       - name: Deploy helloworld2 to dev Environment
         working-directory: ./api/functionapp/helloworld2
         run: |
-          mvn -DfunctionAppName=joaz-func-helloworld-9021-dev \
-          -DappName=joaz-func-helloworld2-9021-dev \
+          mvn -DfunctionAppName=joaz-func-helloworld2-9021-dev \
+          -DappName=joaz-func-helloworld-9021-dev \
           -DresourceGroup=brandon \
           -Dregion=westus3 \
           clean package azure-functions:deploy
