@@ -3,12 +3,17 @@ package com.example;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 /**
  * Azure Functions with HTTP Trigger.
  */
 public class HelloWorldFunction {
+    private static final String VERSION = "v2.2.0";
+    private static final String BUILD_DATE = "2024-01-15";
+    
     /**
      * This function listens at endpoint "/api/hello". Two ways to invoke it using "curl" command in bash:
      * 1. curl -d "HTTP Body" {your host}/api/hello
@@ -33,8 +38,12 @@ public class HelloWorldFunction {
                     .body("Please pass a name on the query string or in the request body")
                     .build();
         } else {
+            String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String responseBody = String.format("Hello, %s! Welcome to Azure Functions!\n\nApp: HelloWorld2\nVersion: %s\nBuild Date: %s\nDeployed At: %s", 
+                name, VERSION, BUILD_DATE, timestamp);
+            
             return request.createResponseBuilder(HttpStatus.OK)
-                    .body("Hello, " + name + "! Welcome to Azure Functions!")
+                    .body(responseBody)
                     .build();
         }
     }
