@@ -29,6 +29,27 @@ jobs:
           echo "${BUILD_NUMBER}"
           echo "DIST_VERSION=${BUILD_NUMBER}" >> $GITHUB_ENV
 
+  build2:
+    name: Build Azure Function 2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Java 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+      - name: Build Azure Function 2
+        working-directory: ./api/functionapp/helloworld2
+        run: |
+          mvn clean compile package
+      - name: Set Dist Version
+        run: |
+          BUILD_NUMBER="${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}"
+          echo "${BUILD_NUMBER}"
+          echo "DIST_VERSION=${BUILD_NUMBER}" >> $GITHUB_ENV
+
   security_scans:
     name: Security Scans
     runs-on: ubuntu-latest
@@ -42,6 +63,17 @@ jobs:
           distribution: 'temurin'
       - name: Run security scan
         working-directory: ./api/functionapp/helloworld
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: |
+          if [ -n "$NVD_API_KEY" ]; then
+            mvn org.owasp:dependency-check-maven:check \
+              -Dnvd.api.key=$NVD_API_KEY
+          else
+            echo "NVD_API_KEY not set, running without API key (may be slower)"
+          fi
+      - name: Run security scan for helloworld2
+        working-directory: ./api/functionapp/helloworld2
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
@@ -158,6 +190,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: 
       - build
+      - build2
       - verify_toggles
       - security_scans
     environment: 
@@ -189,6 +222,14 @@ jobs:
           -DresourceGroup=brandon \
           -Dregion=westus3 \
           clean package azure-functions:deploy
+      - name: Deploy helloworld2 to dev Environment
+        working-directory: ./api/functionapp/helloworld2
+        run: |
+          mvn -DfunctionAppName=joaz-func-helloworld2-9021-dev \
+          -DappName=joaz-func-helloworld2-9021-dev \
+          -DresourceGroup=brandon \
+          -Dregion=westus3 \
+          clean package azure-functions:deploy
 
   smoke_test_dev:
     name: Smoke Test for Dev
@@ -209,6 +250,12 @@ jobs:
           newman run postman/HelloWorldFunction.postman_collection.json \
             --reporters cli \
             --env-var "baseUrl=https://joaz-func-helloworld-9021-dev.azurewebsites.net/api/hello"
+      - name: Run Newman Tests for HelloWorld2 Dev Environment
+        run: |
+          echo "Running Newman smoke tests for HelloWorld2 Azure Function in Dev environment..."
+          newman run postman/HelloWorld2Function.postman_collection.json \
+            --reporters cli \
+            --env-var "baseUrl=https://joaz-func-helloworld2-9021-dev.azurewebsites.net/api/hello"
 
   deploy_test:
     name: Deploy to Test
@@ -237,6 +284,14 @@ jobs:
           -DresourceGroup=brandon-test \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
+      - name: Deploy helloworld2 to Test Environment
+        working-directory: ./api/functionapp/helloworld2
+        run: |
+          mvn -DfunctionAppName=joaz-func-helloworld2-9021-test \
+          -DappName=joaz-func-helloworld2-9021-test \
+          -DresourceGroup=brandon-test \
+          -Dregion=eastus2 \
+          clean package azure-functions:deploy
 
   smoke_test_test:
     name: Smoke Test for Test
@@ -257,6 +312,12 @@ jobs:
           newman run postman/HelloWorldFunction.postman_collection.json \
             --reporters cli \
             --env-var "baseUrl=https://joaz-func-helloworld-9021-test.azurewebsites.net/api/hello"
+      - name: Run Newman Tests for HelloWorld2 Test Environment
+        run: |
+          echo "Running Newman smoke tests for HelloWorld2 Azure Function in Test environment..."
+          newman run postman/HelloWorld2Function.postman_collection.json \
+            --reporters cli \
+            --env-var "baseUrl=https://joaz-func-helloworld2-9021-test.azurewebsites.net/api/hello"
 
   integration_tests:
     name: Integration Tests
@@ -296,6 +357,14 @@ jobs:
           -DresourceGroup=brandon-stage \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
+      - name: Deploy helloworld2 to Stage Environment
+        working-directory: ./api/functionapp/helloworld2
+        run: |
+          mvn -DfunctionAppName=joaz-func-helloworld2-9021-stage \
+          -DappName=joaz-func-helloworld2-9021-stage \
+          -DresourceGroup=brandon-stage \
+          -Dregion=eastus2 \
+          clean package azure-functions:deploy
 
   smoke_test_stage:
     name: Smoke Test for Stage
@@ -316,6 +385,12 @@ jobs:
           newman run postman/HelloWorldFunction.postman_collection.json \
             --reporters cli \
             --env-var "baseUrl=https://joaz-func-helloworld-9021-stage.azurewebsites.net/api/hello"
+      - name: Run Newman Tests for HelloWorld2 Stage Environment
+        run: |
+          echo "Running Newman smoke tests for HelloWorld2 Azure Function in Stage environment..."
+          newman run postman/HelloWorld2Function.postman_collection.json \
+            --reporters cli \
+            --env-var "baseUrl=https://joaz-func-helloworld2-9021-stage.azurewebsites.net/api/hello"
 
   performance_test:
     name: Performance tests
@@ -403,6 +478,14 @@ jobs:
           -DresourceGroup=brandon-prod \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
+      - name: Deploy helloworld2 to Production Environment
+        working-directory: ./api/functionapp/helloworld2
+        run: |
+          mvn -DfunctionAppName=joaz-func-helloworld2-9021-prod \
+          -DappName=joaz-func-helloworld2-9021-prod \
+          -DresourceGroup=brandon-prod \
+          -Dregion=eastus2 \
+          clean package azure-functions:deploy
 
   smoke_test_production:
     name: Smoke Test for Production
@@ -423,6 +506,12 @@ jobs:
           newman run postman/HelloWorldFunction.postman_collection.json \
             --reporters cli \
             --env-var "baseUrl=https://joaz-func-helloworld-9021-prod.azurewebsites.net/api/hello"
+      - name: Run Newman Tests for HelloWorld2 Production Environment
+        run: |
+          echo "Running Newman smoke tests for HelloWorld2 Azure Function in Production environment..."
+          newman run postman/HelloWorld2Function.postman_collection.json \
+            --reporters cli \
+            --env-var "baseUrl=https://joaz-func-helloworld2-9021-prod.azurewebsites.net/api/hello"
 
   notify_prod_release:
     name: Send Notifications of Prod release completed
