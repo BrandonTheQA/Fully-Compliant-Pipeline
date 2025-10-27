@@ -27,10 +27,10 @@ jobs:
             "function-app-name-test": ("joaz-func-" + . + "-9021-test"),
             "function-app-name-stage": ("joaz-func-" + . + "-9021-stage"),
             "function-app-name-prod": ("joaz-func-" + . + "-9021-prod"),
-            "app-service-plan-dev": ("asp-joaz-func-" + . + "-9021-dev"),
-            "app-service-plan-test": ("asp-joaz-func-" + . + "-9021-test"),
-            "app-service-plan-stage": ("asp-joaz-func-" + . + "-9021-stage"),
-            "app-service-plan-prod": ("asp-joaz-func-" + . + "-9021-prod"),
+            "app-service-plan-dev": "asp-joaz-func-helloworld-9021-dev",
+            "app-service-plan-test": "asp-joaz-func-helloworld-9021-test",
+            "app-service-plan-stage": "asp-joaz-func-helloworld-9021-stage",
+            "app-service-plan-prod": "asp-joaz-func-helloworld-9021-prod",
             collection: ("postman/" + (. | ascii_upcase[:1] + .[1:]) + "Function.postman_collection.json")
           }]}')
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
