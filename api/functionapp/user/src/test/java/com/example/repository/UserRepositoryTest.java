@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,14 +27,15 @@ class UserRepositoryTest {
     @DisplayName("Should save user successfully")
     void shouldSaveUserSuccessfully() {
         // Given
-        User user = new User("user-123", "John Doe", "john@example.com", "password123");
+        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        user.setCreatedAt("2023-01-01T00:00:00");
 
         // When
         User savedUser = userRepository.save(user);
 
         // Then
         assertNotNull(savedUser);
-        assertEquals("user-123", savedUser.getId());
+        assertEquals("user-id", savedUser.getId());
         assertEquals("John Doe", savedUser.getName());
         assertEquals("john@example.com", savedUser.getEmail());
         assertEquals("password123", savedUser.getPassword());
@@ -41,25 +43,25 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Should find user by ID when user exists")
-    void shouldFindUserByIdWhenUserExists() {
+    @DisplayName("Should find user by id")
+    void shouldFindUserById() {
         // Given
-        User user = new User("user-123", "John Doe", "john@example.com", "password123");
+        User user = new User("user-id", "John Doe", "john@example.com", "password123");
         userRepository.save(user);
 
         // When
-        Optional<User> foundUser = userRepository.findById("user-123");
+        Optional<User> foundUser = userRepository.findById("user-id");
 
         // Then
         assertTrue(foundUser.isPresent());
-        assertEquals("user-123", foundUser.get().getId());
+        assertEquals("user-id", foundUser.get().getId());
         assertEquals("John Doe", foundUser.get().getName());
         assertEquals("john@example.com", foundUser.get().getEmail());
     }
 
     @Test
-    @DisplayName("Should return empty optional when user does not exist")
-    void shouldReturnEmptyOptionalWhenUserDoesNotExist() {
+    @DisplayName("Should return empty when user not found by id")
+    void shouldReturnEmptyWhenUserNotFoundById() {
         // When
         Optional<User> foundUser = userRepository.findById("non-existent-id");
 
@@ -68,10 +70,10 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Should find user by email when user exists")
-    void shouldFindUserByEmailWhenUserExists() {
+    @DisplayName("Should find user by email")
+    void shouldFindUserByEmail() {
         // Given
-        User user = new User("user-123", "John Doe", "john@example.com", "password123");
+        User user = new User("user-id", "John Doe", "john@example.com", "password123");
         userRepository.save(user);
 
         // When
@@ -79,14 +81,14 @@ class UserRepositoryTest {
 
         // Then
         assertTrue(foundUser.isPresent());
-        assertEquals("user-123", foundUser.get().getId());
+        assertEquals("user-id", foundUser.get().getId());
         assertEquals("John Doe", foundUser.get().getName());
         assertEquals("john@example.com", foundUser.get().getEmail());
     }
 
     @Test
-    @DisplayName("Should return empty optional when email does not exist")
-    void shouldReturnEmptyOptionalWhenEmailDoesNotExist() {
+    @DisplayName("Should return empty when user not found by email")
+    void shouldReturnEmptyWhenUserNotFoundByEmail() {
         // When
         Optional<User> foundUser = userRepository.findByEmail("nonexistent@example.com");
 
@@ -95,46 +97,37 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("Should return true when user exists by email")
-    void shouldReturnTrueWhenUserExistsByEmail() {
+    @DisplayName("Should check if email exists")
+    void shouldCheckIfEmailExists() {
         // Given
-        User user = new User("user-123", "John Doe", "john@example.com", "password123");
+        User user = new User("user-id", "John Doe", "john@example.com", "password123");
         userRepository.save(user);
 
-        // When
-        boolean exists = userRepository.existsByEmail("john@example.com");
-
-        // Then
-        assertTrue(exists);
+        // When & Then
+        assertTrue(userRepository.existsByEmail("john@example.com"));
+        assertFalse(userRepository.existsByEmail("nonexistent@example.com"));
     }
 
     @Test
-    @DisplayName("Should return false when user does not exist by email")
-    void shouldReturnFalseWhenUserDoesNotExistByEmail() {
-        // When
-        boolean exists = userRepository.existsByEmail("nonexistent@example.com");
-
-        // Then
-        assertFalse(exists);
-    }
-
-    @Test
-    @DisplayName("Should return correct count of users")
-    void shouldReturnCorrectCountOfUsers() {
+    @DisplayName("Should count users correctly")
+    void shouldCountUsersCorrectly() {
         // Given
         assertEquals(0, userRepository.count());
 
         // When
-        userRepository.save(new User("user-1", "John Doe", "john@example.com", "password123"));
-        userRepository.save(new User("user-2", "Jane Smith", "jane@example.com", "password456"));
-
-        // Then
+        User user1 = new User("user-1", "John Doe", "john@example.com", "password123");
+        User user2 = new User("user-2", "Jane Smith", "jane@example.com", "password456");
+        
+        userRepository.save(user1);
+        assertEquals(1, userRepository.count());
+        
+        userRepository.save(user2);
         assertEquals(2, userRepository.count());
     }
 
     @Test
-    @DisplayName("Should handle multiple users with different emails")
-    void shouldHandleMultipleUsersWithDifferentEmails() {
+    @DisplayName("Should handle multiple users independently")
+    void shouldHandleMultipleUsersIndependently() {
         // Given
         User user1 = new User("user-1", "John Doe", "john@example.com", "password123");
         User user2 = new User("user-2", "Jane Smith", "jane@example.com", "password456");
@@ -142,37 +135,50 @@ class UserRepositoryTest {
         userRepository.save(user1);
         userRepository.save(user2);
 
-        // When & Then
-        assertTrue(userRepository.existsByEmail("john@example.com"));
-        assertTrue(userRepository.existsByEmail("jane@example.com"));
-        assertFalse(userRepository.existsByEmail("bob@example.com"));
+        // When
+        Optional<User> foundUser1 = userRepository.findById("user-1");
+        Optional<User> foundUser2 = userRepository.findById("user-2");
+        Optional<User> foundByEmail1 = userRepository.findByEmail("john@example.com");
+        Optional<User> foundByEmail2 = userRepository.findByEmail("jane@example.com");
 
-        Optional<User> foundUser1 = userRepository.findByEmail("john@example.com");
-        Optional<User> foundUser2 = userRepository.findByEmail("jane@example.com");
-
+        // Then
         assertTrue(foundUser1.isPresent());
         assertTrue(foundUser2.isPresent());
-        assertEquals("user-1", foundUser1.get().getId());
-        assertEquals("user-2", foundUser2.get().getId());
+        assertTrue(foundByEmail1.isPresent());
+        assertTrue(foundByEmail2.isPresent());
+        
+        assertEquals("John Doe", foundUser1.get().getName());
+        assertEquals("Jane Smith", foundUser2.get().getName());
+        assertEquals("john@example.com", foundByEmail1.get().getEmail());
+        assertEquals("jane@example.com", foundByEmail2.get().getEmail());
+        
+        assertEquals(2, userRepository.count());
     }
 
     @Test
-    @DisplayName("Should update existing user when saving with same ID")
-    void shouldUpdateExistingUserWhenSavingWithSameId() {
+    @DisplayName("Should update existing user")
+    void shouldUpdateExistingUser() {
         // Given
-        User originalUser = new User("user-123", "John Doe", "john@example.com", "password123");
+        User originalUser = new User("user-id", "John Doe", "john@example.com", "password123");
         userRepository.save(originalUser);
 
         // When
-        User updatedUser = new User("user-123", "John Updated", "john.updated@example.com", "newpassword");
+        User updatedUser = new User("user-id", "John Updated", "john.updated@example.com", "newpassword");
         userRepository.save(updatedUser);
 
         // Then
-        Optional<User> foundUser = userRepository.findById("user-123");
+        Optional<User> foundUser = userRepository.findById("user-id");
         assertTrue(foundUser.isPresent());
         assertEquals("John Updated", foundUser.get().getName());
         assertEquals("john.updated@example.com", foundUser.get().getEmail());
         assertEquals("newpassword", foundUser.get().getPassword());
-        assertEquals(1, userRepository.count()); // Should still be 1 user
+        assertEquals(1, userRepository.count()); // Should still be 1 user, not 2
+    }
+
+    @Test
+    @DisplayName("Should handle null user gracefully")
+    void shouldHandleNullUserGracefully() {
+        // When & Then
+        assertThrows(NullPointerException.class, () -> userRepository.save(null));
     }
 }

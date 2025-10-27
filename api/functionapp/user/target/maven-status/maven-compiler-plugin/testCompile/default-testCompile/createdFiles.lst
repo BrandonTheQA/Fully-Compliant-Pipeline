@@ -1,4 +1,1 @@
-com/example/repository/UserRepositoryTest.class
-com/example/service/UserServiceTest.class
-com/example/controller/UserControllerTest.class
 com/example/integration/UserManagementIntegrationTest.class
