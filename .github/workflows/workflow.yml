@@ -162,7 +162,7 @@ jobs:
       - security_scans
     environment: 
       name: Dev
-      url: https://joaz-func-helloworld-9021.azurewebsites.net
+      url: https://joaz-func-helloworld-9021-dev.azurewebsites.net
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -184,7 +184,8 @@ jobs:
       - name: Deploy to dev Environment
         working-directory: ./api/functionapp/helloworld
         run: |
-          mvn -DappName=joaz-func-helloworld-9021 \
+          mvn -DfunctionAppName=joaz-func-helloworld-9021-dev \
+          -DappName=joaz-func-helloworld-9021-dev \
           -DresourceGroup=brandon \
           -Dregion=westus3 \
           clean package azure-functions:deploy
@@ -207,7 +208,7 @@ jobs:
           echo "Running Newman smoke tests for Azure Function in Dev environment..."
           newman run postman/HelloWorldFunction.postman_collection.json \
             --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld-9021.azurewebsites.net/api/hello"
+            --env-var "baseUrl=https://joaz-func-helloworld-9021-dev.azurewebsites.net/api/hello"
 
   deploy_test:
     name: Deploy to Test
@@ -215,7 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: 
       name: Test
-      url: https://joaz-func-helloworld-test-9021.azurewebsites.net
+      url: https://joaz-func-helloworld-9021-test.azurewebsites.net
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -231,7 +232,8 @@ jobs:
       - name: Deploy to Test Environment
         working-directory: ./api/functionapp/helloworld
         run: |
-          mvn -DappName=joaz-func-helloworld-test-9021 \
+          mvn -DfunctionAppName=joaz-func-helloworld-9021-test \
+          -DappName=joaz-func-helloworld-9021-test \
           -DresourceGroup=brandon-test \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
@@ -254,7 +256,7 @@ jobs:
           echo "Running Newman smoke tests for Azure Function in Test environment..."
           newman run postman/HelloWorldFunction.postman_collection.json \
             --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld-test-9021.azurewebsites.net/api/hello"
+            --env-var "baseUrl=https://joaz-func-helloworld-9021-test.azurewebsites.net/api/hello"
 
   integration_tests:
     name: Integration Tests
@@ -273,7 +275,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: 
       name: Stage
-      url: https://joaz-func-helloworld-stage-9021.azurewebsites.net
+      url: https://joaz-func-helloworld-9021-stage.azurewebsites.net
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -289,7 +291,8 @@ jobs:
       - name: Deploy to Stage Environment
         working-directory: ./api/functionapp/helloworld
         run: |
-          mvn -DappName=joaz-func-helloworld-stage-9021 \
+          mvn -DfunctionAppName=joaz-func-helloworld-9021-stage \
+          -DappName=joaz-func-helloworld-9021-stage \
           -DresourceGroup=brandon-stage \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
@@ -312,7 +315,7 @@ jobs:
           echo "Running Newman smoke tests for Azure Function in Stage environment..."
           newman run postman/HelloWorldFunction.postman_collection.json \
             --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld-stage-9021.azurewebsites.net/api/hello"
+            --env-var "baseUrl=https://joaz-func-helloworld-9021-stage.azurewebsites.net/api/hello"
 
   performance_test:
     name: Performance tests
@@ -379,7 +382,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: 
       name: Production
-      url: https://joaz-func-helloworld-prod-9021.azurewebsites.net
+      url: https://joaz-func-helloworld-9021-prod.azurewebsites.net
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -395,7 +398,8 @@ jobs:
       - name: Deploy to Production Environment
         working-directory: ./api/functionapp/helloworld
         run: |
-          mvn -DappName=joaz-func-helloworld-prod-9021 \
+          mvn -DfunctionAppName=joaz-func-helloworld-9021-prod \
+          -DappName=joaz-func-helloworld-9021-prod \
           -DresourceGroup=brandon-prod \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
@@ -418,7 +422,7 @@ jobs:
           echo "Running Newman smoke tests for Azure Function in Production environment..."
           newman run postman/HelloWorldFunction.postman_collection.json \
             --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld-prod-9021.azurewebsites.net/api/hello"
+            --env-var "baseUrl=https://joaz-func-helloworld-9021-prod.azurewebsites.net/api/hello"
 
   notify_prod_release:
     name: Send Notifications of Prod release completed

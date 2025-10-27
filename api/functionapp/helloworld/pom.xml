@@ -18,6 +18,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <azure.functions.java.library.version>3.0.0</azure.functions.java.library.version>
         <azure.functions.maven.plugin.version>1.20.0</azure.functions.maven.plugin.version>
+        <!-- Default value if not overridden by -DfunctionAppName -->
         <functionAppName>joaz-func-helloworld-9021</functionAppName>
         <functionAppRegion>westus3</functionAppRegion>
         <functionResourceGroup>brandon</functionResourceGroup>
