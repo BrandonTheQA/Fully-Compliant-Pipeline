@@ -6,7 +6,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -48,7 +47,7 @@ public class UserFunctionHandler {
             // Call Spring Boot controller
             ResponseEntity<String> response = restTemplate.exchange(
                 "http://localhost:8080/api/users", 
-                HttpMethod.POST, 
+                org.springframework.http.HttpMethod.POST, 
                 entity, 
                 String.class
             );
@@ -123,7 +122,7 @@ public class UserFunctionHandler {
             // Call Spring Boot controller
             ResponseEntity<String> response = restTemplate.exchange(
                 "http://localhost:8080/api/login", 
-                HttpMethod.POST, 
+                org.springframework.http.HttpMethod.POST, 
                 entity, 
                 String.class
             );
