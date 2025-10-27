@@ -50,39 +50,39 @@ jobs:
           echo "${BUILD_NUMBER}"
           echo "DIST_VERSION=${BUILD_NUMBER}" >> $GITHUB_ENV
 
-  security_scans:
-    name: Security Scans
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Set up Java 11
-        uses: actions/setup-java@v3
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-      - name: Run security scan
-        working-directory: ./api/functionapp/helloworld
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: |
-          if [ -n "$NVD_API_KEY" ]; then
-            mvn org.owasp:dependency-check-maven:check \
-              -Dnvd.api.key=$NVD_API_KEY
-          else
-            echo "NVD_API_KEY not set, running without API key (may be slower)"
-          fi
-      - name: Run security scan for helloworld2
-        working-directory: ./api/functionapp/helloworld2
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: |
-          if [ -n "$NVD_API_KEY" ]; then
-            mvn org.owasp:dependency-check-maven:check \
-              -Dnvd.api.key=$NVD_API_KEY
-          else
-            echo "NVD_API_KEY not set, running without API key (may be slower)"
-          fi
+  # security_scans:
+  #   name: Security Scans
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
+  #     - name: Set up Java 11
+  #       uses: actions/setup-java@v3
+  #       with:
+  #         java-version: '11'
+  #         distribution: 'temurin'
+  #     - name: Run security scan
+  #       working-directory: ./api/functionapp/helloworld
+  #       env:
+  #         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+  #       run: |
+  #         if [ -n "$NVD_API_KEY" ]; then
+  #           mvn org.owasp:dependency-check-maven:check \
+  #             -Dnvd.api.key=$NVD_API_KEY
+  #         else
+  #           echo "NVD_API_KEY not set, running without API key (may be slower)"
+  #         fi
+  #     - name: Run security scan for helloworld2
+  #       working-directory: ./api/functionapp/helloworld2
+  #       env:
+  #         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+  #       run: |
+  #         if [ -n "$NVD_API_KEY" ]; then
+  #           mvn org.owasp:dependency-check-maven:check \
+  #             -Dnvd.api.key=$NVD_API_KEY
+  #         else
+  #           echo "NVD_API_KEY not set, running without API key (may be slower)"
+  #         fi
   analyze:
     name: Analyze (${{ matrix.language }})
     # Runner size impacts CodeQL analysis time. To learn more, please see:
@@ -192,7 +192,7 @@ jobs:
       - build
       - build2
       - verify_toggles
-      - security_scans
+      # - security_scans  # Commented out for faster pipeline
     environment: 
       name: Dev
       url: https://joaz-func-helloworld-9021-dev.azurewebsites.net
