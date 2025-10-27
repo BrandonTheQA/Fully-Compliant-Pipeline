@@ -8,16 +8,39 @@ on:
   workflow_dispatch:
 
 jobs:
+  discover-apps:
+    name: Discover Function Apps
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Discover function apps
+        id: set-matrix
+        run: |
+          apps=$(find api/functionapp -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+          matrix=$(echo $apps | jq -c '{include: [.[] | {
+            app: .,
+            "working-dir": ("./api/functionapp/" + .),
+            "function-app-name-dev": ("joaz-func-" + . + "-9021-dev"),
+            "function-app-name-test": ("joaz-func-" + . + "-9021-test"),
+            "function-app-name-stage": ("joaz-func-" + . + "-9021-stage"),
+            "function-app-name-prod": ("joaz-func-" + . + "-9021-prod"),
+            "app-service-plan-dev": ("asp-joaz-func-" + . + "-9021-dev"),
+            "app-service-plan-test": ("asp-joaz-func-" + . + "-9021-test"),
+            "app-service-plan-stage": ("asp-joaz-func-" + . + "-9021-stage"),
+            "app-service-plan-prod": ("asp-joaz-func-" + . + "-9021-prod"),
+            collection: ("postman/" + (. | ascii_upcase[:1] + .[1:]) + "Function.postman_collection.json")
+          }]}')
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
   build:
     name: Build Azure Function (${{ matrix.app }})
     runs-on: ubuntu-latest
+    needs: discover-apps
     strategy:
-      matrix:
-        include:
-          - app: helloworld
-            working-dir: ./api/functionapp/helloworld
-          - app: helloworld2
-            working-dir: ./api/functionapp/helloworld2
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -175,6 +198,7 @@ jobs:
     name: Deploy to Dev (${{ matrix.app }})
     runs-on: ubuntu-latest
     needs: 
+      - discover-apps
       - build
       - verify_toggles
       - analyze
@@ -183,14 +207,7 @@ jobs:
       name: Dev
       url: https://joaz-func-helloworld-9021-dev.azurewebsites.net
     strategy:
-      matrix:
-        include:
-          - app: helloworld
-            function-app-name: joaz-func-helloworld-9021-dev
-            working-dir: ./api/functionapp/helloworld
-          - app: helloworld2
-            function-app-name: joaz-func-helloworld2-9021-dev
-            working-dir: ./api/functionapp/helloworld2
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -212,26 +229,21 @@ jobs:
       - name: Deploy Function App
         working-directory: ${{ matrix.working-dir }}
         run: |
-          mvn -DfunctionAppName=${{ matrix.function-app-name }} \
-          -DappName=${{ matrix.function-app-name }} \
-          -DappServicePlanName=asp-joaz-func-helloworld-9021-dev \
+          mvn -DfunctionAppName=${{ matrix.function-app-name-dev }} \
+          -DappName=${{ matrix.function-app-name-dev }} \
+          -DappServicePlanName=${{ matrix.app-service-plan-dev }} \
           -DresourceGroup=brandon \
           -Dregion=westus3 \
           clean package azure-functions:deploy
 
   smoke_test_dev:
     name: Smoke Test for Dev (${{ matrix.app }})
-    needs: deploy_dev
+    needs: 
+      - discover-apps
+      - deploy_dev
     runs-on: ubuntu-latest
     strategy:
-      matrix:
-        include:
-          - app: helloworld
-            base-url: https://joaz-func-helloworld-9021-dev.azurewebsites.net
-            collection: postman/HelloWorldFunction.postman_collection.json
-          - app: helloworld2
-            base-url: https://joaz-func-helloworld2-9021-dev.azurewebsites.net
-            collection: postman/HelloWorld2Function.postman_collection.json
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -246,24 +258,19 @@ jobs:
           echo "Running Newman smoke tests for ${{ matrix.app }} in Dev environment..."
           newman run ${{ matrix.collection }} \
             --reporters cli \
-            --env-var "baseUrl=${{ matrix.base-url }}/api/hello"
+            --env-var "baseUrl=https://${{ matrix.function-app-name-dev }}.azurewebsites.net/api/hello"
 
   deploy_test:
     name: Deploy to Test (${{ matrix.app }})
-    needs: smoke_test_dev
+    needs: 
+      - discover-apps
+      - smoke_test_dev
     runs-on: ubuntu-latest
     environment: 
       name: Test
       url: https://joaz-func-helloworld-9021-test.azurewebsites.net
     strategy:
-      matrix:
-        include:
-          - app: helloworld
-            function-app-name: joaz-func-helloworld-9021-test
-            working-dir: ./api/functionapp/helloworld
-          - app: helloworld2
-            function-app-name: joaz-func-helloworld2-9021-test
-            working-dir: ./api/functionapp/helloworld2
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -279,26 +286,21 @@ jobs:
       - name: Deploy Function App
         working-directory: ${{ matrix.working-dir }}
         run: |
-          mvn -DfunctionAppName=${{ matrix.function-app-name }} \
-          -DappName=${{ matrix.function-app-name }} \
-          -DappServicePlanName=asp-joaz-func-helloworld-9021-test \
+          mvn -DfunctionAppName=${{ matrix.function-app-name-test }} \
+          -DappName=${{ matrix.function-app-name-test }} \
+          -DappServicePlanName=${{ matrix.app-service-plan-test }} \
           -DresourceGroup=brandon-test \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
 
   smoke_test_test:
     name: Smoke Test for Test (${{ matrix.app }})
-    needs: deploy_test
+    needs: 
+      - discover-apps
+      - deploy_test
     runs-on: ubuntu-latest
     strategy:
-      matrix:
-        include:
-          - app: helloworld
-            base-url: https://joaz-func-helloworld-9021-test.azurewebsites.net
-            collection: postman/HelloWorldFunction.postman_collection.json
-          - app: helloworld2
-            base-url: https://joaz-func-helloworld2-9021-test.azurewebsites.net
-            collection: postman/HelloWorld2Function.postman_collection.json
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -313,7 +315,7 @@ jobs:
           echo "Running Newman smoke tests for ${{ matrix.app }} in Test environment..."
           newman run ${{ matrix.collection }} \
             --reporters cli \
-            --env-var "baseUrl=${{ matrix.base-url }}/api/hello"
+            --env-var "baseUrl=https://${{ matrix.function-app-name-test }}.azurewebsites.net/api/hello"
 
   integration_tests:
     name: Integration Tests
@@ -328,20 +330,15 @@ jobs:
 
   deploy_stage:
     name: Deploy to Stage (${{ matrix.app }})
-    needs: integration_tests
+    needs: 
+      - discover-apps
+      - integration_tests
     runs-on: ubuntu-latest
     environment: 
       name: Stage
       url: https://joaz-func-helloworld-9021-stage.azurewebsites.net
     strategy:
-      matrix:
-        include:
-          - app: helloworld
-            function-app-name: joaz-func-helloworld-9021-stage
-            working-dir: ./api/functionapp/helloworld
-          - app: helloworld2
-            function-app-name: joaz-func-helloworld2-9021-stage
-            working-dir: ./api/functionapp/helloworld2
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -357,26 +354,21 @@ jobs:
       - name: Deploy Function App
         working-directory: ${{ matrix.working-dir }}
         run: |
-          mvn -DfunctionAppName=${{ matrix.function-app-name }} \
-          -DappName=${{ matrix.function-app-name }} \
-          -DappServicePlanName=asp-joaz-func-helloworld-9021-stage \
+          mvn -DfunctionAppName=${{ matrix.function-app-name-stage }} \
+          -DappName=${{ matrix.function-app-name-stage }} \
+          -DappServicePlanName=${{ matrix.app-service-plan-stage }} \
           -DresourceGroup=brandon-stage \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
 
   smoke_test_stage:
     name: Smoke Test for Stage (${{ matrix.app }})
-    needs: deploy_stage
+    needs: 
+      - discover-apps
+      - deploy_stage
     runs-on: ubuntu-latest
     strategy:
-      matrix:
-        include:
-          - app: helloworld
-            base-url: https://joaz-func-helloworld-9021-stage.azurewebsites.net
-            collection: postman/HelloWorldFunction.postman_collection.json
-          - app: helloworld2
-            base-url: https://joaz-func-helloworld2-9021-stage.azurewebsites.net
-            collection: postman/HelloWorld2Function.postman_collection.json
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -391,7 +383,7 @@ jobs:
           echo "Running Newman smoke tests for ${{ matrix.app }} in Stage environment..."
           newman run ${{ matrix.collection }} \
             --reporters cli \
-            --env-var "baseUrl=${{ matrix.base-url }}/api/hello"
+            --env-var "baseUrl=https://${{ matrix.function-app-name-stage }}.azurewebsites.net/api/hello"
 
   performance_test:
     name: Performance tests
@@ -454,20 +446,15 @@ jobs:
 
   deploy_production:
     name: Deploy to Production (${{ matrix.app }})
-    needs: stage_production_build
+    needs: 
+      - discover-apps
+      - stage_production_build
     runs-on: ubuntu-latest
     environment: 
       name: Production
       url: https://joaz-func-helloworld-9021-prod.azurewebsites.net
     strategy:
-      matrix:
-        include:
-          - app: helloworld
-            function-app-name: joaz-func-helloworld-9021-prod
-            working-dir: ./api/functionapp/helloworld
-          - app: helloworld2
-            function-app-name: joaz-func-helloworld2-9021-prod
-            working-dir: ./api/functionapp/helloworld2
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -483,26 +470,21 @@ jobs:
       - name: Deploy Function App
         working-directory: ${{ matrix.working-dir }}
         run: |
-          mvn -DfunctionAppName=${{ matrix.function-app-name }} \
-          -DappName=${{ matrix.function-app-name }} \
-          -DappServicePlanName=asp-joaz-func-helloworld-9021-prod \
+          mvn -DfunctionAppName=${{ matrix.function-app-name-prod }} \
+          -DappName=${{ matrix.function-app-name-prod }} \
+          -DappServicePlanName=${{ matrix.app-service-plan-prod }} \
           -DresourceGroup=brandon-prod \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
 
   smoke_test_production:
     name: Smoke Test for Production (${{ matrix.app }})
-    needs: deploy_production
+    needs: 
+      - discover-apps
+      - deploy_production
     runs-on: ubuntu-latest
     strategy:
-      matrix:
-        include:
-          - app: helloworld
-            base-url: https://joaz-func-helloworld-9021-prod.azurewebsites.net
-            collection: postman/HelloWorldFunction.postman_collection.json
-          - app: helloworld2
-            base-url: https://joaz-func-helloworld2-9021-prod.azurewebsites.net
-            collection: postman/HelloWorld2Function.postman_collection.json
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -517,7 +499,7 @@ jobs:
           echo "Running Newman smoke tests for ${{ matrix.app }} in Production environment..."
           newman run ${{ matrix.collection }} \
             --reporters cli \
-            --env-var "baseUrl=${{ matrix.base-url }}/api/hello"
+            --env-var "baseUrl=https://${{ matrix.function-app-name-prod }}.azurewebsites.net/api/hello"
 
   notify_prod_release:
     name: Send Notifications of Prod release completed
