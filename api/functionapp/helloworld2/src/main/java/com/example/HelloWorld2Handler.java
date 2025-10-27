@@ -6,7 +6,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -63,7 +62,7 @@ public class HelloWorld2Handler {
             // Call Spring Boot controller
             ResponseEntity<String> response = restTemplate.exchange(
                 url, 
-                HttpMethod.valueOf(method), 
+                org.springframework.http.HttpMethod.valueOf(method), 
                 entity, 
                 String.class
             );

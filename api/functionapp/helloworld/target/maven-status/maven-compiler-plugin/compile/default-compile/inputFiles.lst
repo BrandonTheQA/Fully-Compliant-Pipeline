@@ -1,1 +1,4 @@
-/Users/brandongarlock/projects/Fully-Compliant-Pipeline/api/functionapp/helloworld/src/main/java/com/example/HelloWorldFunction.java
+/Users/brandongarlock/projects/Fully-Compliant-Pipeline/api/functionapp/helloworld/src/main/java/com/example/dto/HelloResponse.java
+/Users/brandongarlock/projects/Fully-Compliant-Pipeline/api/functionapp/helloworld/src/main/java/com/example/controller/HelloWorldController.java
+/Users/brandongarlock/projects/Fully-Compliant-Pipeline/api/functionapp/helloworld/src/main/java/com/example/HelloWorldHandler.java
+/Users/brandongarlock/projects/Fully-Compliant-Pipeline/api/functionapp/helloworld/src/main/java/com/example/HelloWorldApplication.java
