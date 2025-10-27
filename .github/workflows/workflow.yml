@@ -251,18 +251,42 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - name: Install Newman
-        run: npm install -g newman
-      - name: Run Newman Tests
+      - name: Health Check
         run: |
-          echo "Running Newman smoke tests for ${{ matrix.app }} in Dev environment..."
-          newman run ${{ matrix.collection }} \
-            --reporters cli \
-            --env-var "baseUrl=https://${{ matrix.function-app-name-dev }}.azurewebsites.net/api/hello"
+          echo "Running health check for ${{ matrix.app }} in Dev environment..."
+          
+          # Retry logic for health check
+          max_attempts=3
+          attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt of $max_attempts"
+            
+            # Call health endpoint and check response
+            response=$(curl -s -w "\n%{http_code}" "https://${{ matrix.function-app-name-dev }}.azurewebsites.net/api/health")
+            http_code=$(echo "$response" | tail -n1)
+            body=$(echo "$response" | head -n -1)
+            
+            echo "HTTP Status: $http_code"
+            echo "Response: $body"
+            
+            # Check if HTTP status is 200 and response contains "UP" status
+            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status": "UP"'; then
+              echo "Health check passed for ${{ matrix.app }} in Dev environment"
+              exit 0
+            else
+              echo "Health check failed for ${{ matrix.app }} in Dev environment (attempt $attempt)"
+              if [ $attempt -lt $max_attempts ]; then
+                echo "Retrying in 10 seconds..."
+                sleep 10
+              fi
+            fi
+            
+            attempt=$((attempt + 1))
+          done
+          
+          echo "Health check failed after $max_attempts attempts"
+          exit 1
 
   deploy_test:
     name: Deploy to Test (${{ matrix.app }})
@@ -308,29 +332,94 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - name: Health Check
+        run: |
+          echo "Running health check for ${{ matrix.app }} in Test environment..."
+          
+          # Retry logic for health check
+          max_attempts=3
+          attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt of $max_attempts"
+            
+            # Call health endpoint and check response
+            response=$(curl -s -w "\n%{http_code}" "https://${{ matrix.function-app-name-test }}.azurewebsites.net/api/health")
+            http_code=$(echo "$response" | tail -n1)
+            body=$(echo "$response" | head -n -1)
+            
+            echo "HTTP Status: $http_code"
+            echo "Response: $body"
+            
+            # Check if HTTP status is 200 and response contains "UP" status
+            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status": "UP"'; then
+              echo "Health check passed for ${{ matrix.app }} in Test environment"
+              exit 0
+            else
+              echo "Health check failed for ${{ matrix.app }} in Test environment (attempt $attempt)"
+              if [ $attempt -lt $max_attempts ]; then
+                echo "Retrying in 10 seconds..."
+                sleep 10
+              fi
+            fi
+            
+            attempt=$((attempt + 1))
+          done
+          
+          echo "Health check failed after $max_attempts attempts"
+          exit 1
+
+  integration_tests:
+    name: Integration Tests
+    needs: 
+      - discover-apps
+      - smoke_test_test
+    runs-on: ubuntu-latest
+    environment: Test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
       - name: Install Newman
         run: npm install -g newman
-      - name: Run Newman Tests
-        run: |
-          echo "Running Newman smoke tests for ${{ matrix.app }} in Test environment..."
-          newman run ${{ matrix.collection }} \
-            --reporters cli \
-            --env-var "baseUrl=https://${{ matrix.function-app-name-test }}.azurewebsites.net/api/hello"
-
-  integration_tests:
-    name: Integration Tests
-    needs: smoke_test_test
-    runs-on: ubuntu-latest
-    environment: Test
-    steps:
       - name: Run Integration Tests
         run: |
-          echo "Running integration tests for Azure Function..."
-          # Add integration test commands here
+          echo "Running Newman integration tests for all function apps against Test environment..."
+          
+          # Run Newman tests for each function app against Test environment
+          for app in helloworld helloworld2 user; do
+            case $app in
+              helloworld)
+                collection="postman/HelloWorldFunction.postman_collection.json"
+                function_app_name="joaz-func-helloworld-9021-test"
+                ;;
+              helloworld2)
+                collection="postman/HelloWorld2Function.postman_collection.json"
+                function_app_name="joaz-func-helloworld2-9021-test"
+                ;;
+              user)
+                collection="postman/UserFunction.postman_collection.json"
+                function_app_name="joaz-func-user-9021-test"
+                ;;
+            esac
+            
+            echo "Running integration tests for $app..."
+            newman run $collection \
+              --reporters cli \
+              --env-var "baseUrl=https://$function_app_name.azurewebsites.net" \
+              --timeout-request 30000 \
+              --timeout-script 30000
+            
+            if [ $? -ne 0 ]; then
+              echo "Integration tests failed for $app"
+              exit 1
+            fi
+          done
+          
+          echo "All integration tests completed successfully"
 
   deploy_stage:
     name: Deploy to Stage (${{ matrix.app }})
@@ -376,18 +465,42 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - name: Install Newman
-        run: npm install -g newman
-      - name: Run Newman Tests
+      - name: Health Check
         run: |
-          echo "Running Newman smoke tests for ${{ matrix.app }} in Stage environment..."
-          newman run ${{ matrix.collection }} \
-            --reporters cli \
-            --env-var "baseUrl=https://${{ matrix.function-app-name-stage }}.azurewebsites.net/api/hello"
+          echo "Running health check for ${{ matrix.app }} in Stage environment..."
+          
+          # Retry logic for health check
+          max_attempts=3
+          attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt of $max_attempts"
+            
+            # Call health endpoint and check response
+            response=$(curl -s -w "\n%{http_code}" "https://${{ matrix.function-app-name-stage }}.azurewebsites.net/api/health")
+            http_code=$(echo "$response" | tail -n1)
+            body=$(echo "$response" | head -n -1)
+            
+            echo "HTTP Status: $http_code"
+            echo "Response: $body"
+            
+            # Check if HTTP status is 200 and response contains "UP" status
+            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status": "UP"'; then
+              echo "Health check passed for ${{ matrix.app }} in Stage environment"
+              exit 0
+            else
+              echo "Health check failed for ${{ matrix.app }} in Stage environment (attempt $attempt)"
+              if [ $attempt -lt $max_attempts ]; then
+                echo "Retrying in 10 seconds..."
+                sleep 10
+              fi
+            fi
+            
+            attempt=$((attempt + 1))
+          done
+          
+          echo "Health check failed after $max_attempts attempts"
+          exit 1
 
   performance_test:
     name: Performance tests
@@ -492,18 +605,42 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-      - name: Install Newman
-        run: npm install -g newman
-      - name: Run Newman Tests
+      - name: Health Check
         run: |
-          echo "Running Newman smoke tests for ${{ matrix.app }} in Production environment..."
-          newman run ${{ matrix.collection }} \
-            --reporters cli \
-            --env-var "baseUrl=https://${{ matrix.function-app-name-prod }}.azurewebsites.net/api/hello"
+          echo "Running health check for ${{ matrix.app }} in Production environment..."
+          
+          # Retry logic for health check
+          max_attempts=3
+          attempt=1
+          
+          while [ $attempt -le $max_attempts ]; do
+            echo "Attempt $attempt of $max_attempts"
+            
+            # Call health endpoint and check response
+            response=$(curl -s -w "\n%{http_code}" "https://${{ matrix.function-app-name-prod }}.azurewebsites.net/api/health")
+            http_code=$(echo "$response" | tail -n1)
+            body=$(echo "$response" | head -n -1)
+            
+            echo "HTTP Status: $http_code"
+            echo "Response: $body"
+            
+            # Check if HTTP status is 200 and response contains "UP" status
+            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status": "UP"'; then
+              echo "Health check passed for ${{ matrix.app }} in Production environment"
+              exit 0
+            else
+              echo "Health check failed for ${{ matrix.app }} in Production environment (attempt $attempt)"
+              if [ $attempt -lt $max_attempts ]; then
+                echo "Retrying in 10 seconds..."
+                sleep 10
+              fi
+            fi
+            
+            attempt=$((attempt + 1))
+          done
+          
+          echo "Health check failed after $max_attempts attempts"
+          exit 1
 
   notify_prod_release:
     name: Send Notifications of Prod release completed
