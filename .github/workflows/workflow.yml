@@ -186,7 +186,7 @@ jobs:
           # Add release notes generation logic here
 
   deploy_dev:
-    name: Deploy to Dev
+    name: Deploy to Dev (${{ matrix.app }})
     runs-on: ubuntu-latest
     needs: 
       - build
@@ -196,6 +196,15 @@ jobs:
     environment: 
       name: Dev
       url: https://joaz-func-helloworld-9021-dev.azurewebsites.net
+    strategy:
+      matrix:
+        include:
+          - app: helloworld
+            function-app-name: joaz-func-helloworld-9021-dev
+            working-dir: ./api/functionapp/helloworld
+          - app: helloworld2
+            function-app-name: joaz-func-helloworld2-9021-dev
+            working-dir: ./api/functionapp/helloworld2
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -214,29 +223,29 @@ jobs:
           azcliversion: latest
           inlineScript: |
             az account show
-      - name: Deploy to dev Environment
-        working-directory: ./api/functionapp/helloworld
+      - name: Deploy Function App
+        working-directory: ${{ matrix.working-dir }}
         run: |
-          mvn -DfunctionAppName=joaz-func-helloworld-9021-dev \
-          -DappName=joaz-func-helloworld-9021-dev \
-          -DappServicePlanName=asp-joaz-func-helloworld-9021-dev \
-          -DresourceGroup=brandon \
-          -Dregion=westus3 \
-          clean package azure-functions:deploy
-      - name: Deploy helloworld2 to dev Environment
-        working-directory: ./api/functionapp/helloworld2
-        run: |
-          mvn -DfunctionAppName=joaz-func-helloworld2-9021-dev \
-          -DappName=joaz-func-helloworld2-9021-dev \
+          mvn -DfunctionAppName=${{ matrix.function-app-name }} \
+          -DappName=${{ matrix.function-app-name }} \
           -DappServicePlanName=asp-joaz-func-helloworld-9021-dev \
           -DresourceGroup=brandon \
           -Dregion=westus3 \
           clean package azure-functions:deploy
 
   smoke_test_dev:
-    name: Smoke Test for Dev
+    name: Smoke Test for Dev (${{ matrix.app }})
     needs: deploy_dev
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - app: helloworld
+            base-url: https://joaz-func-helloworld-9021-dev.azurewebsites.net
+            collection: postman/HelloWorldFunction.postman_collection.json
+          - app: helloworld2
+            base-url: https://joaz-func-helloworld2-9021-dev.azurewebsites.net
+            collection: postman/HelloWorld2Function.postman_collection.json
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -246,26 +255,29 @@ jobs:
           node-version: '18'
       - name: Install Newman
         run: npm install -g newman
-      - name: Run Newman Tests for Dev Environment
+      - name: Run Newman Tests
         run: |
-          echo "Running Newman smoke tests for Azure Function in Dev environment..."
-          newman run postman/HelloWorldFunction.postman_collection.json \
+          echo "Running Newman smoke tests for ${{ matrix.app }} in Dev environment..."
+          newman run ${{ matrix.collection }} \
             --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld-9021-dev.azurewebsites.net/api/hello"
-      - name: Run Newman Tests for HelloWorld2 Dev Environment
-        run: |
-          echo "Running Newman smoke tests for HelloWorld2 Azure Function in Dev environment..."
-          newman run postman/HelloWorld2Function.postman_collection.json \
-            --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld2-9021-dev.azurewebsites.net/api/hello"
+            --env-var "baseUrl=${{ matrix.base-url }}/api/hello"
 
   deploy_test:
-    name: Deploy to Test
+    name: Deploy to Test (${{ matrix.app }})
     needs: smoke_test_dev
     runs-on: ubuntu-latest
     environment: 
       name: Test
       url: https://joaz-func-helloworld-9021-test.azurewebsites.net
+    strategy:
+      matrix:
+        include:
+          - app: helloworld
+            function-app-name: joaz-func-helloworld-9021-test
+            working-dir: ./api/functionapp/helloworld
+          - app: helloworld2
+            function-app-name: joaz-func-helloworld2-9021-test
+            working-dir: ./api/functionapp/helloworld2
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -278,29 +290,29 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Deploy to Test Environment
-        working-directory: ./api/functionapp/helloworld
+      - name: Deploy Function App
+        working-directory: ${{ matrix.working-dir }}
         run: |
-          mvn -DfunctionAppName=joaz-func-helloworld-9021-test \
-          -DappName=joaz-func-helloworld-9021-test \
-          -DappServicePlanName=asp-joaz-func-helloworld-9021-test \
-          -DresourceGroup=brandon-test \
-          -Dregion=eastus2 \
-          clean package azure-functions:deploy
-      - name: Deploy helloworld2 to Test Environment
-        working-directory: ./api/functionapp/helloworld2
-        run: |
-          mvn -DfunctionAppName=joaz-func-helloworld2-9021-test \
-          -DappName=joaz-func-helloworld2-9021-test \
+          mvn -DfunctionAppName=${{ matrix.function-app-name }} \
+          -DappName=${{ matrix.function-app-name }} \
           -DappServicePlanName=asp-joaz-func-helloworld-9021-test \
           -DresourceGroup=brandon-test \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
 
   smoke_test_test:
-    name: Smoke Test for Test
+    name: Smoke Test for Test (${{ matrix.app }})
     needs: deploy_test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - app: helloworld
+            base-url: https://joaz-func-helloworld-9021-test.azurewebsites.net
+            collection: postman/HelloWorldFunction.postman_collection.json
+          - app: helloworld2
+            base-url: https://joaz-func-helloworld2-9021-test.azurewebsites.net
+            collection: postman/HelloWorld2Function.postman_collection.json
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -310,18 +322,12 @@ jobs:
           node-version: '18'
       - name: Install Newman
         run: npm install -g newman
-      - name: Run Newman Tests for Test Environment
+      - name: Run Newman Tests
         run: |
-          echo "Running Newman smoke tests for Azure Function in Test environment..."
-          newman run postman/HelloWorldFunction.postman_collection.json \
+          echo "Running Newman smoke tests for ${{ matrix.app }} in Test environment..."
+          newman run ${{ matrix.collection }} \
             --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld-9021-test.azurewebsites.net/api/hello"
-      - name: Run Newman Tests for HelloWorld2 Test Environment
-        run: |
-          echo "Running Newman smoke tests for HelloWorld2 Azure Function in Test environment..."
-          newman run postman/HelloWorld2Function.postman_collection.json \
-            --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld2-9021-test.azurewebsites.net/api/hello"
+            --env-var "baseUrl=${{ matrix.base-url }}/api/hello"
 
   integration_tests:
     name: Integration Tests
@@ -335,12 +341,21 @@ jobs:
           # Add integration test commands here
 
   deploy_stage:
-    name: Deploy to Stage
+    name: Deploy to Stage (${{ matrix.app }})
     needs: integration_tests
     runs-on: ubuntu-latest
     environment: 
       name: Stage
       url: https://joaz-func-helloworld-9021-stage.azurewebsites.net
+    strategy:
+      matrix:
+        include:
+          - app: helloworld
+            function-app-name: joaz-func-helloworld-9021-stage
+            working-dir: ./api/functionapp/helloworld
+          - app: helloworld2
+            function-app-name: joaz-func-helloworld2-9021-stage
+            working-dir: ./api/functionapp/helloworld2
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -353,29 +368,29 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Deploy to Stage Environment
-        working-directory: ./api/functionapp/helloworld
+      - name: Deploy Function App
+        working-directory: ${{ matrix.working-dir }}
         run: |
-          mvn -DfunctionAppName=joaz-func-helloworld-9021-stage \
-          -DappName=joaz-func-helloworld-9021-stage \
-          -DappServicePlanName=asp-joaz-func-helloworld-9021-stage \
-          -DresourceGroup=brandon-stage \
-          -Dregion=eastus2 \
-          clean package azure-functions:deploy
-      - name: Deploy helloworld2 to Stage Environment
-        working-directory: ./api/functionapp/helloworld2
-        run: |
-          mvn -DfunctionAppName=joaz-func-helloworld2-9021-stage \
-          -DappName=joaz-func-helloworld2-9021-stage \
+          mvn -DfunctionAppName=${{ matrix.function-app-name }} \
+          -DappName=${{ matrix.function-app-name }} \
           -DappServicePlanName=asp-joaz-func-helloworld-9021-stage \
           -DresourceGroup=brandon-stage \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
 
   smoke_test_stage:
-    name: Smoke Test for Stage
+    name: Smoke Test for Stage (${{ matrix.app }})
     needs: deploy_stage
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - app: helloworld
+            base-url: https://joaz-func-helloworld-9021-stage.azurewebsites.net
+            collection: postman/HelloWorldFunction.postman_collection.json
+          - app: helloworld2
+            base-url: https://joaz-func-helloworld2-9021-stage.azurewebsites.net
+            collection: postman/HelloWorld2Function.postman_collection.json
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -385,18 +400,12 @@ jobs:
           node-version: '18'
       - name: Install Newman
         run: npm install -g newman
-      - name: Run Newman Tests for Stage Environment
+      - name: Run Newman Tests
         run: |
-          echo "Running Newman smoke tests for Azure Function in Stage environment..."
-          newman run postman/HelloWorldFunction.postman_collection.json \
+          echo "Running Newman smoke tests for ${{ matrix.app }} in Stage environment..."
+          newman run ${{ matrix.collection }} \
             --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld-9021-stage.azurewebsites.net/api/hello"
-      - name: Run Newman Tests for HelloWorld2 Stage Environment
-        run: |
-          echo "Running Newman smoke tests for HelloWorld2 Azure Function in Stage environment..."
-          newman run postman/HelloWorld2Function.postman_collection.json \
-            --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld2-9021-stage.azurewebsites.net/api/hello"
+            --env-var "baseUrl=${{ matrix.base-url }}/api/hello"
 
   performance_test:
     name: Performance tests
@@ -458,12 +467,21 @@ jobs:
           # For now, we'll just log the requirement
 
   deploy_production:
-    name: Deploy to Production
+    name: Deploy to Production (${{ matrix.app }})
     needs: stage_production_build
     runs-on: ubuntu-latest
     environment: 
       name: Production
       url: https://joaz-func-helloworld-9021-prod.azurewebsites.net
+    strategy:
+      matrix:
+        include:
+          - app: helloworld
+            function-app-name: joaz-func-helloworld-9021-prod
+            working-dir: ./api/functionapp/helloworld
+          - app: helloworld2
+            function-app-name: joaz-func-helloworld2-9021-prod
+            working-dir: ./api/functionapp/helloworld2
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -476,29 +494,29 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      - name: Deploy to Production Environment
-        working-directory: ./api/functionapp/helloworld
+      - name: Deploy Function App
+        working-directory: ${{ matrix.working-dir }}
         run: |
-          mvn -DfunctionAppName=joaz-func-helloworld-9021-prod \
-          -DappName=joaz-func-helloworld-9021-prod \
-          -DappServicePlanName=asp-joaz-func-helloworld-9021-prod \
-          -DresourceGroup=brandon-prod \
-          -Dregion=eastus2 \
-          clean package azure-functions:deploy
-      - name: Deploy helloworld2 to Production Environment
-        working-directory: ./api/functionapp/helloworld2
-        run: |
-          mvn -DfunctionAppName=joaz-func-helloworld2-9021-prod \
-          -DappName=joaz-func-helloworld2-9021-prod \
+          mvn -DfunctionAppName=${{ matrix.function-app-name }} \
+          -DappName=${{ matrix.function-app-name }} \
           -DappServicePlanName=asp-joaz-func-helloworld-9021-prod \
           -DresourceGroup=brandon-prod \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
 
   smoke_test_production:
-    name: Smoke Test for Production
+    name: Smoke Test for Production (${{ matrix.app }})
     needs: deploy_production
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - app: helloworld
+            base-url: https://joaz-func-helloworld-9021-prod.azurewebsites.net
+            collection: postman/HelloWorldFunction.postman_collection.json
+          - app: helloworld2
+            base-url: https://joaz-func-helloworld2-9021-prod.azurewebsites.net
+            collection: postman/HelloWorld2Function.postman_collection.json
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -508,18 +526,12 @@ jobs:
           node-version: '18'
       - name: Install Newman
         run: npm install -g newman
-      - name: Run Newman Tests for Production Environment
+      - name: Run Newman Tests
         run: |
-          echo "Running Newman smoke tests for Azure Function in Production environment..."
-          newman run postman/HelloWorldFunction.postman_collection.json \
+          echo "Running Newman smoke tests for ${{ matrix.app }} in Production environment..."
+          newman run ${{ matrix.collection }} \
             --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld-9021-prod.azurewebsites.net/api/hello"
-      - name: Run Newman Tests for HelloWorld2 Production Environment
-        run: |
-          echo "Running Newman smoke tests for HelloWorld2 Azure Function in Production environment..."
-          newman run postman/HelloWorld2Function.postman_collection.json \
-            --reporters cli \
-            --env-var "baseUrl=https://joaz-func-helloworld2-9021-prod.azurewebsites.net/api/hello"
+            --env-var "baseUrl=${{ matrix.base-url }}/api/hello"
 
   notify_prod_release:
     name: Send Notifications of Prod release completed
