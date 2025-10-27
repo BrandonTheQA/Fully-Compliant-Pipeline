@@ -270,8 +270,8 @@ jobs:
             echo "HTTP Status: $http_code"
             echo "Response: $body"
             
-            # Check if HTTP status is 200 and response contains "UP" status
-            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status": "UP"'; then
+            # Check if HTTP status is 200 and response contains "UP" status (Spring Boot Actuator format)
+            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status":"UP"'; then
               echo "Health check passed for ${{ matrix.app }} in Dev environment"
               exit 0
             else
@@ -351,8 +351,8 @@ jobs:
             echo "HTTP Status: $http_code"
             echo "Response: $body"
             
-            # Check if HTTP status is 200 and response contains "UP" status
-            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status": "UP"'; then
+            # Check if HTTP status is 200 and response contains "UP" status (Spring Boot Actuator format)
+            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status":"UP"'; then
               echo "Health check passed for ${{ matrix.app }} in Test environment"
               exit 0
             else
@@ -484,8 +484,8 @@ jobs:
             echo "HTTP Status: $http_code"
             echo "Response: $body"
             
-            # Check if HTTP status is 200 and response contains "UP" status
-            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status": "UP"'; then
+            # Check if HTTP status is 200 and response contains "UP" status (Spring Boot Actuator format)
+            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status":"UP"'; then
               echo "Health check passed for ${{ matrix.app }} in Stage environment"
               exit 0
             else
@@ -624,8 +624,8 @@ jobs:
             echo "HTTP Status: $http_code"
             echo "Response: $body"
             
-            # Check if HTTP status is 200 and response contains "UP" status
-            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status": "UP"'; then
+            # Check if HTTP status is 200 and response contains "UP" status (Spring Boot Actuator format)
+            if [ "$http_code" = "200" ] && echo "$body" | grep -q '"status":"UP"'; then
               echo "Health check passed for ${{ matrix.app }} in Production environment"
               exit 0
             else
