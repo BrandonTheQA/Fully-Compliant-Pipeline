@@ -53,10 +53,10 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Build Azure Function
+      - name: Build and Test Azure Function
         working-directory: ${{ matrix.working-dir }}
         run: |
-          mvn clean compile package
+          mvn clean compile test package
       - name: Set Dist Version
         run: |
           BUILD_NUMBER="${{ github.run_id }}-${{ github.run_number }}-${{ github.run_attempt }}"
@@ -379,44 +379,29 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Java 11
+        uses: actions/setup-java@v3
         with:
-          node-version: '18'
-      - name: Install Newman
-        run: npm install -g newman
+          java-version: '11'
+          distribution: 'temurin'
       - name: Run Integration Tests
         run: |
-          echo "Running Newman integration tests for all function apps against Test environment..."
+          echo "Running integration tests for all function apps..."
           
-          # Run Newman tests for each function app against Test environment
+          # Run integration tests for each function app
           for app in helloworld helloworld2 user; do
-            case $app in
-              helloworld)
-                collection="postman/HelloWorldFunction.postman_collection.json"
-                function_app_name="joaz-func-helloworld-9021-test"
-                ;;
-              helloworld2)
-                collection="postman/HelloWorld2Function.postman_collection.json"
-                function_app_name="joaz-func-helloworld2-9021-test"
-                ;;
-              user)
-                collection="postman/UserFunction.postman_collection.json"
-                function_app_name="joaz-func-user-9021-test"
-                ;;
-            esac
-            
             echo "Running integration tests for $app..."
-            newman run $collection \
-              --reporters cli \
-              --env-var "baseUrl=https://$function_app_name.azurewebsites.net" \
-              --timeout-request 30000 \
-              --timeout-script 30000
+            cd "api/functionapp/$app"
+            
+            # Run Maven integration tests
+            mvn test -Dtest="*IntegrationTest"
             
             if [ $? -ne 0 ]; then
               echo "Integration tests failed for $app"
               exit 1
             fi
+            
+            cd - > /dev/null
           done
           
           echo "All integration tests completed successfully"
