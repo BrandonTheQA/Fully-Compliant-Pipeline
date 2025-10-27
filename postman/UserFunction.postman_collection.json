@@ -1,0 +1,222 @@
+{
+	"info": {
+		"_postman_id": "user-function-collection",
+		"name": "User Function API",
+		"description": "Collection for testing User Management Azure Function endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create User",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users"
+					]
+				},
+				"description": "Create a new user account"
+			},
+			"response": []
+		},
+		{
+			"name": "Get User Profile",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/{{userId}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"{{userId}}"
+					]
+				},
+				"description": "Get user profile by ID"
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"password123\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"login"
+					]
+				},
+				"description": "Authenticate user and get access token"
+			},
+			"response": []
+		},
+		{
+			"name": "Create Another User",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane.smith@example.com\",\n  \"password\": \"securepass456\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/users",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users"
+					]
+				},
+				"description": "Create a second user for testing"
+			},
+			"response": []
+		},
+		{
+			"name": "Login Jane",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"jane.smith@example.com\",\n  \"password\": \"securepass456\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"login"
+					]
+				},
+				"description": "Login as Jane Smith"
+			},
+			"response": []
+		},
+		{
+			"name": "Get Non-existent User",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/users/non-existent-id",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"users",
+						"non-existent-id"
+					]
+				},
+				"description": "Test error handling for non-existent user"
+			},
+			"response": []
+		},
+		{
+			"name": "Invalid Login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"wrongpassword\"\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/login",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"login"
+					]
+				},
+				"description": "Test invalid login credentials"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:7071",
+			"type": "string"
+		},
+		{
+			"key": "userId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
