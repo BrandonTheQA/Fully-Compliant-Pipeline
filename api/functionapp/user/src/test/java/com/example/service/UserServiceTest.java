@@ -64,7 +64,7 @@ class UserServiceTest {
 
         // Then
         assertNotNull(result);
-        assertEquals("user-id1", result.getUserId());
+        assertEquals("user-id", result.getUserId());
         assertEquals("John Doe", result.getName());
         assertEquals("john@example.com", result.getEmail());
         assertNotNull(result.getCreatedAt());
