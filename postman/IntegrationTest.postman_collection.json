@@ -1,0 +1,593 @@
+{
+	"info": {
+		"_postman_id": "integration-test-collection",
+		"name": "Integration Test - Full Workflow",
+		"description": "End-to-end integration test that creates a user, products, and an order with assertions",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Create User",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has userId\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('userId');",
+							"    pm.environment.set('userId', jsonData.userId);",
+							"});",
+							"",
+							"pm.test(\"Response has name\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('name');",
+							"    pm.expect(jsonData.name).to.eql(pm.environment.get('userName'));",
+							"});",
+							"",
+							"pm.test(\"Response has email\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('email');",
+							"    pm.expect(jsonData.email).to.eql(pm.environment.get('userEmail'));",
+							"});",
+							"",
+							"pm.test(\"Response has createdAt\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('createdAt');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{userName}}\",\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\"\n}"
+				},
+				"url": {
+					"raw": "{{userBaseUrl}}/users",
+					"host": [
+						"{{userBaseUrl}}"
+					],
+					"path": [
+						"users"
+					]
+				},
+				"description": "Creates a new user and stores the userId in environment variable for later use"
+			},
+			"response": []
+		},
+		{
+			"name": "2. Get User (Verify)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"User exists and matches created user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.userId).to.eql(pm.environment.get('userId'));",
+							"    pm.expect(jsonData.name).to.eql(pm.environment.get('userName'));",
+							"    pm.expect(jsonData.email).to.eql(pm.environment.get('userEmail'));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{userBaseUrl}}/users/{{userId}}",
+					"host": [
+						"{{userBaseUrl}}"
+					],
+					"path": [
+						"users",
+						"{{userId}}"
+					]
+				},
+				"description": "Retrieves the created user to verify it was created successfully"
+			},
+			"response": []
+		},
+		{
+			"name": "3. Create Product 1",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has product id\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('id');",
+							"    pm.environment.set('productId1', jsonData.id);",
+							"});",
+							"",
+							"pm.test(\"Product has correct name\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.name).to.eql(pm.environment.get('product1Name'));",
+							"});",
+							"",
+							"pm.test(\"Product has price\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('price');",
+							"    pm.expect(jsonData.price).to.be.a('number');",
+							"    pm.environment.set('product1Price', jsonData.price);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{product1Name}}\",\n    \"description\": \"{{product1Description}}\",\n    \"price\": {{product1Price}},\n    \"quantity\": {{product1Quantity}},\n    \"category\": \"{{product1Category}}\"\n}"
+				},
+				"url": {
+					"raw": "{{productBaseUrl}}/products",
+					"host": [
+						"{{productBaseUrl}}"
+					],
+					"path": [
+						"products"
+					]
+				},
+				"description": "Creates the first product"
+			},
+			"response": []
+		},
+		{
+			"name": "4. Create Product 2",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has product id\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('id');",
+							"    pm.environment.set('productId2', jsonData.id);",
+							"});",
+							"",
+							"pm.test(\"Product has correct name\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.name).to.eql(pm.environment.get('product2Name'));",
+							"});",
+							"",
+							"pm.test(\"Product has price\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('price');",
+							"    pm.expect(jsonData.price).to.be.a('number');",
+							"    pm.environment.set('product2Price', jsonData.price);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{product2Name}}\",\n    \"description\": \"{{product2Description}}\",\n    \"price\": {{product2Price}},\n    \"quantity\": {{product2Quantity}},\n    \"category\": \"{{product2Category}}\"\n}"
+				},
+				"url": {
+					"raw": "{{productBaseUrl}}/products",
+					"host": [
+						"{{productBaseUrl}}"
+					],
+					"path": [
+						"products"
+					]
+				},
+				"description": "Creates the second product"
+			},
+			"response": []
+		},
+		{
+			"name": "5. Create Product 3",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has product id\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('id');",
+							"    pm.environment.set('productId3', jsonData.id);",
+							"});",
+							"",
+							"pm.test(\"Product has correct name\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.name).to.eql(pm.environment.get('product3Name'));",
+							"});",
+							"",
+							"pm.test(\"Product has price\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('price');",
+							"    pm.expect(jsonData.price).to.be.a('number');",
+							"    pm.environment.set('product3Price', jsonData.price);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"{{product3Name}}\",\n    \"description\": \"{{product3Description}}\",\n    \"price\": {{product3Price}},\n    \"quantity\": {{product3Quantity}},\n    \"category\": \"{{product3Category}}\"\n}"
+				},
+				"url": {
+					"raw": "{{productBaseUrl}}/products",
+					"host": [
+						"{{productBaseUrl}}"
+					],
+					"path": [
+						"products"
+					]
+				},
+				"description": "Creates the third product"
+			},
+			"response": []
+		},
+		{
+			"name": "6. Get Product 1 (Verify)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Product exists and matches created product\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.id).to.eql(pm.environment.get('productId1'));",
+							"    pm.expect(jsonData.name).to.eql(pm.environment.get('product1Name'));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{productBaseUrl}}/products/{{productId1}}",
+					"host": [
+						"{{productBaseUrl}}"
+					],
+					"path": [
+						"products",
+						"{{productId1}}"
+					]
+				},
+				"description": "Retrieves the first product to verify it was created successfully"
+			},
+			"response": []
+		},
+		{
+			"name": "7. Create Order",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has order id\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('id');",
+							"    pm.environment.set('orderId', jsonData.id);",
+							"});",
+							"",
+							"pm.test(\"Order has correct userId\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.userId).to.eql(pm.environment.get('userId'));",
+							"});",
+							"",
+							"pm.test(\"Order has items\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('items');",
+							"    pm.expect(jsonData.items).to.be.an('array');",
+							"    pm.expect(jsonData.items.length).to.be.at.least(1);",
+							"});",
+							"",
+							"pm.test(\"Order has totalAmount\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('totalAmount');",
+							"    pm.expect(jsonData.totalAmount).to.be.a('number');",
+							"    pm.expect(jsonData.totalAmount).to.be.above(0);",
+							"});",
+							"",
+							"pm.test(\"Order has status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('status');",
+							"});",
+							"",
+							"pm.test(\"Order items contain expected products\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var productIds = jsonData.items.map(item => item.productId);",
+							"    pm.expect(productIds).to.include(pm.environment.get('productId1'));",
+							"    pm.expect(productIds).to.include(pm.environment.get('productId2'));",
+							"    pm.expect(productIds).to.include(pm.environment.get('productId3'));",
+							"});",
+							"",
+							"pm.test(\"Order total amount is correct\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var calculatedTotal = 0;",
+							"    jsonData.items.forEach(function(item) {",
+							"        calculatedTotal += item.subtotal;",
+							"    });",
+							"    pm.expect(jsonData.totalAmount).to.eql(calculatedTotal);",
+							"});",
+							"",
+							"pm.test(\"Order has createdAt\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('createdAt');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"userId\": \"{{userId}}\",\n    \"items\": [\n        {\n            \"productId\": \"{{productId1}}\",\n            \"quantity\": {{product1OrderQuantity}}\n        },\n        {\n            \"productId\": \"{{productId2}}\",\n            \"quantity\": {{product2OrderQuantity}}\n        },\n        {\n            \"productId\": \"{{productId3}}\",\n            \"quantity\": {{product3OrderQuantity}}\n        }\n    ]\n}"
+				},
+				"url": {
+					"raw": "{{orderBaseUrl}}/orders",
+					"host": [
+						"{{orderBaseUrl}}"
+					],
+					"path": [
+						"orders"
+					]
+				},
+				"description": "Creates an order with the previously created user and products"
+			},
+			"response": []
+		},
+		{
+			"name": "8. Get Order (Verify)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Order exists and matches created order\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.id).to.eql(pm.environment.get('orderId'));",
+							"    pm.expect(jsonData.userId).to.eql(pm.environment.get('userId'));",
+							"});",
+							"",
+							"pm.test(\"Order has all expected items\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.items.length).to.eql(3);",
+							"});",
+							"",
+							"pm.test(\"Order items have correct structure\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    jsonData.items.forEach(function(item) {",
+							"        pm.expect(item).to.have.property('productId');",
+							"        pm.expect(item).to.have.property('productName');",
+							"        pm.expect(item).to.have.property('quantity');",
+							"        pm.expect(item).to.have.property('price');",
+							"        pm.expect(item).to.have.property('subtotal');",
+							"        pm.expect(item.subtotal).to.eql(item.price * item.quantity);",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{orderBaseUrl}}/orders/{{orderId}}",
+					"host": [
+						"{{orderBaseUrl}}"
+					],
+					"path": [
+						"orders",
+						"{{orderId}}"
+					]
+				},
+				"description": "Retrieves the created order to verify it was created successfully and contains all expected data"
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "userBaseUrl",
+			"value": "https://joaz-func-user-9021-test.azurewebsites.net/api",
+			"type": "string"
+		},
+		{
+			"key": "productBaseUrl",
+			"value": "https://joaz-func-product-9021-test.azurewebsites.net/api",
+			"type": "string"
+		},
+		{
+			"key": "orderBaseUrl",
+			"value": "https://joaz-func-order-9021-test.azurewebsites.net/api",
+			"type": "string"
+		},
+		{
+			"key": "userName",
+			"value": "John Doe",
+			"type": "string"
+		},
+		{
+			"key": "userEmail",
+			"value": "john.doe@example.com",
+			"type": "string"
+		},
+		{
+			"key": "userPassword",
+			"value": "SecurePassword123",
+			"type": "string"
+		},
+		{
+			"key": "product1Name",
+			"value": "Laptop",
+			"type": "string"
+		},
+		{
+			"key": "product1Description",
+			"value": "High-performance laptop",
+			"type": "string"
+		},
+		{
+			"key": "product1Price",
+			"value": "999.99",
+			"type": "string"
+		},
+		{
+			"key": "product1Quantity",
+			"value": "10",
+			"type": "string"
+		},
+		{
+			"key": "product1Category",
+			"value": "Electronics",
+			"type": "string"
+		},
+		{
+			"key": "product1OrderQuantity",
+			"value": "1",
+			"type": "string"
+		},
+		{
+			"key": "product2Name",
+			"value": "Mouse",
+			"type": "string"
+		},
+		{
+			"key": "product2Description",
+			"value": "Wireless mouse",
+			"type": "string"
+		},
+		{
+			"key": "product2Price",
+			"value": "29.99",
+			"type": "string"
+		},
+		{
+			"key": "product2Quantity",
+			"value": "50",
+			"type": "string"
+		},
+		{
+			"key": "product2Category",
+			"value": "Electronics",
+			"type": "string"
+		},
+		{
+			"key": "product2OrderQuantity",
+			"value": "2",
+			"type": "string"
+		},
+		{
+			"key": "product3Name",
+			"value": "Keyboard",
+			"type": "string"
+		},
+		{
+			"key": "product3Description",
+			"value": "Mechanical keyboard",
+			"type": "string"
+		},
+		{
+			"key": "product3Price",
+			"value": "79.99",
+			"type": "string"
+		},
+		{
+			"key": "product3Quantity",
+			"value": "25",
+			"type": "string"
+		},
+		{
+			"key": "product3Category",
+			"value": "Electronics",
+			"type": "string"
+		},
+		{
+			"key": "product3OrderQuantity",
+			"value": "1",
+			"type": "string"
+		}
+	]
+}
