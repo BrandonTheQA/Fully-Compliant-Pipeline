@@ -35,6 +35,14 @@ security:
   basic:
     enabled: false
 
+# SpringDoc OpenAPI (Swagger) Configuration
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
 # External service endpoints - environment based
 services:
   user:

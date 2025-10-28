@@ -93,6 +93,13 @@
             <version>2.13.3</version>
         </dependency>
         
+        <!-- SpringDoc OpenAPI (Swagger) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-ui</artifactId>
+            <version>1.6.15</version>
+        </dependency>
+        
         <!-- Testing Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
