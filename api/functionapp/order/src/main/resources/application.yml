@@ -1,0 +1,44 @@
+spring:
+  application:
+    name: order-function
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+  health:
+    defaults:
+      enabled: true
+
+logging:
+  level:
+    com.example: DEBUG
+    org.springframework: INFO
+    root: INFO
+
+app:
+  name: Order
+  version: v1.0.0
+  build-date: 2024-01-15
+
+server:
+  port: 8080
+
+# Security configuration (disabled for now)
+security:
+  basic:
+    enabled: false
+
+# External service endpoints - environment based
+services:
+  user:
+    base-url: ${USER_SERVICE_URL:https://joaz-func-user-9021-${ENVIRONMENT:dev}.azurewebsites.net/api}
+  product:
+    base-url: ${PRODUCT_SERVICE_URL:https://joaz-func-product-9021-${ENVIRONMENT:dev}.azurewebsites.net/api}
+
