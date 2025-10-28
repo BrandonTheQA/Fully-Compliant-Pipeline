@@ -1,18 +1,9 @@
 import axios, { type AxiosInstance } from 'axios';
-import type { 
-  User, 
-  Product, 
-  Order, 
-  CreateUserRequest, 
-  CreateProductRequest, 
-  CreateOrderRequest 
-} from '../types';
 
 // Helper to safely get environment variables in both Vite and Jest
 function getEnvVar(key: string, defaultValue: string): string {
   // In Vite, this will be replaced at build time
   // In Jest, this will throw and we catch it
-  let viteValue: string | undefined;
   try {
     // This is replaced by Vite's build process, but Jest can't parse it
     // We'll use eval to defer the parse error to runtime
