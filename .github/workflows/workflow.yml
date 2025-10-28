@@ -27,10 +27,10 @@ jobs:
             "function-app-name-test": ("joaz-func-" + . + "-9021-test"),
             "function-app-name-stage": ("joaz-func-" + . + "-9021-stage"),
             "function-app-name-prod": ("joaz-func-" + . + "-9021-prod"),
-            "app-service-plan-dev": "asp-joaz-func-helloworld-9021-dev",
-            "app-service-plan-test": "asp-joaz-func-helloworld-9021-test",
-            "app-service-plan-stage": "asp-joaz-func-helloworld-9021-stage",
-            "app-service-plan-prod": "asp-joaz-func-helloworld-9021-prod",
+            "app-service-plan-dev": "ASP-POC-dev-7029",
+            "app-service-plan-test": "ASP-POC-test-7029",
+            "app-service-plan-stage": "ASP-POC-stage-7029",
+            "app-service-plan-prod": "ASP-POC-prod-7029",
             collection: ("postman/" + (. | 
               if . == "helloworld" then "HelloWorld"
               elif . == "helloworld2" then "HelloWorld2" 
@@ -306,13 +306,13 @@ jobs:
                 az webapp create \
                   --name joaz-ui-9021-dev \
                   --resource-group brandon \
-                  --plan asp-joaz-func-helloworld-9021-dev
+                  --plan ASP-POC-dev-7029
               else
                 echo "Using runtime: $NODE_RUNTIME"
                 az webapp create \
                   --name joaz-ui-9021-dev \
                   --resource-group brandon \
-                  --plan asp-joaz-func-helloworld-9021-dev \
+                  --plan ASP-POC-dev-7029 \
                   --runtime "$NODE_RUNTIME"
               fi
               
@@ -538,13 +538,13 @@ jobs:
                 az webapp create \
                   --name joaz-ui-9021-test \
                   --resource-group brandon-test \
-                  --plan asp-joaz-func-helloworld-9021-test
+                  --plan ASP-POC-test-7029
               else
                 echo "Using runtime: $NODE_RUNTIME"
                 az webapp create \
                   --name joaz-ui-9021-test \
                   --resource-group brandon-test \
-                  --plan asp-joaz-func-helloworld-9021-test \
+                  --plan ASP-POC-test-7029 \
                   --runtime "$NODE_RUNTIME"
               fi
               
@@ -773,13 +773,13 @@ jobs:
                 az webapp create \
                   --name joaz-ui-9021-stage \
                   --resource-group brandon-stage \
-                  --plan asp-joaz-func-helloworld-9021-stage
+                  --plan ASP-POC-stage-7029
               else
                 echo "Using runtime: $NODE_RUNTIME"
                 az webapp create \
                   --name joaz-ui-9021-stage \
                   --resource-group brandon-stage \
-                  --plan asp-joaz-func-helloworld-9021-stage \
+                  --plan ASP-POC-stage-7029 \
                   --runtime "$NODE_RUNTIME"
               fi
               
@@ -1003,13 +1003,13 @@ jobs:
                 az webapp create \
                   --name joaz-ui-9021-prod \
                   --resource-group brandon-prod \
-                  --plan asp-joaz-func-helloworld-9021-prod
+                  --plan ASP-POC-prod-7029
               else
                 echo "Using runtime: $NODE_RUNTIME"
                 az webapp create \
                   --name joaz-ui-9021-prod \
                   --resource-group brandon-prod \
-                  --plan asp-joaz-func-helloworld-9021-prod \
+                  --plan ASP-POC-prod-7029 \
                   --runtime "$NODE_RUNTIME"
               fi
               
