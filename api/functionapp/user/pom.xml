@@ -165,7 +165,7 @@
                     <appServicePlanName>${appServicePlanName}</appServicePlanName>
                     <region>${functionAppRegion}</region>
                     <runtime>
-                        <os>windows</os>
+                        <os>linux</os>
                         <javaVersion>11</javaVersion>
                     </runtime>
                     <appSettings>
