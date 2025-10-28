@@ -405,6 +405,55 @@ jobs:
           done
           
           echo "All integration tests completed successfully"
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install Newman
+        run: npm install -g newman
+      - name: Run Postman Integration Tests
+        run: |
+          echo "Running Postman integration tests..."
+          
+          # Generate unique email to avoid conflicts
+          TIMESTAMP=$(date +%s)
+          UNIQUE_EMAIL="john.doe.${TIMESTAMP}@example.com"
+          
+          # Run Postman collection with environment variables
+          newman run postman/IntegrationTest.postman_collection.json \
+            --env-var "userBaseUrl=https://joaz-func-user-9021-test.azurewebsites.net/api" \
+            --env-var "productBaseUrl=https://joaz-func-product-9021-test.azurewebsites.net/api" \
+            --env-var "orderBaseUrl=https://joaz-func-order-9021-test.azurewebsites.net/api" \
+            --env-var "userEmail=${UNIQUE_EMAIL}" \
+            --env-var "userName=John Doe" \
+            --env-var "userPassword=SecurePassword123" \
+            --env-var "product1Name=Laptop" \
+            --env-var "product1Description=High-performance laptop" \
+            --env-var "product1Price=999.99" \
+            --env-var "product1Quantity=10" \
+            --env-var "product1Category=Electronics" \
+            --env-var "product1OrderQuantity=1" \
+            --env-var "product2Name=Mouse" \
+            --env-var "product2Description=Wireless mouse" \
+            --env-var "product2Price=29.99" \
+            --env-var "product2Quantity=50" \
+            --env-var "product2Category=Electronics" \
+            --env-var "product2OrderQuantity=2" \
+            --env-var "product3Name=Keyboard" \
+            --env-var "product3Description=Mechanical keyboard" \
+            --env-var "product3Price=79.99" \
+            --env-var "product3Quantity=25" \
+            --env-var "product3Category=Electronics" \
+            --env-var "product3OrderQuantity=1" \
+            --reporters cli,json \
+            --reporter-json-export postman-test-results.json
+          
+          if [ $? -ne 0 ]; then
+            echo "Postman integration tests failed"
+            exit 1
+          fi
+          
+          echo "Postman integration tests completed successfully"
 
   deploy_stage:
     name: Deploy to Stage (${{ matrix.app }})
