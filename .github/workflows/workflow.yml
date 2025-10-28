@@ -23,7 +23,7 @@ jobs:
           matrix=$(echo $apps | jq -c '{include: [.[] | {
             app: .,
             "working-dir": ("./api/functionapp/" + .),
-            "function-app-name-dev": ("ASP-POC-" + . + "-7029-dev"),
+            "function-app-name-dev": ("ASP-POC-" + . + "-dev"),
             "function-app-name-test": ("joaz-func-" + . + "-9021-test"),
             "function-app-name-stage": ("joaz-func-" + . + "-9021-stage"),
             "function-app-name-prod": ("joaz-func-" + . + "-9021-prod"),
@@ -267,7 +267,6 @@ jobs:
         run: |
           mvn -DfunctionAppName=${{ matrix.function-app-name-dev }} \
           -DappName=${{ matrix.function-app-name-dev }} \
-          -DappServicePlanName=${{ matrix.app-service-plan-dev }} \
           -DresourceGroup=brandon \
           -Dregion=westus3 \
           clean package azure-functions:deploy
@@ -500,7 +499,6 @@ jobs:
         run: |
           mvn -DfunctionAppName=${{ matrix.function-app-name-test }} \
           -DappName=${{ matrix.function-app-name-test }} \
-          -DappServicePlanName=${{ matrix.app-service-plan-test }} \
           -DresourceGroup=brandon-test \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
@@ -732,7 +730,6 @@ jobs:
         run: |
           mvn -DfunctionAppName=${{ matrix.function-app-name-stage }} \
           -DappName=${{ matrix.function-app-name-stage }} \
-          -DappServicePlanName=${{ matrix.app-service-plan-stage }} \
           -DresourceGroup=brandon-stage \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
@@ -962,7 +959,6 @@ jobs:
         run: |
           mvn -DfunctionAppName=${{ matrix.function-app-name-prod }} \
           -DappName=${{ matrix.function-app-name-prod }} \
-          -DappServicePlanName=${{ matrix.app-service-plan-prod }} \
           -DresourceGroup=brandon-prod \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
