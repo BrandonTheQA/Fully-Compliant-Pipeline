@@ -7,6 +7,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.oas.models.Paths;
 import org.springdoc.core.OpenAPIService;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -86,9 +92,66 @@ public class ProductFunctionHandler {
                 // Continue to fallback
             }
             
-            // Fallback: Get OpenAPI bean from Spring context (base config only, no paths)
-            // This happens when SpringDoc hasn't built the spec yet because Spring MVC isn't active
+            // Manual build: Add paths manually since SpringDoc isn't scanning controllers
             OpenAPI openAPI = applicationContext.getBean(OpenAPI.class);
+            Paths paths = new Paths();
+            
+            // GET /api/products
+            PathItem getAllProductsPath = new PathItem();
+            Operation getAllProductsOp = new Operation();
+            getAllProductsOp.setSummary("Get all products");
+            getAllProductsOp.setDescription("Retrieves a list of all available products");
+            getAllProductsOp.setOperationId("getAllProducts");
+            
+            ApiResponses getAllProductsResponses = new ApiResponses();
+            getAllProductsResponses.addApiResponse("200", new ApiResponse().description("Products retrieved successfully"));
+            getAllProductsResponses.addApiResponse("500", new ApiResponse().description("Internal server error"));
+            getAllProductsOp.setResponses(getAllProductsResponses);
+            getAllProductsPath.setGet(getAllProductsOp);
+            paths.addPathItem("/api/products", getAllProductsPath);
+            
+            // GET /api/products/{id}
+            PathItem getProductPath = new PathItem();
+            Operation getProductOp = new Operation();
+            getProductOp.setSummary("Get product by ID");
+            getProductOp.setDescription("Retrieves product details for the specified product ID");
+            getProductOp.setOperationId("getProduct");
+            
+            Parameter idParam = new Parameter();
+            idParam.setName("id");
+            idParam.setIn("path");
+            idParam.setRequired(true);
+            idParam.setDescription("Product ID");
+            getProductOp.addParametersItem(idParam);
+            
+            ApiResponses getProductResponses = new ApiResponses();
+            getProductResponses.addApiResponse("200", new ApiResponse().description("Product found"));
+            getProductResponses.addApiResponse("404", new ApiResponse().description("Product not found"));
+            getProductResponses.addApiResponse("500", new ApiResponse().description("Internal server error"));
+            getProductOp.setResponses(getProductResponses);
+            getProductPath.setGet(getProductOp);
+            paths.addPathItem("/api/products/{id}", getProductPath);
+            
+            // POST /api/products
+            PathItem createOrUpdateProductPath = new PathItem();
+            Operation createOrUpdateProductOp = new Operation();
+            createOrUpdateProductOp.setSummary("Create or update a product");
+            createOrUpdateProductOp.setDescription("Creates a new product or updates an existing one with the provided product details");
+            createOrUpdateProductOp.setOperationId("createOrUpdateProduct");
+            
+            ApiResponses createOrUpdateProductResponses = new ApiResponses();
+            createOrUpdateProductResponses.addApiResponse("201", new ApiResponse().description("Product created/updated successfully"));
+            createOrUpdateProductResponses.addApiResponse("400", new ApiResponse().description("Invalid request data"));
+            createOrUpdateProductResponses.addApiResponse("500", new ApiResponse().description("Internal server error"));
+            createOrUpdateProductOp.setResponses(createOrUpdateProductResponses);
+            createOrUpdateProductOp.setRequestBody(new io.swagger.v3.oas.models.parameters.RequestBody().required(true)
+                .description("Product creation/update request"));
+            createOrUpdateProductPath.setPost(createOrUpdateProductOp);
+            paths.addPathItem("/api/products", createOrUpdateProductPath);
+            
+            // Set the manually built paths
+            openAPI.setPaths(paths);
+            
             return objectMapper.writeValueAsString(openAPI);
         } catch (Exception e) {
             return "{\"error\":\"Failed to generate OpenAPI spec: " + e.getMessage() + "\",\"paths\":{}}";
