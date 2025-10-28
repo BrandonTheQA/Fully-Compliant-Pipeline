@@ -89,7 +89,7 @@ jobs:
           VITE_ORDER_API_URL: https://joaz-func-order-9021-test.azurewebsites.net/api
         run: npm run build
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ui-build
           path: ui/dist
@@ -663,7 +663,7 @@ jobs:
       name: Stage
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ui-build
           path: ui/dist
@@ -851,7 +851,7 @@ jobs:
       name: Production
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: ui-build
           path: ui/dist
