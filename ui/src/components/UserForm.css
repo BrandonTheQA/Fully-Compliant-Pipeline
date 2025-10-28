@@ -1,0 +1,35 @@
+.user-form-container {
+  background-color: var(--bg-color);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.user-form-container h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+}
+
+.user-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-info {
+  text-align: center;
+}
+
+.user-info h2 {
+  margin-bottom: 1rem;
+}
+
+.user-info p {
+  margin-bottom: 0.5rem;
+}
+
+.user-info button {
+  margin-top: 1rem;
+}
+
