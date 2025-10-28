@@ -288,6 +288,34 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Create UI App Service if it doesn't exist
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest
+          inlineScript: |
+            # Check if the app service already exists
+            if ! az webapp show --name joaz-ui-9021-dev --resource-group brandon &>/dev/null; then
+              echo "Creating UI App Service joaz-ui-9021-dev..."
+              az webapp create \
+                --name joaz-ui-9021-dev \
+                --resource-group brandon \
+                --plan asp-joaz-func-helloworld-9021-dev \
+                --runtime "NODE:18-lts"
+              
+              # Configure the webapp for static site hosting
+              az webapp config set \
+                --name joaz-ui-9021-dev \
+                --resource-group brandon \
+                --always-on true
+              
+              # Set the startup command
+              az webapp config set \
+                --name joaz-ui-9021-dev \
+                --resource-group brandon \
+                --startup-file "npm install -g serve && serve -s . -p 8080"
+            else
+              echo "UI App Service joaz-ui-9021-dev already exists, skipping creation."
+            fi
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -478,6 +506,34 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Create UI App Service if it doesn't exist
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest
+          inlineScript: |
+            # Check if the app service already exists
+            if ! az webapp show --name joaz-ui-9021-test --resource-group brandon-test &>/dev/null; then
+              echo "Creating UI App Service joaz-ui-9021-test..."
+              az webapp create \
+                --name joaz-ui-9021-test \
+                --resource-group brandon-test \
+                --plan asp-joaz-func-helloworld-9021-test \
+                --runtime "NODE:18-lts"
+              
+              # Configure the webapp for static site hosting
+              az webapp config set \
+                --name joaz-ui-9021-test \
+                --resource-group brandon-test \
+                --always-on true
+              
+              # Set the startup command
+              az webapp config set \
+                --name joaz-ui-9021-test \
+                --resource-group brandon-test \
+                --startup-file "npm install -g serve && serve -s . -p 8080"
+            else
+              echo "UI App Service joaz-ui-9021-test already exists, skipping creation."
+            fi
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -671,6 +727,34 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Create UI App Service if it doesn't exist
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest
+          inlineScript: |
+            # Check if the app service already exists
+            if ! az webapp show --name joaz-ui-9021-stage --resource-group brandon-stage &>/dev/null; then
+              echo "Creating UI App Service joaz-ui-9021-stage..."
+              az webapp create \
+                --name joaz-ui-9021-stage \
+                --resource-group brandon-stage \
+                --plan asp-joaz-func-helloworld-9021-stage \
+                --runtime "NODE:18-lts"
+              
+              # Configure the webapp for static site hosting
+              az webapp config set \
+                --name joaz-ui-9021-stage \
+                --resource-group brandon-stage \
+                --always-on true
+              
+              # Set the startup command
+              az webapp config set \
+                --name joaz-ui-9021-stage \
+                --resource-group brandon-stage \
+                --startup-file "npm install -g serve && serve -s . -p 8080"
+            else
+              echo "UI App Service joaz-ui-9021-stage already exists, skipping creation."
+            fi
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
@@ -859,6 +943,34 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Create UI App Service if it doesn't exist
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest
+          inlineScript: |
+            # Check if the app service already exists
+            if ! az webapp show --name joaz-ui-9021-prod --resource-group brandon-prod &>/dev/null; then
+              echo "Creating UI App Service joaz-ui-9021-prod..."
+              az webapp create \
+                --name joaz-ui-9021-prod \
+                --resource-group brandon-prod \
+                --plan asp-joaz-func-helloworld-9021-prod \
+                --runtime "NODE:18-lts"
+              
+              # Configure the webapp for static site hosting
+              az webapp config set \
+                --name joaz-ui-9021-prod \
+                --resource-group brandon-prod \
+                --always-on true
+              
+              # Set the startup command
+              az webapp config set \
+                --name joaz-ui-9021-prod \
+                --resource-group brandon-prod \
+                --startup-file "npm install -g serve && serve -s . -p 8080"
+            else
+              echo "UI App Service joaz-ui-9021-prod already exists, skipping creation."
+            fi
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
