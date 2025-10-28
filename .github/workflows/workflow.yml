@@ -300,7 +300,7 @@ jobs:
                 --name joaz-ui-9021-dev \
                 --resource-group brandon \
                 --plan asp-joaz-func-helloworld-9021-dev \
-                --runtime "node|18"
+                --runtime "NODE|18LTS"
               
               # Configure the webapp for static site hosting
               az webapp config set \
@@ -518,7 +518,7 @@ jobs:
                 --name joaz-ui-9021-test \
                 --resource-group brandon-test \
                 --plan asp-joaz-func-helloworld-9021-test \
-                --runtime "node|18"
+                --runtime "NODE|18LTS"
               
               # Configure the webapp for static site hosting
               az webapp config set \
@@ -739,7 +739,7 @@ jobs:
                 --name joaz-ui-9021-stage \
                 --resource-group brandon-stage \
                 --plan asp-joaz-func-helloworld-9021-stage \
-                --runtime "node|18"
+                --runtime "NODE|18LTS"
               
               # Configure the webapp for static site hosting
               az webapp config set \
@@ -955,7 +955,7 @@ jobs:
                 --name joaz-ui-9021-prod \
                 --resource-group brandon-prod \
                 --plan asp-joaz-func-helloworld-9021-prod \
-                --runtime "node|18"
+                --runtime "NODE|18LTS"
               
               # Configure the webapp for static site hosting
               az webapp config set \
