@@ -63,6 +63,38 @@ jobs:
           echo "${BUILD_NUMBER}"
           echo "DIST_VERSION=${BUILD_NUMBER}" >> $GITHUB_ENV
 
+  build_ui:
+    name: Build UI
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: ui/package-lock.json
+      - name: Install dependencies
+        working-directory: ./ui
+        run: npm ci --legacy-peer-deps
+      - name: Run tests
+        working-directory: ./ui
+        run: npm test -- --coverage --watchAll=false
+      - name: Build UI
+        working-directory: ./ui
+        env:
+          VITE_USER_API_URL: https://joaz-func-user-9021-test.azurewebsites.net/api
+          VITE_PRODUCT_API_URL: https://joaz-func-product-9021-test.azurewebsites.net/api
+          VITE_ORDER_API_URL: https://joaz-func-order-9021-test.azurewebsites.net/api
+        run: npm run build
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ui-build
+          path: ui/dist
+          retention-days: 7
+
   # security_scans:
   #   name: Security Scans
   #   runs-on: ubuntu-latest
@@ -240,6 +272,52 @@ jobs:
           -Dregion=westus3 \
           clean package azure-functions:deploy
 
+  deploy_ui_dev:
+    name: Deploy UI to Dev
+    runs-on: ubuntu-latest
+    needs:
+      - build_ui
+      - verify_toggles
+      - analyze
+    environment:
+      name: Dev
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        working-directory: ./ui
+        run: npm ci --legacy-peer-deps
+      - name: Build UI for Dev environment
+        working-directory: ./ui
+        env:
+          VITE_USER_API_URL: https://joaz-func-user-9021-dev.azurewebsites.net/api
+          VITE_PRODUCT_API_URL: https://joaz-func-product-9021-dev.azurewebsites.net/api
+          VITE_ORDER_API_URL: https://joaz-func-order-9021-dev.azurewebsites.net/api
+        run: npm run build
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'joaz-ui-9021-dev'
+          package: ./ui/dist
+          startup-command: 'npm install -g serve && serve -s . -p 8080'
+      - name: Configure App Settings
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az webapp config appsettings set --name joaz-ui-9021-dev --resource-group brandon --settings \
+              VITE_USER_API_URL=https://joaz-func-user-9021-dev.azurewebsites.net/api \
+              VITE_PRODUCT_API_URL=https://joaz-func-product-9021-dev.azurewebsites.net/api \
+              VITE_ORDER_API_URL=https://joaz-func-order-9021-dev.azurewebsites.net/api
+
   smoke_test_dev:
     name: Smoke Test for Dev (${{ matrix.app }})
     needs: 
@@ -384,6 +462,51 @@ jobs:
           -DresourceGroup=brandon-test \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
+
+  deploy_ui_test:
+    name: Deploy UI to Test
+    runs-on: ubuntu-latest
+    needs:
+      - build_ui
+      - integration_tests_dev
+    environment:
+      name: Test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        working-directory: ./ui
+        run: npm ci --legacy-peer-deps
+      - name: Build UI for Test environment
+        working-directory: ./ui
+        env:
+          VITE_USER_API_URL: https://joaz-func-user-9021-test.azurewebsites.net/api
+          VITE_PRODUCT_API_URL: https://joaz-func-product-9021-test.azurewebsites.net/api
+          VITE_ORDER_API_URL: https://joaz-func-order-9021-test.azurewebsites.net/api
+        run: npm run build
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'joaz-ui-9021-test'
+          package: ./ui/dist
+          startup-command: 'npm install -g serve && serve -s . -p 8080'
+      - name: Configure App Settings
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az webapp config appsettings set --name joaz-ui-9021-test --resource-group brandon-test --settings \
+              VITE_USER_API_URL=https://joaz-func-user-9021-test.azurewebsites.net/api \
+              VITE_PRODUCT_API_URL=https://joaz-func-product-9021-test.azurewebsites.net/api \
+              VITE_ORDER_API_URL=https://joaz-func-order-9021-test.azurewebsites.net/api
 
   smoke_test_test:
     name: Smoke Test for Test (${{ matrix.app }})
@@ -530,6 +653,54 @@ jobs:
           -Dregion=eastus2 \
           clean package azure-functions:deploy
 
+  deploy_ui_stage:
+    name: Deploy UI to Stage
+    runs-on: ubuntu-latest
+    needs:
+      - build_ui
+      - integration_tests
+    environment:
+      name: Stage
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ui-build
+          path: ui/dist
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        working-directory: ./ui
+        run: npm ci --legacy-peer-deps
+      - name: Build UI for Stage environment
+        working-directory: ./ui
+        env:
+          VITE_USER_API_URL: https://joaz-func-user-9021-stage.azurewebsites.net/api
+          VITE_PRODUCT_API_URL: https://joaz-func-product-9021-stage.azurewebsites.net/api
+          VITE_ORDER_API_URL: https://joaz-func-order-9021-stage.azurewebsites.net/api
+        run: npm run build
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'joaz-ui-9021-stage'
+          package: ./ui/dist
+          startup-command: 'npm install -g serve && serve -s . -p 8080'
+      - name: Configure App Settings
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az webapp config appsettings set --name joaz-ui-9021-stage --resource-group brandon-stage --settings \
+              VITE_USER_API_URL=https://joaz-func-user-9021-stage.azurewebsites.net/api \
+              VITE_PRODUCT_API_URL=https://joaz-func-product-9021-stage.azurewebsites.net/api \
+              VITE_ORDER_API_URL=https://joaz-func-order-9021-stage.azurewebsites.net/api
+
   smoke_test_stage:
     name: Smoke Test for Stage (${{ matrix.app }})
     needs: 
@@ -669,6 +840,54 @@ jobs:
           -DresourceGroup=brandon-prod \
           -Dregion=eastus2 \
           clean package azure-functions:deploy
+
+  deploy_ui_production:
+    name: Deploy UI to Production
+    runs-on: ubuntu-latest
+    needs:
+      - build_ui
+      - stage_production_build
+    environment:
+      name: Production
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ui-build
+          path: ui/dist
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        working-directory: ./ui
+        run: npm ci --legacy-peer-deps
+      - name: Build UI for Production environment
+        working-directory: ./ui
+        env:
+          VITE_USER_API_URL: https://joaz-func-user-9021-prod.azurewebsites.net/api
+          VITE_PRODUCT_API_URL: https://joaz-func-product-9021-prod.azurewebsites.net/api
+          VITE_ORDER_API_URL: https://joaz-func-order-9021-prod.azurewebsites.net/api
+        run: npm run build
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'joaz-ui-9021-prod'
+          package: ./ui/dist
+          startup-command: 'npm install -g serve && serve -s . -p 8080'
+      - name: Configure App Settings
+        uses: azure/CLI@v1
+        with:
+          azcliversion: latest
+          inlineScript: |
+            az webapp config appsettings set --name joaz-ui-9021-prod --resource-group brandon-prod --settings \
+              VITE_USER_API_URL=https://joaz-func-user-9021-prod.azurewebsites.net/api \
+              VITE_PRODUCT_API_URL=https://joaz-func-product-9021-prod.azurewebsites.net/api \
+              VITE_ORDER_API_URL=https://joaz-func-order-9021-prod.azurewebsites.net/api
 
   smoke_test_production:
     name: Smoke Test for Production (${{ matrix.app }})

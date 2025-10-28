@@ -1,0 +1,22 @@
+.product-form-container {
+  background-color: var(--bg-color);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.product-form-container h2 {
+  margin-bottom: 1.5rem;
+}
+
+.product-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
