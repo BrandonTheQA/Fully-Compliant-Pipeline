@@ -23,7 +23,7 @@ jobs:
           matrix=$(echo $apps | jq -c '{include: [.[] | {
             app: .,
             "working-dir": ("./api/functionapp/" + .),
-            "function-app-name-dev": ("joaz-func-" + . + "-9021-dev"),
+            "function-app-name-dev": ("ASP-POC-" + . + "-7029-dev"),
             "function-app-name-test": ("joaz-func-" + . + "-9021-test"),
             "function-app-name-stage": ("joaz-func-" + . + "-9021-stage"),
             "function-app-name-prod": ("joaz-func-" + . + "-9021-prod"),
