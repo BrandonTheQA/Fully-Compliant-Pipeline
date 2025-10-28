@@ -1,10 +1,10 @@
+/// <reference types="@testing-library/jest-dom" />
 import React from 'react';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
 import { act } from 'react';
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { AppProvider, useAppContext } from '../AppContext';
-import type { User, Product } from '../../types';
 
 const TestComponent: React.FC = () => {
   const { user, cart, setUser, addToCart, removeFromCart, clearCart } = useAppContext();

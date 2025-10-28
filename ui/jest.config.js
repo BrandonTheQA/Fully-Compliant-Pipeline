@@ -10,15 +10,7 @@ export default {
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: {
-        jsx: 'react-jsx',
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-        module: 'commonjs',
-        moduleResolution: 'node',
-        target: 'es2015',
-        types: ['jest', '@testing-library/jest-dom'],
-      },
+      tsconfig: 'tsconfig.jest.json',
     }],
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],

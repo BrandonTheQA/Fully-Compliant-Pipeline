@@ -1,3 +1,4 @@
+/// <reference types="@testing-library/jest-dom" />
 import React from 'react';
 import { describe, it, expect } from '@jest/globals';
 import { render } from '@testing-library/react';
@@ -45,10 +46,17 @@ describe('OrderDetails', () => {
 
     expect(screen.getByText('Laptop')).toBeInTheDocument();
     expect(screen.getByText('Mouse')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument();
+    
+    // Check quantities - use getAllByText since there might be multiple "1" values
+    const quantities = screen.getAllByText('1');
+    expect(quantities.length).toBeGreaterThan(0);
     expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('$999.99')).toBeInTheDocument();
-    expect(screen.getByText('$29.99')).toBeInTheDocument();
+    
+    // Check prices - use getAllByText for prices since they appear in multiple cells
+    const laptopPrices = screen.getAllByText('$999.99');
+    expect(laptopPrices.length).toBeGreaterThan(0);
+    const mousePrices = screen.getAllByText('$29.99');
+    expect(mousePrices.length).toBeGreaterThan(0);
   });
 
   it('should render formatted date', () => {

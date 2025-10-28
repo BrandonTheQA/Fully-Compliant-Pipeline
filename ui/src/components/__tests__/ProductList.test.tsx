@@ -1,3 +1,4 @@
+/// <reference types="@testing-library/jest-dom" />
 import React from 'react';
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render } from '@testing-library/react';
@@ -5,6 +6,7 @@ import { screen, waitFor } from '@testing-library/dom';
 import { ProductList } from '../ProductList';
 import { AppProvider } from '../../context/AppContext';
 import { productService } from '../../services/productService';
+import type { Product } from '../../types';
 
 jest.mock('../../services/productService');
 
@@ -18,7 +20,7 @@ describe('ProductList', () => {
   });
 
   it('should render loading state', () => {
-    (productService.getAllProducts as jest.Mock).mockImplementation(
+    (productService.getAllProducts as jest.MockedFunction<typeof productService.getAllProducts>).mockImplementation(
       () => new Promise(() => {})
     );
 
@@ -46,7 +48,7 @@ describe('ProductList', () => {
       },
     ];
 
-    (productService.getAllProducts as jest.Mock).mockResolvedValue(mockProducts);
+    (productService.getAllProducts as jest.MockedFunction<typeof productService.getAllProducts>).mockResolvedValue(mockProducts);
 
     renderWithProvider(<ProductList />);
 
@@ -60,7 +62,7 @@ describe('ProductList', () => {
 
   it('should show error message on failure', async () => {
     const error = new Error('Failed to load products');
-    (productService.getAllProducts as jest.Mock).mockRejectedValue(error);
+    (productService.getAllProducts as jest.MockedFunction<typeof productService.getAllProducts>).mockRejectedValue(error);
 
     renderWithProvider(<ProductList />);
 
@@ -71,7 +73,7 @@ describe('ProductList', () => {
   });
 
   it('should show empty state when no products', async () => {
-    (productService.getAllProducts as jest.Mock).mockResolvedValue([]);
+    (productService.getAllProducts as jest.MockedFunction<typeof productService.getAllProducts>).mockResolvedValue([]);
 
     renderWithProvider(<ProductList />);
 
