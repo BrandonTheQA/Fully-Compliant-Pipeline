@@ -36,7 +36,8 @@ public class UserFunctions
             if (string.IsNullOrEmpty(requestBody))
             {
                 var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequestResponse.WriteAsJsonAsync(new { error = "Request body is required" }, _jsonOptions);
+                badRequestResponse.Headers.Add("Content-Type", "application/json");
+                await badRequestResponse.WriteStringAsync(JsonSerializer.Serialize(new { error = "Request body is required" }, _jsonOptions));
                 return badRequestResponse;
             }
 
@@ -44,27 +45,31 @@ public class UserFunctions
             if (createRequest == null)
             {
                 var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequestResponse.WriteAsJsonAsync(new { error = "Invalid request body" }, _jsonOptions);
+                badRequestResponse.Headers.Add("Content-Type", "application/json");
+                await badRequestResponse.WriteStringAsync(JsonSerializer.Serialize(new { error = "Invalid request body" }, _jsonOptions));
                 return badRequestResponse;
             }
 
             var user = _userService.CreateUser(createRequest);
             var response = req.CreateResponse(HttpStatusCode.Created);
-            await response.WriteAsJsonAsync(user, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(user, _jsonOptions));
             return response;
         }
         catch (UserAlreadyExistsException ex)
         {
             _logger.LogWarning(ex, "User already exists");
             var response = req.CreateResponse(HttpStatusCode.Conflict);
-            await response.WriteAsJsonAsync(new { error = ex.Message }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = ex.Message }, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating user");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -78,21 +83,24 @@ public class UserFunctions
         {
             var user = _userService.GetUser(id);
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(user, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(user, _jsonOptions));
             return response;
         }
         catch (UserNotFoundException ex)
         {
             _logger.LogWarning(ex, "User not found: {UserId}", id);
             var response = req.CreateResponse(HttpStatusCode.NotFound);
-            await response.WriteAsJsonAsync(new { error = ex.Message }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = ex.Message }, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving user: {UserId}", id);
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -107,7 +115,8 @@ public class UserFunctions
             if (string.IsNullOrEmpty(requestBody))
             {
                 var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequestResponse.WriteAsJsonAsync(new { error = "Request body is required" }, _jsonOptions);
+                badRequestResponse.Headers.Add("Content-Type", "application/json");
+                await badRequestResponse.WriteStringAsync(JsonSerializer.Serialize(new { error = "Request body is required" }, _jsonOptions));
                 return badRequestResponse;
             }
 
@@ -115,27 +124,31 @@ public class UserFunctions
             if (loginRequest == null)
             {
                 var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequestResponse.WriteAsJsonAsync(new { error = "Invalid request body" }, _jsonOptions);
+                badRequestResponse.Headers.Add("Content-Type", "application/json");
+                await badRequestResponse.WriteStringAsync(JsonSerializer.Serialize(new { error = "Invalid request body" }, _jsonOptions));
                 return badRequestResponse;
             }
 
             var loginResponse = _userService.Login(loginRequest);
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(loginResponse, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(loginResponse, _jsonOptions));
             return response;
         }
         catch (AuthenticationException ex)
         {
             _logger.LogWarning(ex, "Authentication failed");
             var response = req.CreateResponse(HttpStatusCode.Unauthorized);
-            await response.WriteAsJsonAsync(new { error = ex.Message }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = ex.Message }, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during login");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -147,14 +160,16 @@ public class UserFunctions
         try
         {
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(new { status = "UP" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { status = "UP" }, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Health check failed");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { status = "DOWN", error = $"Health check failed: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { status = "DOWN", error = $"Health check failed: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -246,14 +261,15 @@ public class UserFunctions
                 .Replace("__409", "409")
                 .Replace("__500", "500");
                 
-            await response.WriteStringAsync(json);
+                await response.WriteStringAsync(json);
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating OpenAPI spec");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Failed to load API docs: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Failed to load API docs: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -303,7 +319,7 @@ public class UserFunctions
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "text/html; charset=utf-8");
-            await response.WriteStringAsync(swaggerHtml);
+                await response.WriteStringAsync(swaggerHtml);
             return response;
         }
         catch (Exception ex)
@@ -311,7 +327,7 @@ public class UserFunctions
             _logger.LogError(ex, "Error generating Swagger UI");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
             response.Headers.Add("Content-Type", "text/html");
-            await response.WriteStringAsync($"<html><body><h1>Error</h1><p>Failed to load Swagger UI: {ex.Message}</p></body></html>");
+                await response.WriteStringAsync($"<html><body><h1>Error</h1><p>Failed to load Swagger UI: {ex.Message}</p></body></html>");
             return response;
         }
     }

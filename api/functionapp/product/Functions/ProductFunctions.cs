@@ -34,14 +34,16 @@ public class ProductFunctions
         {
             var products = _productService.GetAllProducts();
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(products, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(products, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving all products");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -55,21 +57,24 @@ public class ProductFunctions
         {
             var product = _productService.GetProduct(id);
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(product, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(product, _jsonOptions));
             return response;
         }
         catch (ProductNotFoundException ex)
         {
             _logger.LogWarning(ex, "Product not found: {ProductId}", id);
             var response = req.CreateResponse(HttpStatusCode.NotFound);
-            await response.WriteAsJsonAsync(new { error = ex.Message }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = ex.Message }, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving product: {ProductId}", id);
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -84,7 +89,8 @@ public class ProductFunctions
             if (string.IsNullOrEmpty(requestBody))
             {
                 var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequestResponse.WriteAsJsonAsync(new { error = "Request body is required" }, _jsonOptions);
+                badRequestResponse.Headers.Add("Content-Type", "application/json");
+                await badRequestResponse.WriteStringAsync(JsonSerializer.Serialize(new { error = "Request body is required" }, _jsonOptions));
                 return badRequestResponse;
             }
 
@@ -92,27 +98,31 @@ public class ProductFunctions
             if (createRequest == null)
             {
                 var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequestResponse.WriteAsJsonAsync(new { error = "Invalid request body" }, _jsonOptions);
+                badRequestResponse.Headers.Add("Content-Type", "application/json");
+                await badRequestResponse.WriteStringAsync(JsonSerializer.Serialize(new { error = "Invalid request body" }, _jsonOptions));
                 return badRequestResponse;
             }
 
             var product = _productService.CreateOrUpdateProduct(createRequest);
             var response = req.CreateResponse(HttpStatusCode.Created);
-            await response.WriteAsJsonAsync(product, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(product, _jsonOptions));
             return response;
         }
         catch (ProductNotFoundException ex)
         {
             _logger.LogWarning(ex, "Product not found for update");
             var response = req.CreateResponse(HttpStatusCode.NotFound);
-            await response.WriteAsJsonAsync(new { error = ex.Message }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = ex.Message }, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating/updating product");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -124,14 +134,16 @@ public class ProductFunctions
         try
         {
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(new { status = "UP" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { status = "UP" }, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Health check failed");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { status = "DOWN", error = $"Health check failed: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { status = "DOWN", error = $"Health check failed: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -214,14 +226,15 @@ public class ProductFunctions
                 .Replace("__404", "404")
                 .Replace("__500", "500");
                 
-            await response.WriteStringAsync(json);
+                await response.WriteStringAsync(json);
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating OpenAPI spec");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Failed to load API docs: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+                await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Failed to load API docs: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -271,7 +284,7 @@ public class ProductFunctions
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "text/html; charset=utf-8");
-            await response.WriteStringAsync(swaggerHtml);
+                await response.WriteStringAsync(swaggerHtml);
             return response;
         }
         catch (Exception ex)
@@ -279,7 +292,7 @@ public class ProductFunctions
             _logger.LogError(ex, "Error generating Swagger UI");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
             response.Headers.Add("Content-Type", "text/html");
-            await response.WriteStringAsync($"<html><body><h1>Error</h1><p>Failed to load Swagger UI: {ex.Message}</p></body></html>");
+                await response.WriteStringAsync($"<html><body><h1>Error</h1><p>Failed to load Swagger UI: {ex.Message}</p></body></html>");
             return response;
         }
     }

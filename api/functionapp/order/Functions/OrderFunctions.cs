@@ -36,7 +36,8 @@ public class OrderFunctions
             if (string.IsNullOrEmpty(requestBody))
             {
                 var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequestResponse.WriteAsJsonAsync(new { error = "Request body is required" }, _jsonOptions);
+                badRequestResponse.Headers.Add("Content-Type", "application/json");
+                await badRequestResponse.WriteStringAsync(JsonSerializer.Serialize(new { error = "Request body is required" }, _jsonOptions));
                 return badRequestResponse;
             }
 
@@ -44,34 +45,39 @@ public class OrderFunctions
             if (createRequest == null)
             {
                 var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-                await badRequestResponse.WriteAsJsonAsync(new { error = "Invalid request body" }, _jsonOptions);
+                badRequestResponse.Headers.Add("Content-Type", "application/json");
+                await badRequestResponse.WriteStringAsync(JsonSerializer.Serialize(new { error = "Invalid request body" }, _jsonOptions));
                 return badRequestResponse;
             }
 
             var order = await _orderService.CreateOrderAsync(createRequest);
             var response = req.CreateResponse(HttpStatusCode.Created);
-            await response.WriteAsJsonAsync(order, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(order, _jsonOptions));
             return response;
         }
         catch (OrderValidationException ex)
         {
             _logger.LogWarning(ex, "Order validation failed");
             var response = req.CreateResponse(HttpStatusCode.BadRequest);
-            await response.WriteAsJsonAsync(new { error = ex.Message }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(new { error = ex.Message }, _jsonOptions));
             return response;
         }
         catch (ServiceUnavailableException ex)
         {
             _logger.LogError(ex, "External service unavailable");
             var response = req.CreateResponse(HttpStatusCode.ServiceUnavailable);
-            await response.WriteAsJsonAsync(new { error = ex.Message }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(new { error = ex.Message }, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating order");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -85,21 +91,24 @@ public class OrderFunctions
         {
             var order = _orderService.GetOrder(id);
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(order, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(order, _jsonOptions));
             return response;
         }
         catch (OrderNotFoundException ex)
         {
             _logger.LogWarning(ex, "Order not found: {OrderId}", id);
             var response = req.CreateResponse(HttpStatusCode.NotFound);
-            await response.WriteAsJsonAsync(new { error = ex.Message }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(new { error = ex.Message }, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving order: {OrderId}", id);
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -113,14 +122,16 @@ public class OrderFunctions
         {
             var orders = _orderService.GetUserOrders(userId);
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(orders, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(orders, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving orders for user: {UserId}", userId);
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Internal server error: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -132,14 +143,16 @@ public class OrderFunctions
         try
         {
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(new { status = "UP" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(new { status = "UP" }, _jsonOptions));
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Health check failed");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { status = "DOWN", error = $"Health check failed: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(new { status = "DOWN", error = $"Health check failed: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
@@ -237,7 +250,8 @@ public class OrderFunctions
         {
             _logger.LogError(ex, "Error generating OpenAPI spec");
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await response.WriteAsJsonAsync(new { error = $"Failed to load API docs: {ex.Message}" }, _jsonOptions);
+            response.Headers.Add("Content-Type", "application/json");
+            await response.WriteStringAsync(JsonSerializer.Serialize(new { error = $"Failed to load API docs: {ex.Message}" }, _jsonOptions));
             return response;
         }
     }
