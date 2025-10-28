@@ -1,16 +1,15 @@
 /// <reference types="@testing-library/jest-dom" />
-import React from 'react';
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render } from '@testing-library/react';
 import { screen, waitFor } from '@testing-library/dom';
+import type { ReactElement } from 'react';
 import { ProductList } from '../ProductList';
 import { AppProvider } from '../../context/AppContext';
 import { productService } from '../../services/productService';
-import type { Product } from '../../types';
 
 jest.mock('../../services/productService');
 
-const renderWithProvider = (component: React.ReactElement) => {
+const renderWithProvider = (component: ReactElement) => {
   return render(<AppProvider>{component}</AppProvider>);
 };
 
