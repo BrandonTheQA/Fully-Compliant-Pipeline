@@ -236,6 +236,12 @@ jobs:
           azcliversion: latest
           inlineScript: |
             az account show
+      - name: Configure Function App Runtime
+        run: |
+          az functionapp config appsettings set \
+            --name ${{ matrix.function-app-name-dev }} \
+            --resource-group brandon \
+            --settings FUNCTIONS_WORKER_RUNTIME=dotnet-isolated
       - name: Build and Publish Function App
         working-directory: ${{ matrix.working-dir }}
         run: |
@@ -248,6 +254,8 @@ jobs:
           app-name: ${{ matrix.function-app-name-dev }}
           package: ${{ matrix.working-dir }}/publish
           respect-funcignore: true
+          scm-do-build-during-deployment: false
+          enable-oryx-build: false
 
   smoke_test_dev:
     name: Smoke Test for Dev (${{ matrix.app }})
@@ -331,6 +339,8 @@ jobs:
           app-name: ${{ matrix.function-app-name-test }}
           package: ${{ matrix.working-dir }}/publish
           respect-funcignore: true
+          scm-do-build-during-deployment: false
+          enable-oryx-build: false
 
   smoke_test_test:
     name: Smoke Test for Test (${{ matrix.app }})
@@ -473,6 +483,8 @@ jobs:
           app-name: ${{ matrix.function-app-name-stage }}
           package: ${{ matrix.working-dir }}/publish
           respect-funcignore: true
+          scm-do-build-during-deployment: false
+          enable-oryx-build: false
 
   smoke_test_stage:
     name: Smoke Test for Stage (${{ matrix.app }})
@@ -615,6 +627,8 @@ jobs:
           app-name: ${{ matrix.function-app-name-prod }}
           package: ${{ matrix.working-dir }}/publish
           respect-funcignore: true
+          scm-do-build-during-deployment: false
+          enable-oryx-build: false
 
   smoke_test_production:
     name: Smoke Test for Production (${{ matrix.app }})
