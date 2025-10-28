@@ -296,9 +296,9 @@ jobs:
             # Check if the app service already exists
             if ! az webapp show --name joaz-ui-9021-dev --resource-group brandon &>/dev/null; then
               echo "Creating UI App Service joaz-ui-9021-dev..."
-              # Get available Node.js runtimes for Windows and use the first one found
-              echo "Checking available Node.js runtimes for Windows..."
-              NODE_RUNTIME=$(az webapp list-runtimes --os-type windows --query "[?starts_with(@, 'NODE') || starts_with(@, 'node')]" -o tsv | head -n1)
+              # Get available Node.js runtimes for Linux and use the first one found
+              echo "Checking available Node.js runtimes for Linux..."
+              NODE_RUNTIME=$(az webapp list-runtimes --os-type linux --query "[?starts_with(@, 'NODE') || starts_with(@, 'node')]" -o tsv | head -n1)
               
               # If no NODE runtime found, try without specifying runtime (will use default)
               if [ -z "$NODE_RUNTIME" ] || [ "$NODE_RUNTIME" = "" ]; then
@@ -528,9 +528,9 @@ jobs:
             # Check if the app service already exists
             if ! az webapp show --name joaz-ui-9021-test --resource-group brandon-test &>/dev/null; then
               echo "Creating UI App Service joaz-ui-9021-test..."
-              # Get available Node.js runtimes for Windows and use the first one found
-              echo "Checking available Node.js runtimes for Windows..."
-              NODE_RUNTIME=$(az webapp list-runtimes --os-type windows --query "[?starts_with(@, 'NODE') || starts_with(@, 'node')]" -o tsv | head -n1)
+              # Get available Node.js runtimes for Linux and use the first one found
+              echo "Checking available Node.js runtimes for Linux..."
+              NODE_RUNTIME=$(az webapp list-runtimes --os-type linux --query "[?starts_with(@, 'NODE') || starts_with(@, 'node')]" -o tsv | head -n1)
               
               # If no NODE runtime found, try without specifying runtime (will use default)
               if [ -z "$NODE_RUNTIME" ] || [ "$NODE_RUNTIME" = "" ]; then
@@ -763,9 +763,9 @@ jobs:
             # Check if the app service already exists
             if ! az webapp show --name joaz-ui-9021-stage --resource-group brandon-stage &>/dev/null; then
               echo "Creating UI App Service joaz-ui-9021-stage..."
-              # Get available Node.js runtimes for Windows and use the first one found
-              echo "Checking available Node.js runtimes for Windows..."
-              NODE_RUNTIME=$(az webapp list-runtimes --os-type windows --query "[?starts_with(@, 'NODE') || starts_with(@, 'node')]" -o tsv | head -n1)
+              # Get available Node.js runtimes for Linux and use the first one found
+              echo "Checking available Node.js runtimes for Linux..."
+              NODE_RUNTIME=$(az webapp list-runtimes --os-type linux --query "[?starts_with(@, 'NODE') || starts_with(@, 'node')]" -o tsv | head -n1)
               
               # If no NODE runtime found, try without specifying runtime (will use default)
               if [ -z "$NODE_RUNTIME" ] || [ "$NODE_RUNTIME" = "" ]; then
@@ -993,9 +993,9 @@ jobs:
             # Check if the app service already exists
             if ! az webapp show --name joaz-ui-9021-prod --resource-group brandon-prod &>/dev/null; then
               echo "Creating UI App Service joaz-ui-9021-prod..."
-              # Get available Node.js runtimes for Windows and use the first one found
-              echo "Checking available Node.js runtimes for Windows..."
-              NODE_RUNTIME=$(az webapp list-runtimes --os-type windows --query "[?starts_with(@, 'NODE') || starts_with(@, 'node')]" -o tsv | head -n1)
+              # Get available Node.js runtimes for Linux and use the first one found
+              echo "Checking available Node.js runtimes for Linux..."
+              NODE_RUNTIME=$(az webapp list-runtimes --os-type linux --query "[?starts_with(@, 'NODE') || starts_with(@, 'node')]" -o tsv | head -n1)
               
               # If no NODE runtime found, try without specifying runtime (will use default)
               if [ -z "$NODE_RUNTIME" ] || [ "$NODE_RUNTIME" = "" ]; then
