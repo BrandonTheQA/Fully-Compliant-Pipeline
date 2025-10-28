@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
 import io.swagger.v3.oas.models.OpenAPI;
+import org.springdoc.core.OpenAPIService;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.SpringApplication;
@@ -44,11 +45,53 @@ public class OrderFunctionHandler {
     
     private static String getOpenApiJson() {
         try {
-            // Get OpenAPI bean from Spring context and serialize it to JSON
+            // Try to get SpringDoc's OpenAPIService which builds the complete spec with paths
+            try {
+                OpenAPIService openAPIService = applicationContext.getBean(OpenAPIService.class);
+                // Use reflection to access the built OpenAPI since API methods may vary
+                java.lang.reflect.Method getOpenAPIMethod = null;
+                try {
+                    // Try getOpenAPI() with no parameters first
+                    getOpenAPIMethod = openAPIService.getClass().getMethod("getOpenAPI");
+                } catch (NoSuchMethodException e) {
+                    // Try getOpenAPI(String) with default group
+                    try {
+                        getOpenAPIMethod = openAPIService.getClass().getMethod("getOpenAPI", String.class);
+                        OpenAPI builtOpenAPI = (OpenAPI) getOpenAPIMethod.invoke(openAPIService, "default");
+                        if (builtOpenAPI != null && builtOpenAPI.getPaths() != null && !builtOpenAPI.getPaths().isEmpty()) {
+                            return objectMapper.writeValueAsString(builtOpenAPI);
+                        }
+                    } catch (Exception e2) {
+                        // Try with empty string
+                        try {
+                            OpenAPI builtOpenAPI = (OpenAPI) getOpenAPIMethod.invoke(openAPIService, "");
+                            if (builtOpenAPI != null && builtOpenAPI.getPaths() != null && !builtOpenAPI.getPaths().isEmpty()) {
+                                return objectMapper.writeValueAsString(builtOpenAPI);
+                            }
+                        } catch (Exception e3) {
+                            // Continue to fallback
+                        }
+                    }
+                }
+                
+                // If we found a no-param method, try it
+                if (getOpenAPIMethod != null && getOpenAPIMethod.getParameterCount() == 0) {
+                    OpenAPI builtOpenAPI = (OpenAPI) getOpenAPIMethod.invoke(openAPIService);
+                    if (builtOpenAPI != null && builtOpenAPI.getPaths() != null && !builtOpenAPI.getPaths().isEmpty()) {
+                        return objectMapper.writeValueAsString(builtOpenAPI);
+                    }
+                }
+            } catch (Exception e) {
+                // OpenAPIService might not be available or not built yet
+                // Continue to fallback
+            }
+            
+            // Fallback: Get OpenAPI bean from Spring context (base config only, no paths)
+            // This happens when SpringDoc hasn't built the spec yet because Spring MVC isn't active
             OpenAPI openAPI = applicationContext.getBean(OpenAPI.class);
             return objectMapper.writeValueAsString(openAPI);
         } catch (Exception e) {
-            return "{\"error\":\"Failed to generate OpenAPI spec: " + e.getMessage() + "\"}";
+            return "{\"error\":\"Failed to generate OpenAPI spec: " + e.getMessage() + "\",\"paths\":{}}";
         }
     }
     

@@ -42,3 +42,5 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
     enabled: true
+  packages-to-scan: com.example.controller
+  paths-to-match: /api/**
