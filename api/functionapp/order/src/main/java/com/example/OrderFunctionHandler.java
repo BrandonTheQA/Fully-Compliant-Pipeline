@@ -7,6 +7,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.oas.models.Paths;
 import org.springdoc.core.OpenAPIService;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -86,9 +92,74 @@ public class OrderFunctionHandler {
                 // Continue to fallback
             }
             
-            // Fallback: Get OpenAPI bean from Spring context (base config only, no paths)
-            // This happens when SpringDoc hasn't built the spec yet because Spring MVC isn't active
+            // Manual build: Add paths manually since SpringDoc isn't scanning controllers
             OpenAPI openAPI = applicationContext.getBean(OpenAPI.class);
+            Paths paths = new Paths();
+            
+            // POST /api/orders
+            PathItem createOrderPath = new PathItem();
+            Operation createOrderOp = new Operation();
+            createOrderOp.setSummary("Create a new order");
+            createOrderOp.setDescription("Creates a new order with the provided order details");
+            createOrderOp.setOperationId("createOrder");
+            
+            ApiResponses createOrderResponses = new ApiResponses();
+            createOrderResponses.addApiResponse("201", new ApiResponse().description("Order created successfully"));
+            createOrderResponses.addApiResponse("400", new ApiResponse().description("Invalid request data"));
+            createOrderResponses.addApiResponse("500", new ApiResponse().description("Internal server error"));
+            createOrderOp.setResponses(createOrderResponses);
+            createOrderOp.setRequestBody(new io.swagger.v3.oas.models.parameters.RequestBody().required(true)
+                .description("Order creation request"));
+            createOrderPath.setPost(createOrderOp);
+            paths.addPathItem("/api/orders", createOrderPath);
+            
+            // GET /api/orders/{id}
+            PathItem getOrderPath = new PathItem();
+            Operation getOrderOp = new Operation();
+            getOrderOp.setSummary("Get order by ID");
+            getOrderOp.setDescription("Retrieves order details for the specified order ID");
+            getOrderOp.setOperationId("getOrder");
+            
+            Parameter idParam = new Parameter();
+            idParam.setName("id");
+            idParam.setIn("path");
+            idParam.setRequired(true);
+            idParam.setDescription("Order ID");
+            getOrderOp.addParametersItem(idParam);
+            
+            ApiResponses getOrderResponses = new ApiResponses();
+            getOrderResponses.addApiResponse("200", new ApiResponse().description("Order found"));
+            getOrderResponses.addApiResponse("404", new ApiResponse().description("Order not found"));
+            getOrderResponses.addApiResponse("500", new ApiResponse().description("Internal server error"));
+            getOrderOp.setResponses(getOrderResponses);
+            getOrderPath.setGet(getOrderOp);
+            paths.addPathItem("/api/orders/{id}", getOrderPath);
+            
+            // GET /api/orders/user/{userId}
+            PathItem getUserOrdersPath = new PathItem();
+            Operation getUserOrdersOp = new Operation();
+            getUserOrdersOp.setSummary("Get user orders");
+            getUserOrdersOp.setDescription("Retrieves all orders for the specified user ID");
+            getUserOrdersOp.setOperationId("getUserOrders");
+            
+            Parameter userIdParam = new Parameter();
+            userIdParam.setName("userId");
+            userIdParam.setIn("path");
+            userIdParam.setRequired(true);
+            userIdParam.setDescription("User ID");
+            getUserOrdersOp.addParametersItem(userIdParam);
+            
+            ApiResponses getUserOrdersResponses = new ApiResponses();
+            getUserOrdersResponses.addApiResponse("200", new ApiResponse().description("Orders retrieved successfully"));
+            getUserOrdersResponses.addApiResponse("404", new ApiResponse().description("User not found"));
+            getUserOrdersResponses.addApiResponse("500", new ApiResponse().description("Internal server error"));
+            getUserOrdersOp.setResponses(getUserOrdersResponses);
+            getUserOrdersPath.setGet(getUserOrdersOp);
+            paths.addPathItem("/api/orders/user/{userId}", getUserOrdersPath);
+            
+            // Set the manually built paths
+            openAPI.setPaths(paths);
+            
             return objectMapper.writeValueAsString(openAPI);
         } catch (Exception e) {
             return "{\"error\":\"Failed to generate OpenAPI spec: " + e.getMessage() + "\",\"paths\":{}}";

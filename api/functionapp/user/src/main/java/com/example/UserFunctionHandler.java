@@ -9,6 +9,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
 import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.PathItem;
+import io.swagger.v3.oas.models.Operation;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import io.swagger.v3.oas.models.responses.ApiResponse;
+import io.swagger.v3.oas.models.responses.ApiResponses;
+import io.swagger.v3.oas.models.Paths;
 import org.springdoc.core.OpenAPIService;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -90,9 +96,71 @@ public class UserFunctionHandler {
                 // Continue to fallback
             }
             
-            // Fallback: Get OpenAPI bean from Spring context (base config only, no paths)
-            // This happens when SpringDoc hasn't built the spec yet because Spring MVC isn't active
+            // Manual build: Add paths manually since SpringDoc isn't scanning controllers
             OpenAPI openAPI = applicationContext.getBean(OpenAPI.class);
+            Paths paths = new Paths();
+            
+            // POST /api/users
+            PathItem createUserPath = new PathItem();
+            Operation createUserOp = new Operation();
+            createUserOp.setSummary("Create a new user");
+            createUserOp.setDescription("Creates a new user account with the provided user details");
+            createUserOp.setOperationId("createUser");
+            
+            ApiResponses createUserResponses = new ApiResponses();
+            createUserResponses.addApiResponse("201", new ApiResponse().description("User created successfully"));
+            createUserResponses.addApiResponse("400", new ApiResponse().description("Invalid request data"));
+            createUserResponses.addApiResponse("409", new ApiResponse().description("User already exists"));
+            createUserResponses.addApiResponse("500", new ApiResponse().description("Internal server error"));
+            createUserOp.setResponses(createUserResponses);
+            createUserOp.setRequestBody(new io.swagger.v3.oas.models.parameters.RequestBody().required(true)
+                .description("User creation request"));
+            createUserPath.setPost(createUserOp);
+            paths.addPathItem("/api/users", createUserPath);
+            
+            // GET /api/users/{id}
+            PathItem getUserPath = new PathItem();
+            Operation getUserOp = new Operation();
+            getUserOp.setSummary("Get user by ID");
+            getUserOp.setDescription("Retrieves user profile details for the specified user ID");
+            getUserOp.setOperationId("getUser");
+            
+            Parameter idParam = new Parameter();
+            idParam.setName("id");
+            idParam.setIn("path");
+            idParam.setRequired(true);
+            idParam.setDescription("User ID");
+            getUserOp.addParametersItem(idParam);
+            
+            ApiResponses getUserResponses = new ApiResponses();
+            getUserResponses.addApiResponse("200", new ApiResponse().description("User found"));
+            getUserResponses.addApiResponse("404", new ApiResponse().description("User not found"));
+            getUserResponses.addApiResponse("500", new ApiResponse().description("Internal server error"));
+            getUserOp.setResponses(getUserResponses);
+            getUserPath.setGet(getUserOp);
+            paths.addPathItem("/api/users/{id}", getUserPath);
+            
+            // POST /api/login
+            PathItem loginPath = new PathItem();
+            Operation loginOp = new Operation();
+            loginOp.setSummary("User login");
+            loginOp.setDescription("Authenticates a user with email and password, returns login token on success");
+            loginOp.setOperationId("login");
+            
+            ApiResponses loginResponses = new ApiResponses();
+            loginResponses.addApiResponse("200", new ApiResponse().description("Login successful"));
+            loginResponses.addApiResponse("401", new ApiResponse().description("Invalid credentials"));
+            loginResponses.addApiResponse("400", new ApiResponse().description("Invalid request data"));
+            loginResponses.addApiResponse("500", new ApiResponse().description("Internal server error"));
+            loginOp.setResponses(loginResponses);
+            loginOp.setRequestBody(new io.swagger.v3.oas.models.parameters.RequestBody().required(true)
+                .description("Login credentials"));
+            loginPath.setPost(loginOp);
+            paths.addPathItem("/api/login", loginPath);
+            
+            // Set the manually built paths
+            openAPI.setPaths(paths);
+            
             return objectMapper.writeValueAsString(openAPI);
         } catch (Exception e) {
             return "{\"error\":\"Failed to generate OpenAPI spec: " + e.getMessage() + "\",\"paths\":{}}";
