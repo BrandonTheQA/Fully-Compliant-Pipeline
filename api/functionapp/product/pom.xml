@@ -23,7 +23,7 @@
         <!-- Default value if not overridden by -DfunctionAppName -->
         <functionAppName>joaz-func-product-9021</functionAppName>
         <functionAppRegion>westus3</functionAppRegion>
-        <functionResourceGroup>brandon</functionResourceGroup>
+        <functionResourceGroup>RG-POC</functionResourceGroup>
         <!-- Default value if not overridden by -DappServicePlanName -->
         <appServicePlanName>asp-joaz-func-product-9021-dev</appServicePlanName>
         <stagingDirectory>${project.build.directory}/azure-functions/${functionAppName}</stagingDirectory>

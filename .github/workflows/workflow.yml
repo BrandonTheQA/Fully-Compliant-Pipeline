@@ -268,7 +268,7 @@ jobs:
           mvn -DfunctionAppName=${{ matrix.function-app-name-dev }} \
           -DappName=${{ matrix.function-app-name-dev }} \
           -DappServicePlanName=${{ matrix.app-service-plan-dev }} \
-          -DresourceGroup=brandon \
+          -DresourceGroup=RG-POC \
           -Dregion=westus3 \
           clean package azure-functions:deploy
 
@@ -294,7 +294,7 @@ jobs:
           azcliversion: latest
           inlineScript: |
             # Check if the app service already exists
-            if ! az webapp show --name joaz-ui-9021-dev --resource-group brandon &>/dev/null; then
+            if ! az webapp show --name joaz-ui-9021-dev --resource-group RG-POC &>/dev/null; then
               echo "Creating UI App Service joaz-ui-9021-dev..."
               # Get available Node.js runtimes for Windows and use the first one found
               echo "Checking available Node.js runtimes for Windows..."
@@ -305,13 +305,13 @@ jobs:
                 echo "No Node.js runtime found in list, creating without runtime (will use default)..."
                 az webapp create \
                   --name joaz-ui-9021-dev \
-                  --resource-group brandon \
+                  --resource-group RG-POC \
                   --plan ASP-POC-dev-7029-win
               else
                 echo "Using runtime: $NODE_RUNTIME"
                 az webapp create \
                   --name joaz-ui-9021-dev \
-                  --resource-group brandon \
+                  --resource-group RG-POC \
                   --plan ASP-POC-dev-7029-win \
                   --runtime "$NODE_RUNTIME"
               fi
@@ -319,13 +319,13 @@ jobs:
               # Configure the webapp for static site hosting
               az webapp config set \
                 --name joaz-ui-9021-dev \
-                --resource-group brandon \
+                --resource-group RG-POC \
                 --always-on true
               
               # Set the startup command
               az webapp config set \
                 --name joaz-ui-9021-dev \
-                --resource-group brandon \
+                --resource-group RG-POC \
                 --startup-file "npm install -g serve && serve -s . -p 8080"
             else
               echo "UI App Service joaz-ui-9021-dev already exists, skipping creation."
@@ -355,7 +355,7 @@ jobs:
         with:
           azcliversion: latest
           inlineScript: |
-            az webapp config appsettings set --name joaz-ui-9021-dev --resource-group brandon --settings \
+            az webapp config appsettings set --name joaz-ui-9021-dev --resource-group RG-POC --settings \
               VITE_USER_API_URL=https://joaz-func-user-9021-dev.azurewebsites.net/api \
               VITE_PRODUCT_API_URL=https://joaz-func-product-9021-dev.azurewebsites.net/api \
               VITE_ORDER_API_URL=https://joaz-func-order-9021-dev.azurewebsites.net/api
