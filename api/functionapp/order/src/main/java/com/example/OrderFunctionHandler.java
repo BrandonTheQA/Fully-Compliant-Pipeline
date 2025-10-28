@@ -1,14 +1,18 @@
 package com.example;
 
+import com.example.controller.OrderController;
+import com.example.dto.CreateOrderRequest;
+import com.example.dto.OrderResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -17,11 +21,23 @@ import java.util.Optional;
 public class OrderFunctionHandler {
     
     private static ConfigurableApplicationContext applicationContext;
-    private static RestTemplate restTemplate = new RestTemplate();
+    private static ObjectMapper objectMapper = new ObjectMapper();
     
     static {
         // Initialize Spring Boot application context
         applicationContext = SpringApplication.run(OrderApplication.class);
+    }
+    
+    private static OrderController getOrderController() {
+        return applicationContext.getBean(OrderController.class);
+    }
+    
+    private static HealthIndicator getHealthIndicator() {
+        try {
+            return applicationContext.getBean(HealthIndicator.class);
+        } catch (Exception e) {
+            return null;
+        }
     }
     
     /**
@@ -39,28 +55,33 @@ public class OrderFunctionHandler {
         
         try {
             String body = request.getBody().orElse("");
+            if (body.isEmpty()) {
+                return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
+                        .header("Content-Type", "application/json")
+                        .body("{\"error\":\"Request body is required\"}")
+                        .build();
+            }
             
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Content-Type", "application/json");
-            HttpEntity<String> entity = new HttpEntity<>(body, headers);
+            // Parse request body
+            CreateOrderRequest createRequest = objectMapper.readValue(body, CreateOrderRequest.class);
             
-            // Call Spring Boot controller
-            ResponseEntity<String> response = restTemplate.exchange(
-                "http://localhost:8080/api/orders", 
-                org.springframework.http.HttpMethod.POST, 
-                entity, 
-                String.class
-            );
+            // Call Spring Boot controller directly
+            OrderController controller = getOrderController();
+            ResponseEntity<OrderResponse> response = controller.createOrder(createRequest);
+            
+            // Serialize response to JSON
+            String jsonResponse = objectMapper.writeValueAsString(response.getBody());
             
             return request.createResponseBuilder(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
-                    .body(response.getBody())
+                    .body(jsonResponse)
                     .build();
                     
         } catch (Exception e) {
             context.getLogger().severe("Error calling Spring Boot controller: " + e.getMessage());
+            e.printStackTrace();
             return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Internal server error")
+                    .body("{\"error\":\"Internal server error: " + e.getMessage() + "\"}")
                     .build();
         }
     }
@@ -80,21 +101,23 @@ public class OrderFunctionHandler {
             final ExecutionContext context) {
         
         try {
-            // Call Spring Boot controller
-            ResponseEntity<String> response = restTemplate.getForEntity(
-                "http://localhost:8080/api/orders/" + orderId, 
-                String.class
-            );
+            // Call Spring Boot controller directly
+            OrderController controller = getOrderController();
+            ResponseEntity<OrderResponse> response = controller.getOrder(orderId);
+            
+            // Serialize response to JSON
+            String jsonResponse = objectMapper.writeValueAsString(response.getBody());
             
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(response.getBody())
+                    .body(jsonResponse)
                     .build();
                     
         } catch (Exception e) {
             context.getLogger().severe("Error calling Spring Boot controller: " + e.getMessage());
+            e.printStackTrace();
             return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Internal server error")
+                    .body("{\"error\":\"Internal server error: " + e.getMessage() + "\"}")
                     .build();
         }
     }
@@ -114,21 +137,23 @@ public class OrderFunctionHandler {
             final ExecutionContext context) {
         
         try {
-            // Call Spring Boot controller
-            ResponseEntity<String> response = restTemplate.getForEntity(
-                "http://localhost:8080/api/orders/user/" + userId, 
-                String.class
-            );
+            // Call Spring Boot controller directly
+            OrderController controller = getOrderController();
+            ResponseEntity<List<OrderResponse>> response = controller.getUserOrders(userId);
+            
+            // Serialize response to JSON
+            String jsonResponse = objectMapper.writeValueAsString(response.getBody());
             
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")
-                    .body(response.getBody())
+                    .body(jsonResponse)
                     .build();
                     
         } catch (Exception e) {
             context.getLogger().severe("Error calling Spring Boot controller: " + e.getMessage());
+            e.printStackTrace();
             return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Internal server error")
+                    .body("{\"error\":\"Internal server error: " + e.getMessage() + "\"}")
                     .build();
         }
     }
@@ -147,21 +172,30 @@ public class OrderFunctionHandler {
             final ExecutionContext context) {
         
         try {
-            // Call Spring Boot Actuator health endpoint
-            ResponseEntity<String> response = restTemplate.getForEntity(
-                "http://localhost:8080/actuator/health", 
-                String.class
-            );
-            
-            return request.createResponseBuilder(HttpStatus.OK)
-                    .header("Content-Type", "application/json")
-                    .body(response.getBody())
-                    .build();
+            // Try to get health indicator from Spring Boot
+            HealthIndicator healthIndicator = getHealthIndicator();
+            if (healthIndicator != null) {
+                Health health = healthIndicator.health();
+                String jsonResponse = objectMapper.writeValueAsString(health);
+                HttpStatus status = health.getStatus().getCode().equals("UP") ? HttpStatus.OK : HttpStatus.INTERNAL_SERVER_ERROR;
+                
+                return request.createResponseBuilder(status)
+                        .header("Content-Type", "application/json")
+                        .body(jsonResponse)
+                        .build();
+            } else {
+                // Fallback if no health indicator is available
+                return request.createResponseBuilder(HttpStatus.OK)
+                        .header("Content-Type", "application/json")
+                        .body("{\"status\":\"UP\"}")
+                        .build();
+            }
                     
         } catch (Exception e) {
             context.getLogger().severe("Error calling Spring Boot actuator: " + e.getMessage());
+            e.printStackTrace();
             return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Health check failed")
+                    .body("{\"status\":\"DOWN\",\"error\":\"Health check failed: " + e.getMessage() + "\"}")
                     .build();
         }
     }
