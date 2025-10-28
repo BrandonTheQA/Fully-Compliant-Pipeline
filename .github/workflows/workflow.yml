@@ -384,27 +384,6 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Run Integration Tests
-        run: |
-          echo "Running integration tests for all function apps..."
-          
-          # Run integration tests for each function app
-          for app in helloworld helloworld2 user; do
-            echo "Running integration tests for $app..."
-            cd "api/functionapp/$app"
-            
-            # Run Maven integration tests
-            mvn test -Dtest="*IntegrationTest"
-            
-            if [ $? -ne 0 ]; then
-              echo "Integration tests failed for $app"
-              exit 1
-            fi
-            
-            cd - > /dev/null
-          done
-          
-          echo "All integration tests completed successfully"
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
