@@ -1,0 +1,18 @@
+spring:
+  profiles:
+    active: test
+  
+  application:
+    name: product-function-test
+
+logging:
+  level:
+    com.example: DEBUG
+    org.springframework: WARN
+    root: INFO
+
+# Test-specific configuration
+test:
+  data:
+    cleanup: true
+
