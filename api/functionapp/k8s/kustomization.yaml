@@ -1,0 +1,5 @@
+resources:
+  - namespace.yaml
+  - user-service.yaml
+  - product-service.yaml
+  - order-service.yaml

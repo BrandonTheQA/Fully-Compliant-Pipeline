@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Spring Boot Application for Product Management Azure Function
+ * Spring Boot Application for the Product Management service
  */
 @SpringBootApplication
 public class ProductApplication {

@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Spring Boot Application for Order Management Azure Function
+ * Spring Boot Application for the Order Management service
  */
 @SpringBootApplication
 public class OrderApplication {

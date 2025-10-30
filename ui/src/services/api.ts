@@ -23,9 +23,9 @@ function getEnvVar(key: string, defaultValue: string): string {
 }
 
 // Get API base URLs from environment variables
-const getUserBaseUrl = () => getEnvVar('VITE_USER_API_URL', 'https://joaz-func-user-9021-test.azurewebsites.net/api');
-const getProductBaseUrl = () => getEnvVar('VITE_PRODUCT_API_URL', 'https://joaz-func-product-9021-test.azurewebsites.net/api');
-const getOrderBaseUrl = () => getEnvVar('VITE_ORDER_API_URL', 'https://joaz-func-order-9021-test.azurewebsites.net/api');
+const getUserBaseUrl = () => getEnvVar('VITE_USER_API_URL', 'http://localhost:8080/api');
+const getProductBaseUrl = () => getEnvVar('VITE_PRODUCT_API_URL', 'http://localhost:8081/api');
+const getOrderBaseUrl = () => getEnvVar('VITE_ORDER_API_URL', 'http://localhost:8082/api');
 
 // Create axios instances for each service
 const userApi = axios.create({

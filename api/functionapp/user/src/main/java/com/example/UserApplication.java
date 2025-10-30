@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * Spring Boot Application for User Management Azure Function
+ * Spring Boot Application for the User Management service
  */
 @SpringBootApplication
 public class UserApplication {
