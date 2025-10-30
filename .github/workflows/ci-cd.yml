@@ -66,6 +66,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
