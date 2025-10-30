@@ -471,17 +471,17 @@
 	"variable": [
 		{
 			"key": "userBaseUrl",
-            "value": "http://user-service.app-services.svc.cluster.local:8080/api",
+			"value": "https://joaz-func-user-9021-test.azurewebsites.net/api",
 			"type": "string"
 		},
 		{
 			"key": "productBaseUrl",
-            "value": "http://product-service.app-services.svc.cluster.local:8080/api",
+			"value": "https://joaz-func-product-9021-test.azurewebsites.net/api",
 			"type": "string"
 		},
 		{
 			"key": "orderBaseUrl",
-            "value": "http://order-service.app-services.svc.cluster.local:8080/api",
+			"value": "https://joaz-func-order-9021-test.azurewebsites.net/api",
 			"type": "string"
 		},
 		{
