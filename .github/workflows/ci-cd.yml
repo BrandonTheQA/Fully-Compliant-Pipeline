@@ -1,0 +1,115 @@
+name: CI-CD AKS
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  ACR_NAME: rgpocacr9021
+  ACR_LOGIN_SERVER: rgpocacr9021.azurecr.io
+  AKS_RESOURCE_GROUP: ${\{ vars.AKS_RESOURCE_GROUP || 'RG-POC' \}}
+  JAVA_VERSION: '17'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Azure CLI - ACR login
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            az acr login -n ${ACR_NAME}
+
+      - name: Build and push order image
+        run: |
+          docker build -t ${ACR_LOGIN_SERVER}/order:${{ github.sha }} -t ${ACR_LOGIN_SERVER}/order:latest ./api/functionapp/order
+          docker push ${ACR_LOGIN_SERVER}/order:${{ github.sha }}
+          docker push ${ACR_LOGIN_SERVER}/order:latest
+
+      - name: Build and push product image
+        run: |
+          docker build -t ${ACR_LOGIN_SERVER}/product:${{ github.sha }} -t ${ACR_LOGIN_SERVER}/product:latest ./api/functionapp/product
+          docker push ${ACR_LOGIN_SERVER}/product:${{ github.sha }}
+          docker push ${ACR_LOGIN_SERVER}/product:latest
+
+      - name: Build and push user image
+        run: |
+          docker build -t ${ACR_LOGIN_SERVER}/user:${{ github.sha }} -t ${ACR_LOGIN_SERVER}/user:latest ./api/functionapp/user
+          docker push ${ACR_LOGIN_SERVER}/user:${{ github.sha }}
+          docker push ${ACR_LOGIN_SERVER}/user:latest
+
+  deploy-dev:
+    runs-on: ubuntu-latest
+    needs: build-push
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        uses: azure/cli@v2
+        with:
+          inlineScript: |
+            AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+            echo "Using AKS cluster: ${AKS_NAME}"
+            az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+            kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy manifests
+        run: |
+          kubectl apply -f k8s/order -n dev
+          kubectl apply -f k8s/product -n dev
+          kubectl apply -f k8s/user -n dev
+
+      - name: Update images to current SHA
+        run: |
+          kubectl set image deployment/order order=${{ env.ACR_LOGIN_SERVER }}/order:${{ github.sha }} -n dev
+          kubectl set image deployment/product product=${{ env.ACR_LOGIN_SERVER }}/product:${{ github.sha }} -n dev
+          kubectl set image deployment/user user=${{ env.ACR_LOGIN_SERVER }}/user:${{ github.sha }} -n dev
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/order -n dev --timeout=180s || exit 1
+          kubectl rollout status deployment/product -n dev --timeout=180s || exit 1
+          kubectl rollout status deployment/user -n dev --timeout=180s || exit 1
+
+  # TODO: Add deploy-staging job
+  # - Separate namespace: staging
+  # - Manual approval/environment protection
+  # - Optional Ingress and certificate
+
+  # TODO: Add deploy-prod job
+  # - Separate namespace: prod
+  # - Manual approval/environment protection
+  # - Promotion from a release tag or retagging images
+
+
