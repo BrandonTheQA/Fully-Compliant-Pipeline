@@ -103,6 +103,46 @@ jobs:
           kubectl rollout status deployment/product -n dev --timeout=180s || exit 1
           kubectl rollout status deployment/user -n dev --timeout=180s || exit 1
 
+      - name: Health check services
+        run: |
+          set -euo pipefail
+          services=(order product user)
+          for svc in "${services[@]}"; do
+            echo "Waiting for LoadBalancer EXTERNAL-IP for ${svc}..."
+            host=""
+            for i in {1..30}; do
+              ip=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || true)
+              if [ -z "${ip}" ]; then
+                hostname=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || true)
+              else
+                hostname=""
+              fi
+              host=${ip:-$hostname}
+              if [ -n "${host}" ]; then
+                echo "${svc} endpoint host: ${host}"
+                break
+              fi
+              sleep 10
+            done
+            if [ -z "${host}" ]; then
+              echo "Timed out waiting for EXTERNAL-IP/hostname for ${svc}" >&2
+              exit 1
+            fi
+            echo "Checking health for ${svc}..."
+            for i in {1..30}; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" http://${host}/actuator/health || true)
+              if [ "${code}" = "200" ]; then
+                echo "${svc} is healthy (HTTP 200)"
+                break
+              fi
+              sleep 5
+              if [ $i -eq 30 ]; then
+                echo "${svc} health check failed. Last code: ${code}" >&2
+                exit 1
+              fi
+            done
+          done
+
   # TODO: Add deploy-staging job
   # - Separate namespace: staging
   # - Manual approval/environment protection
