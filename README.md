@@ -26,25 +26,30 @@ Internal-only exposure via ClusterIP:
 Namespace: `app-services` (created by workflows if missing).
 
 ## CI/CD (GitHub Actions)
-Workflows:
-- `.github/workflows/order-service.yml`
-- `.github/workflows/product-service.yml`
-- `.github/workflows/user-service.yml`
+Workflow:
+- `.github/workflows/aks-deploy.yml`
 
 Pipeline outline:
-1) Build/test with JDK 17 and Maven
-2) Discover AKS and ACR in resource group `RG-POC`
-3) Login to ACR, build/push image `<acr>.azurecr.io/{service}:${GIT_SHA}`
-4) Set AKS context; apply manifests; wait for rollout
+1) Build/test with JDK 17 and Maven (per service)
+2) Login to ACR, build/push image `${ACR_LOGIN_SERVER}/{service}:${GITHUB_SHA}`
+3) Set AKS context; template manifests via envsubst; apply; wait for rollout
 
-Required secrets/vars:
-- `AZURE_CREDENTIALS` (OIDC or SP JSON)
+Required secrets (OpenID Connect):
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
 
-Optional org/repo vars (if you want to pin):
-- `AZ_SUBSCRIPTION_ID`, `AKS_NAME`, `ACR_NAME`, `AZURE_RESOURCE_GROUP=RG-POC`
+Required repo variables:
+- `ACR_NAME` (e.g., myregistry)
+- `ACR_LOGIN_SERVER` (e.g., myregistry.azurecr.io)
+- `AKS_RESOURCE_GROUP`
+- `AKS_CLUSTER_NAME`
+- `AKS_NAMESPACE` (e.g., app-services)
+
+Add these in GitHub: Settings → Secrets and variables → Actions.
 
 ## Notes
-- All Azure Functions/App Service deployment artifacts have been removed.
+- All Azure Functions and App Service deployment artifacts for backends have been removed.
 - Services are internal-only (no Ingress). Consumers should use cluster DNS:
   - `http://order-service.app-services.svc.cluster.local`
   - `http://product-service.app-services.svc.cluster.local`

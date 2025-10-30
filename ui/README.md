@@ -53,11 +53,11 @@ The app uses environment variables for API endpoints. Configure them in `.env` f
 - `.env.staging` - Staging environment
 - `.env.production` - Production environment
 
-Example:
+Example (AKS internal services or your ingress/gateway URLs):
 ```
-VITE_USER_API_URL=https://joaz-func-user-9021-test.azurewebsites.net/api
-VITE_PRODUCT_API_URL=https://joaz-func-product-9021-test.azurewebsites.net/api
-VITE_ORDER_API_URL=https://joaz-func-order-9021-test.azurewebsites.net/api
+VITE_USER_API_URL=http://user-service.app-services.svc.cluster.local:8080/api
+VITE_PRODUCT_API_URL=http://product-service.app-services.svc.cluster.local:8080/api
+VITE_ORDER_API_URL=http://order-service.app-services.svc.cluster.local:8080/api
 ```
 
 ### Testing
@@ -128,18 +128,11 @@ The UI implements the complete integration test workflow:
 
 ## Deployment
 
-The UI is automatically built and deployed to Azure App Service via GitHub Actions for each environment:
-
-- **Dev**: `joaz-ui-9021-dev`
-- **Test**: `joaz-ui-9021-test`
-- **Stage**: `joaz-ui-9021-stage`
-- **Production**: `joaz-ui-9021-prod`
-
-Deployment happens in parallel with function app deployments for each environment.
+The backend APIs are Spring Boot services deployed to Azure Kubernetes Service (AKS). Point the UI environment variables to your AKS ingress or service endpoints as appropriate.
 
 ## API Endpoints
 
-The UI communicates with three Azure Function backends:
+The UI communicates with three Spring Boot services running on AKS:
 
 - User API: `/api/users`
 - Product API: `/api/products`
