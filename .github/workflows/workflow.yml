@@ -19,8 +19,10 @@ jobs:
       - name: Discover function apps
         id: set-matrix
         run: |
-          apps=$(find api/functionapp -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
-          matrix=$(echo $apps | jq -c '{include: [.[] | {
+          apps=$(for dir in api/functionapp/*/; do
+            [ -f "${dir}pom.xml" ] && basename "$dir"
+          done | jq -R -s -c 'split("\n")[:-1]')
+          matrix=$(echo "$apps" | jq -c '{include: [.[] | {
             app: .,
             "working-dir": ("./api/functionapp/" + .),
             "function-app-name-dev": ("ASP-POC-" + . + "-dev"),
@@ -31,9 +33,9 @@ jobs:
             "app-service-plan-test": "ASP-POC-test-7029",
             "app-service-plan-stage": "ASP-POC-stage-7029",
             "app-service-plan-prod": "ASP-POC-prod-7029",
-            collection: ("postman/" + (. | 
+            collection: ("postman/" + (. |
               if . == "helloworld" then "HelloWorld"
-              elif . == "helloworld2" then "HelloWorld2" 
+              elif . == "helloworld2" then "HelloWorld2"
               else (. | ascii_upcase[:1] + .[1:])
               end) + "Function.postman_collection.json")
           }]}')
