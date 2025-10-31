@@ -18,13 +18,6 @@ spec:
           image: rgpocacr9021.azurecr.io/ui:latest
           ports:
             - containerPort: 80
-          env:
-            - name: VITE_USER_API_URL
-              value: "http://user.dev.svc.cluster.local"
-            - name: VITE_PRODUCT_API_URL
-              value: "http://product.dev.svc.cluster.local"
-            - name: VITE_ORDER_API_URL
-              value: "http://order.dev.svc.cluster.local"
           readinessProbe:
             httpGet:
               path: /health

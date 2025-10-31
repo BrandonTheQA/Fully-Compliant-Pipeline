@@ -1,68 +1,24 @@
 import axios, { type AxiosInstance } from 'axios';
 
-// Helper to safely get environment variables in both Vite and Jest
-function getEnvVar(key: string, defaultValue: string): string {
-  // In Vite, this will be replaced at build time
-  // In Jest, this will throw and we catch it
-  try {
-    // This is replaced by Vite's build process, but Jest can't parse it
-    // We'll use eval to defer the parse error to runtime
-    const metaEnv = (globalThis as any).__MOCK_VITE_ENV__;
-    if (metaEnv && metaEnv[key]) {
-      return metaEnv[key];
-    }
-  } catch {
-    // Not in Vite environment
+// Unified API instance using BFF pattern - all requests go through /api
+const api = axios.create({
+  baseURL: '/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const message = error.response?.data?.message || error.message || 'An error occurred';
+    return Promise.reject(new Error(message));
   }
-  
-  // Fall back to process.env (Jest/Node) or default
-  if (typeof process !== 'undefined' && process.env[key]) {
-    return process.env[key] as string;
-  }
-  return defaultValue;
-}
+);
 
-// Get API base URLs from environment variables
-// Default to same-origin '/api' to avoid hardcoded cross-environment URLs
-const getUserBaseUrl = () => getEnvVar('VITE_USER_API_URL', '/api');
-const getProductBaseUrl = () => getEnvVar('VITE_PRODUCT_API_URL', '/api');
-const getOrderBaseUrl = () => getEnvVar('VITE_ORDER_API_URL', '/api');
-
-// Create axios instances for each service
-const userApi = axios.create({
-  baseURL: getUserBaseUrl(),
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-const productApi = axios.create({
-  baseURL: getProductBaseUrl(),
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-const orderApi = axios.create({
-  baseURL: getOrderBaseUrl(),
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Response interceptors for error handling
-const setupInterceptors = (apiInstance: AxiosInstance) => {
-  apiInstance.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      const message = error.response?.data?.message || error.message || 'An error occurred';
-      return Promise.reject(new Error(message));
-    }
-  );
-};
-
-setupInterceptors(userApi);
-setupInterceptors(productApi);
-setupInterceptors(orderApi);
-
-export { userApi, productApi, orderApi };
+// Export the unified API instance
+// Service layer will use this for all requests (userApi, productApi, orderApi are now aliases)
+export const userApi = api;
+export const productApi = api;
+export const orderApi = api;
