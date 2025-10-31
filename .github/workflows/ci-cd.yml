@@ -120,53 +120,60 @@ jobs:
       - name: Health check services
         run: |
           set -euo pipefail
-          # Check API services via port-forward (they're ClusterIP now)
-          echo "Checking API services health..."
+          # Wait for all LoadBalancer services to get external IPs
+          echo "Waiting for LoadBalancer EXTERNAL-IPs..."
+          services=(order product user ui)
+          declare -A service_hosts
+          
+          for svc in "${services[@]}"; do
+            echo "Waiting for LoadBalancer EXTERNAL-IP for ${svc}..."
+            host=""
+            for i in {1..60}; do
+              ip=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+              if [ -z "${ip}" ]; then
+                hostname=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+              else
+                hostname=""
+              fi
+              host=${ip:-$hostname}
+              if [ -n "${host}" ]; then
+                echo "${svc} endpoint: ${host}"
+                service_hosts[${svc}]=${host}
+                break
+              fi
+              sleep 5
+            done
+            if [ -z "${host}" ]; then
+              echo "Timed out waiting for EXTERNAL-IP/hostname for ${svc}" >&2
+              exit 1
+            fi
+          done
+          
+          # Perform health checks using LoadBalancer external IPs
+          echo "Checking API services health via LoadBalancer..."
           api_services=(order product user)
           for svc in "${api_services[@]}"; do
-            echo "Checking health for ${svc}..."
-            kubectl port-forward -n dev svc/${svc} 8080:80 > /dev/null 2>&1 &
-            PF_PID=$!
-            sleep 2
+            host=${service_hosts[${svc}]}
+            echo "Checking health for ${svc} at http://${host}/actuator/health..."
             for i in {1..30}; do
-              code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health || echo "000")
+              code=$(curl -s -o /dev/null -w "%{http_code}" http://${host}/actuator/health || echo "000")
               if [ "${code}" = "200" ]; then
                 echo "${svc} is healthy (HTTP 200)"
-                kill $PF_PID 2>/dev/null || true
                 break
               fi
               sleep 5
               if [ $i -eq 30 ]; then
                 echo "${svc} health check failed. Last code: ${code}" >&2
-                kill $PF_PID 2>/dev/null || true
                 exit 1
               fi
             done
           done
+          
           # Check UI service via LoadBalancer
-          echo "Waiting for LoadBalancer EXTERNAL-IP for ui..."
-          host=""
+          ui_host=${service_hosts[ui]}
+          echo "Checking health for ui at http://${ui_host}/health..."
           for i in {1..30}; do
-            ip=$(kubectl get svc ui -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || true)
-            if [ -z "${ip}" ]; then
-              hostname=$(kubectl get svc ui -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || true)
-            else
-              hostname=""
-            fi
-            host=${ip:-$hostname}
-            if [ -n "${host}" ]; then
-              echo "ui endpoint host: ${host}"
-              break
-            fi
-            sleep 10
-          done
-          if [ -z "${host}" ]; then
-            echo "Timed out waiting for EXTERNAL-IP/hostname for ui" >&2
-            exit 1
-          fi
-          echo "Checking health for ui..."
-          for i in {1..30}; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" http://${host}/health || true)
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
             if [ "${code}" = "200" ]; then
               echo "ui is healthy (HTTP 200)"
               break
