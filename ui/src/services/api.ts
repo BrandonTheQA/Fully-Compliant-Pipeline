@@ -1,4 +1,4 @@
-import axios, { type AxiosInstance } from 'axios';
+import axios from 'axios';
 
 // Unified API instance using BFF pattern - all requests go through /api
 const api = axios.create({
