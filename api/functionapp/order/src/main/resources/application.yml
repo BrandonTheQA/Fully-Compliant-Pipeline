@@ -48,7 +48,7 @@ springdoc:
 # External service endpoints - environment based
 services:
   user:
-    base-url: ${USER_SERVICE_URL:https://joaz-func-user-9021-${ENVIRONMENT:dev}.azurewebsites.net/api}
+    base-url: ${USER_SERVICE_URL:http://user/api}
   product:
-    base-url: ${PRODUCT_SERVICE_URL:https://joaz-func-product-9021-${ENVIRONMENT:dev}.azurewebsites.net/api}
+    base-url: ${PRODUCT_SERVICE_URL:http://product/api}
 
