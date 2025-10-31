@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui
+  template:
+    metadata:
+      labels:
+        app: ui
+    spec:
+      containers:
+        - name: ui
+          image: rgpocacr9021.azurecr.io/ui:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: VITE_USER_API_URL
+              value: "http://user.dev.svc.cluster.local"
+            - name: VITE_PRODUCT_API_URL
+              value: "http://product.dev.svc.cluster.local"
+            - name: VITE_ORDER_API_URL
+              value: "http://order.dev.svc.cluster.local"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+

@@ -29,6 +29,11 @@ jobs:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
@@ -57,6 +62,12 @@ jobs:
           docker build -t ${ACR_LOGIN_SERVER}/user:${{ github.sha }} -t ${ACR_LOGIN_SERVER}/user:latest ./api/functionapp/user
           docker push ${ACR_LOGIN_SERVER}/user:${{ github.sha }}
           docker push ${ACR_LOGIN_SERVER}/user:latest
+
+      - name: Build and push ui image
+        run: |
+          docker build -t ${ACR_LOGIN_SERVER}/ui:${{ github.sha }} -t ${ACR_LOGIN_SERVER}/ui:latest ./ui
+          docker push ${ACR_LOGIN_SERVER}/ui:${{ github.sha }}
+          docker push ${ACR_LOGIN_SERVER}/ui:latest
 
   deploy-dev:
     runs-on: ubuntu-latest
@@ -90,57 +101,81 @@ jobs:
           kubectl apply -f k8s/order -n dev
           kubectl apply -f k8s/product -n dev
           kubectl apply -f k8s/user -n dev
+          kubectl apply -f k8s/ui -n dev
 
       - name: Update images to current SHA
         run: |
           kubectl set image deployment/order order=${{ env.ACR_LOGIN_SERVER }}/order:${{ github.sha }} -n dev
           kubectl set image deployment/product product=${{ env.ACR_LOGIN_SERVER }}/product:${{ github.sha }} -n dev
           kubectl set image deployment/user user=${{ env.ACR_LOGIN_SERVER }}/user:${{ github.sha }} -n dev
+          kubectl set image deployment/ui ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n dev
 
       - name: Wait for rollout
         run: |
           kubectl rollout status deployment/order -n dev --timeout=180s || exit 1
           kubectl rollout status deployment/product -n dev --timeout=180s || exit 1
           kubectl rollout status deployment/user -n dev --timeout=180s || exit 1
+          kubectl rollout status deployment/ui -n dev --timeout=180s || exit 1
 
       - name: Health check services
         run: |
           set -euo pipefail
-          services=(order product user)
-          for svc in "${services[@]}"; do
-            echo "Waiting for LoadBalancer EXTERNAL-IP for ${svc}..."
-            host=""
-            for i in {1..30}; do
-              ip=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || true)
-              if [ -z "${ip}" ]; then
-                hostname=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || true)
-              else
-                hostname=""
-              fi
-              host=${ip:-$hostname}
-              if [ -n "${host}" ]; then
-                echo "${svc} endpoint host: ${host}"
-                break
-              fi
-              sleep 10
-            done
-            if [ -z "${host}" ]; then
-              echo "Timed out waiting for EXTERNAL-IP/hostname for ${svc}" >&2
-              exit 1
-            fi
+          # Check API services via port-forward (they're ClusterIP now)
+          echo "Checking API services health..."
+          api_services=(order product user)
+          for svc in "${api_services[@]}"; do
             echo "Checking health for ${svc}..."
+            kubectl port-forward -n dev svc/${svc} 8080:80 > /dev/null 2>&1 &
+            PF_PID=$!
+            sleep 2
             for i in {1..30}; do
-              code=$(curl -s -o /dev/null -w "%{http_code}" http://${host}/actuator/health || true)
+              code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health || echo "000")
               if [ "${code}" = "200" ]; then
                 echo "${svc} is healthy (HTTP 200)"
+                kill $PF_PID 2>/dev/null || true
                 break
               fi
               sleep 5
               if [ $i -eq 30 ]; then
                 echo "${svc} health check failed. Last code: ${code}" >&2
+                kill $PF_PID 2>/dev/null || true
                 exit 1
               fi
             done
+          done
+          # Check UI service via LoadBalancer
+          echo "Waiting for LoadBalancer EXTERNAL-IP for ui..."
+          host=""
+          for i in {1..30}; do
+            ip=$(kubectl get svc ui -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' || true)
+            if [ -z "${ip}" ]; then
+              hostname=$(kubectl get svc ui -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' || true)
+            else
+              hostname=""
+            fi
+            host=${ip:-$hostname}
+            if [ -n "${host}" ]; then
+              echo "ui endpoint host: ${host}"
+              break
+            fi
+            sleep 10
+          done
+          if [ -z "${host}" ]; then
+            echo "Timed out waiting for EXTERNAL-IP/hostname for ui" >&2
+            exit 1
+          fi
+          echo "Checking health for ui..."
+          for i in {1..30}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://${host}/health || true)
+            if [ "${code}" = "200" ]; then
+              echo "ui is healthy (HTTP 200)"
+              break
+            fi
+            sleep 5
+            if [ $i -eq 30 ]; then
+              echo "ui health check failed. Last code: ${code}" >&2
+              exit 1
+            fi
           done
 
   # TODO: Add deploy-staging job

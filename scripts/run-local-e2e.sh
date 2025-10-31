@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Starts user/product/order services locally, waits for readiness, runs Postman tests via Newman,
+# Starts user/product/order services and UI locally, waits for readiness, runs Postman tests via Newman,
 # and cleans up background processes on exit.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -10,17 +10,19 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 USER_DIR="$ROOT_DIR/api/functionapp/user"
 PRODUCT_DIR="$ROOT_DIR/api/functionapp/product"
 ORDER_DIR="$ROOT_DIR/api/functionapp/order"
+UI_DIR="$ROOT_DIR/ui"
 
 USER_PORT=8081
 PRODUCT_PORT=8082
 ORDER_PORT=8083
+UI_PORT=8084
 
 # Exclude security for local runs so endpoints are open
 SEC_EXCLUDE="org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration,org.springframework.boot.actuate.autoconfigure.security.servlet.ManagementWebSecurityAutoConfiguration"
 
 cleanup() {
   echo "\nCleaning up..." >&2
-  for p in "$USER_PORT" "$PRODUCT_PORT" "$ORDER_PORT"; do
+  for p in "$USER_PORT" "$PRODUCT_PORT" "$ORDER_PORT" "$UI_PORT"; do
     if lsof -ti tcp:"$p" >/dev/null 2>&1; then
       kill -9 $(lsof -ti tcp:"$p") || true
     fi
@@ -41,8 +43,8 @@ wait_for_port() {
   return 1
 }
 
-echo "Killing any existing services on ports $USER_PORT,$PRODUCT_PORT,$ORDER_PORT..."
-for p in "$USER_PORT" "$PRODUCT_PORT" "$ORDER_PORT"; do
+echo "Killing any existing services on ports $USER_PORT,$PRODUCT_PORT,$ORDER_PORT,$UI_PORT..."
+for p in "$USER_PORT" "$PRODUCT_PORT" "$ORDER_PORT" "$UI_PORT"; do
   lsof -ti tcp:"$p" | xargs -r kill -9 || true
 done
 
@@ -71,6 +73,15 @@ echo "Starting order service (:$ORDER_PORT)..."
 wait_for_port "$USER_PORT" "user"
 wait_for_port "$PRODUCT_PORT" "product"
 wait_for_port "$ORDER_PORT" "order"
+
+echo "Starting UI service (:$UI_PORT)..."
+(
+  cd "$UI_DIR"
+  VITE_USER_API_URL="http://localhost:$USER_PORT/api" VITE_PRODUCT_API_URL="http://localhost:$PRODUCT_PORT/api" VITE_ORDER_API_URL="http://localhost:$ORDER_PORT/api" \
+  npm run dev -- --port $UI_PORT &
+) >/dev/null 2>&1 &
+
+wait_for_port "$UI_PORT" "ui"
 
 # Optional: basic health checks
 for ep in \
