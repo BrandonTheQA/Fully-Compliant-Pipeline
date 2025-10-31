@@ -4,7 +4,7 @@ metadata:
   name: product
   namespace: dev
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: product
   ports:

@@ -340,9 +340,9 @@ jobs:
       - name: Build UI for Dev environment
         working-directory: ./ui
         env:
-          VITE_USER_API_URL: https://joaz-func-user-9021-dev.azurewebsites.net/api
-          VITE_PRODUCT_API_URL: https://joaz-func-product-9021-dev.azurewebsites.net/api
-          VITE_ORDER_API_URL: https://joaz-func-order-9021-dev.azurewebsites.net/api
+          VITE_USER_API_URL: http://4.249.74.188/api
+          VITE_PRODUCT_API_URL: http://4.249.74.188/api
+          VITE_ORDER_API_URL: http://4.249.74.188/api
         run: npm run build
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v2
@@ -356,9 +356,9 @@ jobs:
           azcliversion: latest
           inlineScript: |
             az webapp config appsettings set --name joaz-ui-9021-dev --resource-group RG-POC --settings \
-              VITE_USER_API_URL=https://joaz-func-user-9021-dev.azurewebsites.net/api \
-              VITE_PRODUCT_API_URL=https://joaz-func-product-9021-dev.azurewebsites.net/api \
-              VITE_ORDER_API_URL=https://joaz-func-order-9021-dev.azurewebsites.net/api
+              VITE_USER_API_URL=http://4.249.74.188/api \
+              VITE_PRODUCT_API_URL=http://4.249.74.188/api \
+              VITE_ORDER_API_URL=http://4.249.74.188/api
 
   smoke_test_dev:
     name: Smoke Test for Dev (${{ matrix.app }})
