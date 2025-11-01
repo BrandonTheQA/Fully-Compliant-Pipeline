@@ -15,7 +15,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Discover function apps
         id: set-matrix
         run: |
@@ -47,9 +47,9 @@ jobs:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
@@ -68,9 +68,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
@@ -100,9 +100,9 @@ jobs:
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Checkout repository
-  #       uses: actions/checkout@v3
+  #       uses: actions/checkout@v4
   #     - name: Set up Java 11
-  #       uses: actions/setup-java@v3
+  #       uses: actions/setup-java@v4
   #       with:
   #         java-version: '11'
   #         distribution: 'temurin'
@@ -213,7 +213,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Verify feature toggles
         run: |
           echo "Verifying feature toggles configuration..."
@@ -224,7 +224,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Generate release notes
         run: |
           echo "Generating release notes for Azure Function deployment..."
@@ -246,18 +246,18 @@ jobs:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: Azure login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Azure CLI script
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           azcliversion: latest
           inlineScript: |
@@ -283,13 +283,13 @@ jobs:
       name: Dev
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Azure login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Create UI App Service if it doesn't exist
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           azcliversion: latest
           inlineScript: |
@@ -331,7 +331,7 @@ jobs:
               echo "UI App Service joaz-ui-9021-dev already exists, skipping creation."
             fi
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
       - name: Install dependencies
@@ -345,13 +345,13 @@ jobs:
           VITE_ORDER_API_URL: http://4.249.74.188/api
         run: npm run build
       - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
           app-name: 'joaz-ui-9021-dev'
           package: ./ui/dist
           startup-command: 'npm install -g serve && serve -s . -p 8080'
       - name: Configure App Settings
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           azcliversion: latest
           inlineScript: |
@@ -370,7 +370,7 @@ jobs:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Health Check
         run: |
           echo "Running health check for ${{ matrix.app }} in Dev environment..."
@@ -416,14 +416,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
       - name: Install Newman
@@ -485,14 +485,14 @@ jobs:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: Azure login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Deploy Function App
@@ -514,13 +514,13 @@ jobs:
       name: Test
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Azure login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Create UI App Service if it doesn't exist
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           azcliversion: latest
           inlineScript: |
@@ -562,7 +562,7 @@ jobs:
               echo "UI App Service joaz-ui-9021-test already exists, skipping creation."
             fi
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
       - name: Install dependencies
@@ -576,13 +576,13 @@ jobs:
           VITE_ORDER_API_URL: https://joaz-func-order-9021-test.azurewebsites.net/api
         run: npm run build
       - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
           app-name: 'joaz-ui-9021-test'
           package: ./ui/dist
           startup-command: 'npm install -g serve && serve -s . -p 8080'
       - name: Configure App Settings
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           azcliversion: latest
           inlineScript: |
@@ -601,7 +601,7 @@ jobs:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Health Check
         run: |
           echo "Running health check for ${{ matrix.app }} in Test environment..."
@@ -647,14 +647,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
       - name: Install Newman
@@ -716,14 +716,14 @@ jobs:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: Azure login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Deploy Function App
@@ -750,11 +750,11 @@ jobs:
           name: ui-build
           path: ui/dist
       - name: Azure login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Create UI App Service if it doesn't exist
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           azcliversion: latest
           inlineScript: |
@@ -796,7 +796,7 @@ jobs:
               echo "UI App Service joaz-ui-9021-stage already exists, skipping creation."
             fi
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
       - name: Install dependencies
@@ -810,13 +810,13 @@ jobs:
           VITE_ORDER_API_URL: https://joaz-func-order-9021-stage.azurewebsites.net/api
         run: npm run build
       - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
           app-name: 'joaz-ui-9021-stage'
           package: ./ui/dist
           startup-command: 'npm install -g serve && serve -s . -p 8080'
       - name: Configure App Settings
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           azcliversion: latest
           inlineScript: |
@@ -835,7 +835,7 @@ jobs:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Health Check
         run: |
           echo "Running health check for ${{ matrix.app }} in Stage environment..."
@@ -945,14 +945,14 @@ jobs:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
       - name: Azure login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Deploy Function App
@@ -979,11 +979,11 @@ jobs:
           name: ui-build
           path: ui/dist
       - name: Azure login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       - name: Create UI App Service if it doesn't exist
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           azcliversion: latest
           inlineScript: |
@@ -1025,7 +1025,7 @@ jobs:
               echo "UI App Service joaz-ui-9021-prod already exists, skipping creation."
             fi
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '18'
       - name: Install dependencies
@@ -1039,13 +1039,13 @@ jobs:
           VITE_ORDER_API_URL: https://joaz-func-order-9021-prod.azurewebsites.net/api
         run: npm run build
       - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@v3
         with:
           app-name: 'joaz-ui-9021-prod'
           package: ./ui/dist
           startup-command: 'npm install -g serve && serve -s . -p 8080'
       - name: Configure App Settings
-        uses: azure/CLI@v1
+        uses: azure/CLI@v2
         with:
           azcliversion: latest
           inlineScript: |
@@ -1064,7 +1064,7 @@ jobs:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Health Check
         run: |
           echo "Running health check for ${{ matrix.app }} in Production environment..."
