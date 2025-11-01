@@ -53,6 +53,8 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: ${{ matrix.working-dir }}/pom.xml
       - name: Build and Test Azure Function
         working-directory: ${{ matrix.working-dir }}
         run: |
@@ -252,6 +254,8 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: ${{ matrix.working-dir }}/pom.xml
       - name: Azure login
         uses: azure/login@v2
         with:
@@ -422,6 +426,7 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'maven'
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -491,6 +496,8 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: ${{ matrix.working-dir }}/pom.xml
       - name: Azure login
         uses: azure/login@v2
         with:
@@ -653,6 +660,7 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'maven'
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -722,6 +730,8 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: ${{ matrix.working-dir }}/pom.xml
       - name: Azure login
         uses: azure/login@v2
         with:
@@ -951,6 +961,8 @@ jobs:
         with:
           java-version: '11'
           distribution: 'temurin'
+          cache: 'maven'
+          cache-dependency-path: ${{ matrix.working-dir }}/pom.xml
       - name: Azure login
         uses: azure/login@v2
         with:
