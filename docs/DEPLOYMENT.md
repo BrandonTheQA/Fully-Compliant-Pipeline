@@ -53,3 +53,7 @@ After deployment, retrieve external IPs:
 kubectl get svc -n dev
 ```
 Endpoints will be on port 80 forwarding to container port 8080.
+
+## Build Optimization
+- Maven dependencies are cached in GitHub Actions to speed up build times
+- Cache is automatically invalidated when pom.xml files change
