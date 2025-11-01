@@ -152,8 +152,8 @@ public class ProductsPage extends BasePage {
     public boolean isProductDisplayed(String productName) {
         List<WebElement> products = driver.findElements(PRODUCT_CARDS);
         for (WebElement product : products) {
-            String text = product.getText();
-            if (text.contains(productName)) {
+            WebElement nameElement = product.findElement(By.cssSelector("h3"));
+            if (nameElement.getText().equals(productName)) {
                 return true;
             }
         }
@@ -168,7 +168,8 @@ public class ProductsPage extends BasePage {
     public void clickOnProduct(String productName) {
         List<WebElement> products = driver.findElements(PRODUCT_CARDS);
         for (WebElement product : products) {
-            if (product.getText().contains(productName)) {
+            WebElement nameElement = product.findElement(By.cssSelector("h3"));
+            if (nameElement.getText().equals(productName)) {
                 product.click();
                 break;
             }
@@ -192,12 +193,14 @@ public class ProductsPage extends BasePage {
     public void addProductToCart(String productName) {
         List<WebElement> products = driver.findElements(PRODUCT_CARDS);
         for (WebElement product : products) {
-            if (product.getText().contains(productName)) {
+            // Find the h3 element containing the product name
+            WebElement nameElement = product.findElement(By.cssSelector("h3"));
+            if (nameElement.getText().equals(productName)) {
                 WebElement addToCartBtn = product.findElement(ADD_TO_CART_BUTTON);
                 addToCartBtn.click();
-                // Wait a bit for cart update
+                // Wait for cart update to complete
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(1000);  // Increased wait time
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
