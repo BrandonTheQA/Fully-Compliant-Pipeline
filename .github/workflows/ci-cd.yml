@@ -370,7 +370,10 @@ jobs:
 
       - name: Deploy manifest
         run: |
-          kubectl apply -f k8s/${{ matrix.app }} -n test
+          # Replace namespace in manifests before applying
+          for file in k8s/${{ matrix.app }}/*.yaml; do
+            sed 's/namespace: dev/namespace: test/g' "$file" | kubectl apply -f -
+          done
 
       - name: Update image to current SHA
         run: |
@@ -410,7 +413,10 @@ jobs:
 
       - name: Deploy manifest
         run: |
-          kubectl apply -f k8s/ui -n test
+          # Replace namespace in manifests before applying
+          for file in k8s/ui/*.yaml; do
+            sed 's/namespace: dev/namespace: test/g' "$file" | kubectl apply -f -
+          done
 
       - name: Update image to current SHA
         run: |
