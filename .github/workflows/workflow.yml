@@ -19,10 +19,10 @@ jobs:
       - name: Discover function apps
         id: set-matrix
         run: |
-          apps=$(find api/functionapp -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+          apps=$(find api/services -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
           matrix=$(echo $apps | jq -c '{include: [.[] | {
             app: .,
-            "working-dir": ("./api/functionapp/" + .),
+            "working-dir": ("./api/services/" + .),
             "function-app-name-dev": ("ASP-POC-" + . + "-dev"),
             "function-app-name-test": ("joaz-func-" + . + "-9021-test"),
             "function-app-name-stage": ("joaz-func-" + . + "-9021-stage"),
@@ -189,8 +189,8 @@ jobs:
   #       with:
   #         java-version: '11'
   #         distribution: 'temurin'
-  #     - name: Run security scan
-  #       working-directory: ./api/functionapp/helloworld
+    #     - name: Run security scan
+    #       working-directory: ./api/services/helloworld
   #       env:
   #         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
   #       run: |
@@ -200,8 +200,8 @@ jobs:
   #         else
   #           echo "NVD_API_KEY not set, running without API key (may be slower)"
   #         fi
-  #     - name: Run security scan for helloworld2
-  #       working-directory: ./api/functionapp/helloworld2
+    #     - name: Run security scan for helloworld2
+    #       working-directory: ./api/services/helloworld2
   #       env:
   #         NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
   #       run: |

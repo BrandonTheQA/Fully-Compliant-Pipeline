@@ -7,9 +7,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-USER_DIR="$ROOT_DIR/api/functionapp/user"
-PRODUCT_DIR="$ROOT_DIR/api/functionapp/product"
-ORDER_DIR="$ROOT_DIR/api/functionapp/order"
+USER_DIR="$ROOT_DIR/api/services/user"
+PRODUCT_DIR="$ROOT_DIR/api/services/product"
+ORDER_DIR="$ROOT_DIR/api/services/order"
 UI_DIR="$ROOT_DIR/ui"
 
 USER_PORT=8081
