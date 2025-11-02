@@ -28,10 +28,10 @@ jobs:
       - name: Discover function apps
         id: set-matrix
         run: |
-          apps=$(find api/functionapp -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
+          apps=$(find api/services -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | jq -R -s -c 'split("\n")[:-1]')
           matrix=$(echo $apps | jq -c '{include: [.[] | {
             app: .,
-            "working-dir": ("./api/functionapp/" + .)
+            "working-dir": ("./api/services/" + .)
           }]}')
           echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
