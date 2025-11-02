@@ -10,16 +10,16 @@ import java.time.LocalDateTime;
 @Table(name = "users")
 public class User {
     @Id
-    @Column(name = "id", length = 255)
+    @Column(name = "id", columnDefinition = "VARCHAR(255)")
     private String id;
     
-    @Column(name = "name", nullable = false, length = 255)
+    @Column(name = "name", nullable = false, columnDefinition = "NVARCHAR(255)")
     private String name;
     
-    @Column(name = "email", nullable = false, unique = true, length = 255)
+    @Column(name = "email", nullable = false, unique = true, columnDefinition = "NVARCHAR(255)")
     private String email;
     
-    @Column(name = "password", nullable = false, length = 255)
+    @Column(name = "password", nullable = false, columnDefinition = "NVARCHAR(255)")
     private String password;
     
     @Column(name = "created_at", nullable = false)

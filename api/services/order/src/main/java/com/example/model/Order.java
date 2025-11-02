@@ -13,10 +13,10 @@ import java.util.List;
 @Table(name = "orders")
 public class Order {
     @Id
-    @Column(name = "id", length = 255)
+    @Column(name = "id", columnDefinition = "VARCHAR(255)")
     private String id;
     
-    @Column(name = "user_id", nullable = false, length = 255)
+    @Column(name = "user_id", nullable = false, columnDefinition = "VARCHAR(255)")
     private String userId;
     
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -25,7 +25,7 @@ public class Order {
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount;
     
-    @Column(name = "status", nullable = false, length = 50)
+    @Column(name = "status", nullable = false, columnDefinition = "NVARCHAR(50)")
     private String status;
     
     @Column(name = "created_at", nullable = false)

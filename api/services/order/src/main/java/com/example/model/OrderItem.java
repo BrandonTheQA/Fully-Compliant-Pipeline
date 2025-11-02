@@ -18,10 +18,10 @@ public class OrderItem {
     @JoinColumn(name = "order_id", nullable = false)
     private Order order;
     
-    @Column(name = "product_id", nullable = false, length = 255)
+    @Column(name = "product_id", nullable = false, columnDefinition = "VARCHAR(255)")
     private String productId;
     
-    @Column(name = "product_name", nullable = false, length = 255)
+    @Column(name = "product_name", nullable = false, columnDefinition = "NVARCHAR(255)")
     private String productName;
     
     @Column(name = "quantity", nullable = false)

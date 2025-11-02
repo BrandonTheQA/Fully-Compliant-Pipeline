@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 @Table(name = "products")
 public class Product {
     @Id
-    @Column(name = "id", length = 255)
+    @Column(name = "id", columnDefinition = "VARCHAR(255)")
     private String id;
     
-    @Column(name = "name", nullable = false, length = 255)
+    @Column(name = "name", nullable = false, columnDefinition = "NVARCHAR(255)")
     private String name;
     
     @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
@@ -26,7 +26,7 @@ public class Product {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
     
-    @Column(name = "category", length = 255)
+    @Column(name = "category", columnDefinition = "NVARCHAR(255)")
     private String category;
     
     @Column(name = "created_at", nullable = false)
