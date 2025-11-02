@@ -331,6 +331,268 @@ jobs:
           path: selenium/target/surefire-reports/
           retention-days: 7
 
+  deploy-test:
+    name: Deploy to Test (${{ matrix.app }})
+    runs-on: ubuntu-latest
+    needs: [discover-apps, build-push, selenium-tests-dev]
+    environment: test
+    strategy:
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+          kubectl create namespace test --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Create or update Kubernetes secret for SQL database
+        run: |
+          kubectl create secret generic sql-db-secret \
+            --from-literal=password="${{ secrets.SQL_SERVER_PASSWORD }}" \
+            --namespace=test \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy manifest
+        run: |
+          kubectl apply -f k8s/${{ matrix.app }} -n test
+
+      - name: Update image to current SHA
+        run: |
+          kubectl set image deployment/${{ matrix.app }} ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n test
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/${{ matrix.app }} -n test --timeout=180s || exit 1
+
+  deploy-test-ui:
+    name: Deploy UI to Test
+    runs-on: ubuntu-latest
+    needs: [build-push-ui, selenium-tests-dev]
+    environment: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+          kubectl create namespace test --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy manifest
+        run: |
+          kubectl apply -f k8s/ui -n test
+
+      - name: Update image to current SHA
+        run: |
+          kubectl set image deployment/ui ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n test
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/ui -n test --timeout=180s || exit 1
+
+  health-check-test:
+    name: Health Check Services in Test
+    runs-on: ubuntu-latest
+    needs: [deploy-test, deploy-test-ui]
+    environment: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Health check services
+        run: |
+          set -euo pipefail
+          # Wait for all LoadBalancer services to get external IPs
+          echo "Waiting for LoadBalancer EXTERNAL-IPs..."
+          services=(order product user ui)
+          declare -A service_hosts
+          
+          for svc in "${services[@]}"; do
+            echo "Waiting for LoadBalancer EXTERNAL-IP for ${svc}..."
+            host=""
+            for i in {1..60}; do
+              ip=$(kubectl get svc ${svc} -n test -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+              if [ -z "${ip}" ]; then
+                hostname=$(kubectl get svc ${svc} -n test -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+              else
+                hostname=""
+              fi
+              host=${ip:-$hostname}
+              if [ -n "${host}" ]; then
+                echo "${svc} endpoint: ${host}"
+                service_hosts[${svc}]=${host}
+                break
+              fi
+              sleep 5
+            done
+            if [ -z "${host}" ]; then
+              echo "Timed out waiting for EXTERNAL-IP/hostname for ${svc}" >&2
+              exit 1
+            fi
+          done
+          
+          # Perform health checks using LoadBalancer external IPs
+          echo "Checking API services health via LoadBalancer..."
+          api_services=(order product user)
+          for svc in "${api_services[@]}"; do
+            host=${service_hosts[${svc}]}
+            echo "Checking health for ${svc} at http://${host}/actuator/health..."
+            for i in {1..30}; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" http://${host}/actuator/health || echo "000")
+              if [ "${code}" = "200" ]; then
+                echo "${svc} is healthy (HTTP 200)"
+                break
+              fi
+              sleep 5
+              if [ $i -eq 30 ]; then
+                echo "${svc} health check failed. Last code: ${code}" >&2
+                exit 1
+              fi
+            done
+          done
+          
+          # Check UI service via LoadBalancer
+          ui_host=${service_hosts[ui]}
+          echo "Checking health for ui at http://${ui_host}/health..."
+          for i in {1..30}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
+            if [ "${code}" = "200" ]; then
+              echo "ui is healthy (HTTP 200)"
+              break
+            fi
+            sleep 5
+            if [ $i -eq 30 ]; then
+              echo "ui health check failed. Last code: ${code}" >&2
+              exit 1
+            fi
+          done
+
+  selenium-tests-test:
+    runs-on: ubuntu-latest
+    needs: health-check-test
+    environment: test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Get UI service URL
+        id: get-ui-url
+        run: |
+          ui_host=""
+          for i in {1..30}; do
+            ip=$(kubectl get svc ui -n test -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+            if [ -z "${ip}" ]; then
+              hostname=$(kubectl get svc ui -n test -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+            else
+              hostname=""
+            fi
+            ui_host=${ip:-$hostname}
+            if [ -n "${ui_host}" ]; then
+              echo "url=http://${ui_host}" >> $GITHUB_OUTPUT
+              break
+            fi
+            sleep 2
+          done
+          if [ -z "${ui_host}" ]; then
+            echo "Failed to get UI service URL" >&2
+            exit 1
+          fi
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'maven'
+          cache-dependency-path: selenium/pom.xml
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          google-chrome --version
+
+      - name: Run Selenium E2E Tests
+        working-directory: selenium
+        env:
+          BASE_URL: ${{ steps.get-ui-url.outputs.url }}
+        run: |
+          mvn clean test
+
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-test-reports-test
+          path: selenium/target/surefire-reports/
+          retention-days: 7
+
   # TODO: Add deploy-staging job
   # - Separate namespace: staging
   # - Manual approval/environment protection
