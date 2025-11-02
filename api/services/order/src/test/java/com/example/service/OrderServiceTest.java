@@ -228,7 +228,7 @@ class OrderServiceTest {
         String orderId = "order-id";
         String userId = "user-id";
         
-        OrderItem orderItem = new Order.OrderItem("product-id", "Product 1", 2, 10.0);
+        OrderItem orderItem = new OrderItem("product-id", "Product 1", 2, 10.0);
         List<OrderItem> orderItems = new ArrayList<>();
         orderItems.add(orderItem);
         Order order = new Order(orderId, userId, orderItems, 20.0, "PENDING");
