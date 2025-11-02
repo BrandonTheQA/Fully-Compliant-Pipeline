@@ -81,11 +81,14 @@ public class UserService {
      * Map User entity to UserResponse DTO
      */
     private UserResponse mapToResponse(User user) {
+        String createdAtStr = user.getCreatedAt() != null 
+            ? user.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) 
+            : null;
         return new UserResponse(
             user.getId(),
             user.getName(),
             user.getEmail(),
-            user.getCreatedAt()
+            createdAtStr
         );
     }
 }

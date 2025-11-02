@@ -62,7 +62,7 @@ public class ProductService {
             existingProduct.setPrice(request.getPrice());
             existingProduct.setQuantity(request.getQuantity());
             existingProduct.setCategory(request.getCategory());
-            existingProduct.setUpdatedAt(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+            existingProduct.setUpdatedAt(LocalDateTime.now());
             product = productRepository.save(existingProduct);
         } else {
             // Create new product
@@ -85,6 +85,12 @@ public class ProductService {
      * Map Product entity to ProductResponse DTO
      */
     private ProductResponse mapToResponse(Product product) {
+        String createdAtStr = product.getCreatedAt() != null 
+            ? product.getCreatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) 
+            : null;
+        String updatedAtStr = product.getUpdatedAt() != null 
+            ? product.getUpdatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) 
+            : null;
         return new ProductResponse(
                 product.getId(),
                 product.getName(),
@@ -92,8 +98,8 @@ public class ProductService {
                 product.getPrice(),
                 product.getQuantity(),
                 product.getCategory(),
-                product.getCreatedAt(),
-                product.getUpdatedAt()
+                createdAtStr,
+                updatedAtStr
         );
     }
 }

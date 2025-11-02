@@ -6,6 +6,7 @@ import com.example.exception.OrderNotFoundException;
 import com.example.exception.OrderValidationException;
 import com.example.exception.ServiceUnavailableException;
 import com.example.model.Order;
+import com.example.model.OrderItem;
 import com.example.repository.OrderRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -85,8 +86,8 @@ class OrderServiceTest {
         when(objectMapper.readTree(productJson)).thenReturn(productNode);
         
         // Mock repository save
-        Order.OrderItem orderItem = new Order.OrderItem(productId, "Product 1", 2, 10.0);
-        List<Order.OrderItem> orderItems = new ArrayList<>();
+        OrderItem orderItem = new OrderItem(productId, "Product 1", 2, 10.0);
+        List<OrderItem> orderItems = new ArrayList<>();
         orderItems.add(orderItem);
         Order savedOrder = new Order("order-id", userId, orderItems, 20.0, "PENDING");
         
@@ -227,8 +228,8 @@ class OrderServiceTest {
         String orderId = "order-id";
         String userId = "user-id";
         
-        Order.OrderItem orderItem = new Order.OrderItem("product-id", "Product 1", 2, 10.0);
-        List<Order.OrderItem> orderItems = new ArrayList<>();
+        OrderItem orderItem = new Order.OrderItem("product-id", "Product 1", 2, 10.0);
+        List<OrderItem> orderItems = new ArrayList<>();
         orderItems.add(orderItem);
         Order order = new Order(orderId, userId, orderItems, 20.0, "PENDING");
         
@@ -268,13 +269,13 @@ class OrderServiceTest {
         // Given
         String userId = "user-id";
         
-        Order.OrderItem orderItem1 = new Order.OrderItem("product-1", "Product 1", 1, 10.0);
-        List<Order.OrderItem> orderItems1 = new ArrayList<>();
+        OrderItem orderItem1 = new OrderItem("product-1", "Product 1", 1, 10.0);
+        List<OrderItem> orderItems1 = new ArrayList<>();
         orderItems1.add(orderItem1);
         Order order1 = new Order("order-1", userId, orderItems1, 10.0, "PENDING");
         
-        Order.OrderItem orderItem2 = new Order.OrderItem("product-2", "Product 2", 2, 15.0);
-        List<Order.OrderItem> orderItems2 = new ArrayList<>();
+        OrderItem orderItem2 = new OrderItem("product-2", "Product 2", 2, 15.0);
+        List<OrderItem> orderItems2 = new ArrayList<>();
         orderItems2.add(orderItem2);
         Order order2 = new Order("order-2", userId, orderItems2, 30.0, "COMPLETED");
         

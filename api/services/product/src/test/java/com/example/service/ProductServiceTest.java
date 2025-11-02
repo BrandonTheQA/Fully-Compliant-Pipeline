@@ -182,8 +182,6 @@ class ProductServiceTest {
     void shouldMapProductToResponseCorrectly() {
         // Given
         Product product = new Product("product-id", "Test Product", "Test Description", 29.99, 100, "Electronics");
-        product.setCreatedAt("2023-01-01T00:00:00");
-        product.setUpdatedAt("2023-01-01T00:00:00");
 
         // When - Test the mapping indirectly through getProduct
         when(productRepository.findById("product-id")).thenReturn(Optional.of(product));

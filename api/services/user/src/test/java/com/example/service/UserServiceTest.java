@@ -182,7 +182,6 @@ class UserServiceTest {
     void shouldMapUserToResponseCorrectly() {
         // Given
         User user = new User("user-id", "John Doe", "john@example.com", "password123");
-        user.setCreatedAt("2023-01-01T00:00:00");
 
         // When - Test the mapping indirectly through createUser
         when(userRepository.existsByEmail(user.getEmail())).thenReturn(false);

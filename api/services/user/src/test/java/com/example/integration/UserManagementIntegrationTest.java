@@ -7,13 +7,14 @@ import com.example.dto.UserResponse;
 import com.example.exception.AuthenticationException;
 import com.example.exception.UserAlreadyExistsException;
 import com.example.exception.UserNotFoundException;
-import com.example.model.User;
-import com.example.repository.UserRepository;
 import com.example.service.UserService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,26 +22,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * Integration tests for the complete user management flow
  */
 @DisplayName("User Management Integration Tests")
+@SpringBootTest(properties = {"spring.liquibase.enabled=false"})
+@Transactional
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class UserManagementIntegrationTest {
 
+    @Autowired
     private UserService userService;
-    private UserRepository userRepository;
-    private ObjectMapper objectMapper;
-
-    @BeforeEach
-    void setUp() {
-        userRepository = new UserRepository();
-        userService = new UserService();
-        // Use reflection to inject the repository
-        try {
-            java.lang.reflect.Field field = UserService.class.getDeclaredField("userRepository");
-            field.setAccessible(true);
-            field.set(userService, userRepository);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to inject repository", e);
-        }
-        objectMapper = new ObjectMapper();
-    }
 
     @Test
     @DisplayName("Should complete user registration and login flow")
