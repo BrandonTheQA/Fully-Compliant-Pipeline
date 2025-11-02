@@ -111,8 +111,51 @@ jobs:
           cache-to: type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/ui:buildcache,mode=max
 
   deploy-dev:
+    name: Deploy to Dev (${{ matrix.app }})
     runs-on: ubuntu-latest
-    needs: [build-push, build-push-ui]
+    needs: [discover-apps, build-push]
+    environment: dev
+    strategy:
+      matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+          kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy manifest
+        run: |
+          kubectl apply -f k8s/${{ matrix.app }} -n dev
+
+      - name: Update image to current SHA
+        run: |
+          kubectl set image deployment/${{ matrix.app }} ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n dev
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/${{ matrix.app }} -n dev --timeout=180s || exit 1
+
+  deploy-dev-ui:
+    name: Deploy UI to Dev
+    runs-on: ubuntu-latest
+    needs: build-push-ui
     environment: dev
     steps:
       - name: Checkout
@@ -137,26 +180,44 @@ jobs:
           az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
           kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Deploy manifests
+      - name: Deploy manifest
         run: |
-          kubectl apply -f k8s/order -n dev
-          kubectl apply -f k8s/product -n dev
-          kubectl apply -f k8s/user -n dev
           kubectl apply -f k8s/ui -n dev
 
-      - name: Update images to current SHA
+      - name: Update image to current SHA
         run: |
-          kubectl set image deployment/order order=${{ env.ACR_LOGIN_SERVER }}/order:${{ github.sha }} -n dev
-          kubectl set image deployment/product product=${{ env.ACR_LOGIN_SERVER }}/product:${{ github.sha }} -n dev
-          kubectl set image deployment/user user=${{ env.ACR_LOGIN_SERVER }}/user:${{ github.sha }} -n dev
           kubectl set image deployment/ui ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n dev
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/order -n dev --timeout=180s || exit 1
-          kubectl rollout status deployment/product -n dev --timeout=180s || exit 1
-          kubectl rollout status deployment/user -n dev --timeout=180s || exit 1
           kubectl rollout status deployment/ui -n dev --timeout=180s || exit 1
+
+  health-check-dev:
+    name: Health Check Services in Dev
+    runs-on: ubuntu-latest
+    needs: [deploy-dev, deploy-dev-ui]
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
 
       - name: Health check services
         run: |
@@ -228,7 +289,7 @@ jobs:
 
   selenium-tests-dev:
     runs-on: ubuntu-latest
-    needs: deploy-dev
+    needs: health-check-dev
     environment: dev
     steps:
       - name: Checkout
