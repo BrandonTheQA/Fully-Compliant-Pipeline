@@ -1,17 +1,29 @@
 package com.example.model;
 
+import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * User domain model
  */
+@Entity
+@Table(name = "users")
 public class User {
+    @Id
+    @Column(name = "id", length = 255)
     private String id;
+    
+    @Column(name = "name", nullable = false, length = 255)
     private String name;
+    
+    @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
+    
+    @Column(name = "password", nullable = false, length = 255)
     private String password;
-    private String createdAt;
+    
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
     
     // Default constructor
     public User() {}
@@ -22,7 +34,7 @@ public class User {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.createdAt = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        this.createdAt = LocalDateTime.now();
     }
     
     // Getters and Setters
@@ -58,11 +70,11 @@ public class User {
         this.password = password;
     }
     
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
     
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }

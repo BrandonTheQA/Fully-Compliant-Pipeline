@@ -18,6 +18,12 @@ spec:
           image: rgpocacr9021.azurecr.io/order:latest
           ports:
             - containerPort: 8080
+          env:
+            - name: SQL_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: sql-db-secret
+                  key: password
           readinessProbe:
             httpGet:
               path: /actuator/health

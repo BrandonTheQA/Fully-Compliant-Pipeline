@@ -1,20 +1,39 @@
 package com.example.model;
 
+import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 /**
  * Product domain model
  */
+@Entity
+@Table(name = "products")
 public class Product {
+    @Id
+    @Column(name = "id", length = 255)
     private String id;
+    
+    @Column(name = "name", nullable = false, length = 255)
     private String name;
+    
+    @Column(name = "description", columnDefinition = "NVARCHAR(MAX)")
     private String description;
-    private Double price;
+    
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
+    
+    @Column(name = "quantity", nullable = false)
     private Integer quantity;
+    
+    @Column(name = "category", length = 255)
     private String category;
-    private String createdAt;
-    private String updatedAt;
+    
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+    
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
     
     // Default constructor
     public Product() {}
@@ -24,12 +43,12 @@ public class Product {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.price = price;
+        this.price = price != null ? BigDecimal.valueOf(price) : null;
         this.quantity = quantity;
         this.category = category;
-        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        this.createdAt = timestamp;
-        this.updatedAt = timestamp;
+        LocalDateTime now = LocalDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
     }
     
     // Getters and Setters
@@ -58,10 +77,18 @@ public class Product {
     }
     
     public Double getPrice() {
-        return price;
+        return price != null ? price.doubleValue() : null;
     }
     
     public void setPrice(Double price) {
+        this.price = price != null ? BigDecimal.valueOf(price) : null;
+    }
+    
+    public BigDecimal getPriceDecimal() {
+        return price;
+    }
+    
+    public void setPriceDecimal(BigDecimal price) {
         this.price = price;
     }
     
@@ -81,19 +108,19 @@ public class Product {
         this.category = category;
     }
     
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
     
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
     
-    public String getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
     
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 }

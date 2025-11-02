@@ -140,6 +140,13 @@ jobs:
           az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
           kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
 
+      - name: Create or update Kubernetes secret for SQL database
+        run: |
+          kubectl create secret generic sql-db-secret \
+            --from-literal=password="${{ secrets.SQL_SERVER_PASSWORD }}" \
+            --namespace=dev \
+            --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Deploy manifest
         run: |
           kubectl apply -f k8s/${{ matrix.app }} -n dev

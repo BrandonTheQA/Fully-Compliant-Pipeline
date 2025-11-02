@@ -6,6 +6,7 @@ import com.example.exception.OrderNotFoundException;
 import com.example.exception.OrderValidationException;
 import com.example.exception.ServiceUnavailableException;
 import com.example.model.Order;
+import com.example.model.OrderItem;
 import com.example.repository.OrderRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,7 +51,7 @@ public class OrderService {
         verifyUserExists(request.getUserId());
         
         // Build order items with product validation
-        List<Order.OrderItem> orderItems = new ArrayList<>();
+        List<OrderItem> orderItems = new ArrayList<>();
         double totalAmount = 0.0;
         
         for (CreateOrderRequest.OrderItemRequest itemRequest : request.getItems()) {
@@ -61,7 +62,7 @@ public class OrderService {
             Integer quantity = itemRequest.getQuantity();
             Double subtotal = price * quantity;
             
-            Order.OrderItem orderItem = new Order.OrderItem(
+            OrderItem orderItem = new OrderItem(
                 itemRequest.getProductId(),
                 productName,
                 quantity,
@@ -162,7 +163,7 @@ public class OrderService {
      */
     private OrderResponse mapToResponse(Order order) {
         List<OrderResponse.OrderItemResponse> itemResponses = new ArrayList<>();
-        for (Order.OrderItem item : order.getItems()) {
+        for (OrderItem item : order.getItems()) {
             OrderResponse.OrderItemResponse itemResponse = new OrderResponse.OrderItemResponse(
                 item.getProductId(),
                 item.getProductName(),
@@ -179,8 +180,8 @@ public class OrderService {
             itemResponses,
             order.getTotalAmount(),
             order.getStatus(),
-            order.getCreatedAt(),
-            order.getUpdatedAt()
+            order.getCreatedAt() != null ? order.getCreatedAt().toString() : null,
+            order.getUpdatedAt() != null ? order.getUpdatedAt().toString() : null
         );
     }
 }
