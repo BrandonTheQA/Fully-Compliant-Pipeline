@@ -51,21 +51,21 @@ done
 echo "Starting user service (:$USER_PORT)..."
 (
   cd "$USER_DIR"
-  SERVER_PORT="$USER_PORT" mvn -q spring-boot:run \
+  SPRING_PROFILES_ACTIVE=local SERVER_PORT="$USER_PORT" mvn -q spring-boot:run \
     -Dspring-boot.run.jvmArguments="-Dspring.autoconfigure.exclude=$SEC_EXCLUDE" &
 ) >/dev/null 2>&1 &
 
 echo "Starting product service (:$PRODUCT_PORT)..."
 (
   cd "$PRODUCT_DIR"
-  SERVER_PORT="$PRODUCT_PORT" mvn -q spring-boot:run \
+  SPRING_PROFILES_ACTIVE=local SERVER_PORT="$PRODUCT_PORT" mvn -q spring-boot:run \
     -Dspring-boot.run.jvmArguments="-Dspring.autoconfigure.exclude=$SEC_EXCLUDE" &
 ) >/dev/null 2>&1 &
 
 echo "Starting order service (:$ORDER_PORT)..."
 (
   cd "$ORDER_DIR"
-  SERVER_PORT="$ORDER_PORT" USER_SERVICE_URL="http://localhost:$USER_PORT/api" PRODUCT_SERVICE_URL="http://localhost:$PRODUCT_PORT/api" \
+  SPRING_PROFILES_ACTIVE=local SERVER_PORT="$ORDER_PORT" USER_SERVICE_URL="http://localhost:$USER_PORT/api" PRODUCT_SERVICE_URL="http://localhost:$PRODUCT_PORT/api" \
   mvn -q spring-boot:run \
     -Dspring-boot.run.jvmArguments="-Dspring.autoconfigure.exclude=$SEC_EXCLUDE" &
 ) >/dev/null 2>&1 &
