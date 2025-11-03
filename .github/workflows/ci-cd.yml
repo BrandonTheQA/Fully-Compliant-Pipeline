@@ -110,10 +110,57 @@ jobs:
           cache-from: type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/ui:buildcache
           cache-to: type=registry,ref=${{ env.ACR_LOGIN_SERVER }}/ui:buildcache,mode=max
 
+  detect-deployment-color-dev:
+    name: Detect Deployment Color for Dev
+    runs-on: ubuntu-latest
+    needs: [discover-apps, build-push, build-push-ui]
+    environment: dev
+    outputs:
+      active-color: ${{ steps.detect-color.outputs.active-color }}
+      target-color: ${{ steps.detect-color.outputs.target-color }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Ensure ConfigMap exists
+        run: |
+          kubectl get configmap deployment-state -n dev 2>/dev/null || kubectl apply -f k8s/deployment-state-configmap.yaml
+
+      - name: Detect deployment color
+        id: detect-color
+        run: |
+          ACTIVE_COLOR=$(kubectl get configmap deployment-state -n dev -o jsonpath='{.data.active-color}' 2>/dev/null || echo "blue")
+          if [ "$ACTIVE_COLOR" = "blue" ]; then
+            TARGET_COLOR="green"
+          else
+            TARGET_COLOR="blue"
+          fi
+          echo "active-color=$ACTIVE_COLOR" >> $GITHUB_OUTPUT
+          echo "target-color=$TARGET_COLOR" >> $GITHUB_OUTPUT
+          echo "Active color: $ACTIVE_COLOR, Target color: $TARGET_COLOR"
+
   deploy-dev:
     name: Deploy to Dev (${{ matrix.app }})
     runs-on: ubuntu-latest
-    needs: [discover-apps, build-push]
+    needs: [discover-apps, build-push, detect-deployment-color-dev]
     environment: dev
     strategy:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
@@ -149,6 +196,7 @@ jobs:
 
       - name: Deploy manifest
         run: |
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
           tmpdir=$(mktemp -d)
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/deployment.yaml .
@@ -156,7 +204,7 @@ jobs:
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
-          nameSuffix: -blue
+          nameSuffix: -${TARGET_COLOR}
           namespace: dev
           resources:
             - deployment.yaml
@@ -167,21 +215,24 @@ jobs:
 
       - name: Update image to current SHA
         run: |
-          kubectl set image deployment/${{ matrix.app }}-blue ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n dev
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          kubectl set image deployment/${{ matrix.app }}-${TARGET_COLOR} ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n dev
 
-      - name: Annotate deployment and service as -blue
+      - name: Annotate deployment and service
         run: |
-          kubectl annotate deployment/${{ matrix.app }}-blue app.kubernetes.io/instance=${{ matrix.app }}-blue -n dev --overwrite
-          kubectl annotate service/${{ matrix.app }}-blue app.kubernetes.io/instance=${{ matrix.app }}-blue -n dev --overwrite
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          kubectl annotate deployment/${{ matrix.app }}-${TARGET_COLOR} app.kubernetes.io/instance=${{ matrix.app }}-${TARGET_COLOR} -n dev --overwrite
+          kubectl annotate service/${{ matrix.app }}-${TARGET_COLOR} app.kubernetes.io/instance=${{ matrix.app }}-${TARGET_COLOR} -n dev --overwrite
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/${{ matrix.app }}-blue -n dev --timeout=180s || exit 1
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          kubectl rollout status deployment/${{ matrix.app }}-${TARGET_COLOR} -n dev --timeout=180s || exit 1
 
   deploy-dev-ui:
     name: Deploy UI to Dev
     runs-on: ubuntu-latest
-    needs: build-push-ui
+    needs: [build-push-ui, detect-deployment-color-dev]
     environment: dev
     steps:
       - name: Checkout
@@ -208,6 +259,7 @@ jobs:
 
       - name: Deploy manifest
         run: |
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
           tmpdir=$(mktemp -d)
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/ui/deployment.yaml .
@@ -215,7 +267,7 @@ jobs:
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
-          nameSuffix: -blue
+          nameSuffix: -${TARGET_COLOR}
           namespace: dev
           resources:
             - deployment.yaml
@@ -226,21 +278,29 @@ jobs:
 
       - name: Update image to current SHA
         run: |
-          kubectl set image deployment/ui-blue ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n dev
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          kubectl set image deployment/ui-${TARGET_COLOR} ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n dev
 
-      - name: Annotate UI deployment and service as -blue
+      - name: Set environment variables for UI
         run: |
-          kubectl annotate deployment/ui-blue app.kubernetes.io/instance=ui-blue -n dev --overwrite
-          kubectl annotate service/ui-blue app.kubernetes.io/instance=ui-blue -n dev --overwrite
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          kubectl set env deployment/ui-${TARGET_COLOR} DEPLOYMENT_COLOR=${TARGET_COLOR} NAMESPACE=dev -n dev
+
+      - name: Annotate UI deployment and service
+        run: |
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          kubectl annotate deployment/ui-${TARGET_COLOR} app.kubernetes.io/instance=ui-${TARGET_COLOR} -n dev --overwrite
+          kubectl annotate service/ui-${TARGET_COLOR} app.kubernetes.io/instance=ui-${TARGET_COLOR} -n dev --overwrite
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/ui-blue -n dev --timeout=180s || exit 1
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          kubectl rollout status deployment/ui-${TARGET_COLOR} -n dev --timeout=180s || exit 1
 
   health-check-dev:
     name: Health Check Services in Dev
     runs-on: ubuntu-latest
-    needs: [deploy-dev, deploy-dev-ui]
+    needs: [deploy-dev, deploy-dev-ui, detect-deployment-color-dev]
     environment: dev
     steps:
       - name: Checkout
@@ -264,12 +324,15 @@ jobs:
           echo "Using AKS cluster: ${AKS_NAME}"
           az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
 
-      - name: Health check services
+      - name: Health check services on both blue and green
         run: |
           set -euo pipefail
-          # Wait for all LoadBalancer services to get external IPs
+          ACTIVE_COLOR="${{ needs.detect-deployment-color-dev.outputs.active-color }}"
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          
+          # Wait for all LoadBalancer services to get external IPs for both colors
           echo "Waiting for LoadBalancer EXTERNAL-IPs..."
-          services=(order-blue product-blue user-blue ui-blue)
+          services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR} ui-${ACTIVE_COLOR} order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR} ui-${TARGET_COLOR})
           declare -A service_hosts
           
           for svc in "${services[@]}"; do
@@ -296,9 +359,9 @@ jobs:
             fi
           done
           
-          # Perform health checks using LoadBalancer external IPs
+          # Perform health checks using LoadBalancer external IPs for both colors
           echo "Checking API services health via LoadBalancer..."
-          api_services=(order-blue product-blue user-blue)
+          api_services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR} order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR})
           for svc in "${api_services[@]}"; do
             host=${service_hosts[${svc}]}
             echo "Checking health for ${svc} at http://${host}/actuator/health..."
@@ -316,29 +379,79 @@ jobs:
             done
           done
           
-          # Check UI service via LoadBalancer
-          ui_host=${service_hosts[ui-blue]}
-          echo "Checking health for ui-blue at http://${ui_host}/health..."
-          for i in {1..30}; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
-            if [ "${code}" = "200" ]; then
-              echo "ui-blue is healthy (HTTP 200)"
-              break
-            fi
-            sleep 5
-            if [ $i -eq 30 ]; then
-              echo "ui-blue health check failed. Last code: ${code}" >&2
-              exit 1
-            fi
+          # Check UI services via LoadBalancer for both colors
+          for color in ${ACTIVE_COLOR} ${TARGET_COLOR}; do
+            ui_host=${service_hosts[ui-${color}]}
+            echo "Checking health for ui-${color} at http://${ui_host}/health..."
+            for i in {1..30}; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
+              if [ "${code}" = "200" ]; then
+                echo "ui-${color} is healthy (HTTP 200)"
+                break
+              fi
+              sleep 5
+              if [ $i -eq 30 ]; then
+                echo "ui-${color} health check failed. Last code: ${code}" >&2
+                exit 1
+              fi
+            done
           done
 
   selenium-tests-dev:
     runs-on: ubuntu-latest
-    needs: health-check-dev
+    needs: [health-check-dev, detect-deployment-color-dev]
     environment: dev
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Get UI service URLs for both colors
+        id: get-ui-urls
+        run: |
+          ACTIVE_COLOR="${{ needs.detect-deployment-color-dev.outputs.active-color }}"
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          
+          for color in ${ACTIVE_COLOR} ${TARGET_COLOR}; do
+            echo "Getting UI service URL for ui-${color}..."
+            ui_host=""
+            for i in {1..30}; do
+              ip=$(kubectl get svc ui-${color} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+              if [ -z "${ip}" ]; then
+                hostname=$(kubectl get svc ui-${color} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+              else
+                hostname=""
+              fi
+              ui_host=${ip:-$hostname}
+              if [ -n "${ui_host}" ]; then
+                echo "url-${color}=http://${ui_host}" >> $GITHUB_OUTPUT
+                echo "Got URL for ui-${color}: http://${ui_host}"
+                break
+              fi
+              sleep 2
+            done
+            if [ -z "${ui_host}" ]; then
+              echo "Failed to get UI service URL for ui-${color}" >&2
+              exit 1
+            fi
+          done
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -354,10 +467,17 @@ jobs:
           sudo apt-get install -y google-chrome-stable
           google-chrome --version
 
-      - name: Run Selenium E2E Tests
+      - name: Run Selenium E2E Tests on Active Color
         working-directory: selenium
         env:
-          BASE_URL: http://4.249.74.188
+          BASE_URL: ${{ needs.detect-deployment-color-dev.outputs.active-color == 'blue' && steps.get-ui-urls.outputs.url-blue || steps.get-ui-urls.outputs.url-green }}
+        run: |
+          mvn clean test
+
+      - name: Run Selenium E2E Tests on Target Color
+        working-directory: selenium
+        env:
+          BASE_URL: ${{ needs.detect-deployment-color-dev.outputs.target-color == 'blue' && steps.get-ui-urls.outputs.url-blue || steps.get-ui-urls.outputs.url-green }}
         run: |
           mvn clean test
 
@@ -369,10 +489,132 @@ jobs:
           path: selenium/target/surefire-reports/
           retention-days: 7
 
+  teardown-dev:
+    name: Teardown Inactive Deployment for Dev
+    runs-on: ubuntu-latest
+    needs: [selenium-tests-dev, detect-deployment-color-dev]
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Teardown inactive deployments and services
+        run: |
+          ACTIVE_COLOR="${{ needs.detect-deployment-color-dev.outputs.active-color }}"
+          echo "Teardown inactive deployment (${ACTIVE_COLOR})"
+          
+          # Get the list of services
+          services=("order" "product" "user" "ui")
+          
+          # Delete deployments and services for the inactive color
+          for svc in "${services[@]}"; do
+            echo "Deleting ${svc}-${ACTIVE_COLOR}..."
+            kubectl delete deployment ${svc}-${ACTIVE_COLOR} -n dev --ignore-not-found=true || true
+            kubectl delete service ${svc}-${ACTIVE_COLOR} -n dev --ignore-not-found=true || true
+          done
+
+  update-state-dev:
+    name: Update Deployment State for Dev
+    runs-on: ubuntu-latest
+    needs: [teardown-dev, detect-deployment-color-dev]
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Update ConfigMap with new active color
+        run: |
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          echo "Updating deployment state to mark ${TARGET_COLOR} as active"
+          kubectl patch configmap deployment-state -n dev --type merge -p "{\"data\":{\"active-color\":\"${TARGET_COLOR}\"}}"
+
+  detect-deployment-color-test:
+    name: Detect Deployment Color for Test
+    runs-on: ubuntu-latest
+    needs: [discover-apps, build-push, build-push-ui]
+    environment: test
+    outputs:
+      active-color: ${{ steps.detect-color.outputs.active-color }}
+      target-color: ${{ steps.detect-color.outputs.target-color }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Ensure ConfigMap exists
+        run: |
+          kubectl get configmap deployment-state -n test 2>/dev/null || kubectl apply -f k8s/deployment-state-configmap.yaml
+
+      - name: Detect deployment color
+        id: detect-color
+        run: |
+          ACTIVE_COLOR=$(kubectl get configmap deployment-state -n test -o jsonpath='{.data.active-color}' 2>/dev/null || echo "blue")
+          if [ "$ACTIVE_COLOR" = "blue" ]; then
+            TARGET_COLOR="green"
+          else
+            TARGET_COLOR="blue"
+          fi
+          echo "active-color=$ACTIVE_COLOR" >> $GITHUB_OUTPUT
+          echo "target-color=$TARGET_COLOR" >> $GITHUB_OUTPUT
+          echo "Active color: $ACTIVE_COLOR, Target color: $TARGET_COLOR"
+
   deploy-test:
     name: Deploy to Test (${{ matrix.app }})
     runs-on: ubuntu-latest
-    needs: [discover-apps, build-push, selenium-tests-dev]
+    needs: [discover-apps, build-push, selenium-tests-dev, detect-deployment-color-test]
     environment: test
     strategy:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
@@ -408,6 +650,7 @@ jobs:
 
       - name: Deploy manifest
         run: |
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
           tmpdir=$(mktemp -d)
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/deployment.yaml .
@@ -415,7 +658,7 @@ jobs:
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
-          nameSuffix: -blue
+          nameSuffix: -${TARGET_COLOR}
           namespace: test
           resources:
             - deployment.yaml
@@ -426,21 +669,24 @@ jobs:
 
       - name: Update image to current SHA
         run: |
-          kubectl set image deployment/${{ matrix.app }}-blue ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n test
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          kubectl set image deployment/${{ matrix.app }}-${TARGET_COLOR} ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n test
 
-      - name: Annotate deployment and service as -blue
+      - name: Annotate deployment and service
         run: |
-          kubectl annotate deployment/${{ matrix.app }}-blue app.kubernetes.io/instance=${{ matrix.app }}-blue -n test --overwrite
-          kubectl annotate service/${{ matrix.app }}-blue app.kubernetes.io/instance=${{ matrix.app }}-blue -n test --overwrite
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          kubectl annotate deployment/${{ matrix.app }}-${TARGET_COLOR} app.kubernetes.io/instance=${{ matrix.app }}-${TARGET_COLOR} -n test --overwrite
+          kubectl annotate service/${{ matrix.app }}-${TARGET_COLOR} app.kubernetes.io/instance=${{ matrix.app }}-${TARGET_COLOR} -n test --overwrite
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/${{ matrix.app }}-blue -n test --timeout=180s || exit 1
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          kubectl rollout status deployment/${{ matrix.app }}-${TARGET_COLOR} -n test --timeout=180s || exit 1
 
   deploy-test-ui:
     name: Deploy UI to Test
     runs-on: ubuntu-latest
-    needs: [build-push-ui, selenium-tests-dev]
+    needs: [build-push-ui, selenium-tests-dev, detect-deployment-color-test]
     environment: test
     steps:
       - name: Checkout
@@ -467,6 +713,7 @@ jobs:
 
       - name: Deploy manifest
         run: |
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
           tmpdir=$(mktemp -d)
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/ui/deployment.yaml .
@@ -474,7 +721,7 @@ jobs:
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
-          nameSuffix: -blue
+          nameSuffix: -${TARGET_COLOR}
           namespace: test
           resources:
             - deployment.yaml
@@ -485,21 +732,29 @@ jobs:
 
       - name: Update image to current SHA
         run: |
-          kubectl set image deployment/ui-blue ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n test
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          kubectl set image deployment/ui-${TARGET_COLOR} ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n test
 
-      - name: Annotate UI deployment and service as -blue
+      - name: Set environment variables for UI
         run: |
-          kubectl annotate deployment/ui-blue app.kubernetes.io/instance=ui-blue -n test --overwrite
-          kubectl annotate service/ui-blue app.kubernetes.io/instance=ui-blue -n test --overwrite
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          kubectl set env deployment/ui-${TARGET_COLOR} DEPLOYMENT_COLOR=${TARGET_COLOR} NAMESPACE=test -n test
+
+      - name: Annotate UI deployment and service
+        run: |
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          kubectl annotate deployment/ui-${TARGET_COLOR} app.kubernetes.io/instance=ui-${TARGET_COLOR} -n test --overwrite
+          kubectl annotate service/ui-${TARGET_COLOR} app.kubernetes.io/instance=ui-${TARGET_COLOR} -n test --overwrite
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/ui-blue -n test --timeout=180s || exit 1
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          kubectl rollout status deployment/ui-${TARGET_COLOR} -n test --timeout=180s || exit 1
 
   health-check-test:
     name: Health Check Services in Test
     runs-on: ubuntu-latest
-    needs: [deploy-test, deploy-test-ui]
+    needs: [deploy-test, deploy-test-ui, detect-deployment-color-test]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -522,12 +777,15 @@ jobs:
           echo "Using AKS cluster: ${AKS_NAME}"
           az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
 
-      - name: Health check services
+      - name: Health check services on both blue and green
         run: |
           set -euo pipefail
-          # Wait for all LoadBalancer services to get external IPs
+          ACTIVE_COLOR="${{ needs.detect-deployment-color-test.outputs.active-color }}"
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          
+          # Wait for all LoadBalancer services to get external IPs for both colors
           echo "Waiting for LoadBalancer EXTERNAL-IPs..."
-          services=(order-blue product-blue user-blue ui-blue)
+          services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR} ui-${ACTIVE_COLOR} order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR} ui-${TARGET_COLOR})
           declare -A service_hosts
           
           for svc in "${services[@]}"; do
@@ -554,9 +812,9 @@ jobs:
             fi
           done
           
-          # Perform health checks using LoadBalancer external IPs
+          # Perform health checks using LoadBalancer external IPs for both colors
           echo "Checking API services health via LoadBalancer..."
-          api_services=(order-blue product-blue user-blue)
+          api_services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR} order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR})
           for svc in "${api_services[@]}"; do
             host=${service_hosts[${svc}]}
             echo "Checking health for ${svc} at http://${host}/actuator/health..."
@@ -574,25 +832,27 @@ jobs:
             done
           done
           
-          # Check UI service via LoadBalancer
-          ui_host=${service_hosts[ui-blue]}
-          echo "Checking health for ui-blue at http://${ui_host}/health..."
-          for i in {1..30}; do
-            code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
-            if [ "${code}" = "200" ]; then
-              echo "ui-blue is healthy (HTTP 200)"
-              break
-            fi
-            sleep 5
-            if [ $i -eq 30 ]; then
-              echo "ui-blue health check failed. Last code: ${code}" >&2
-              exit 1
-            fi
+          # Check UI services via LoadBalancer for both colors
+          for color in ${ACTIVE_COLOR} ${TARGET_COLOR}; do
+            ui_host=${service_hosts[ui-${color}]}
+            echo "Checking health for ui-${color} at http://${ui_host}/health..."
+            for i in {1..30}; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
+              if [ "${code}" = "200" ]; then
+                echo "ui-${color} is healthy (HTTP 200)"
+                break
+              fi
+              sleep 5
+              if [ $i -eq 30 ]; then
+                echo "ui-${color} health check failed. Last code: ${code}" >&2
+                exit 1
+              fi
+            done
           done
 
   selenium-tests-test:
     runs-on: ubuntu-latest
-    needs: health-check-test
+    needs: [health-check-test, detect-deployment-color-test]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -615,28 +875,35 @@ jobs:
           echo "Using AKS cluster: ${AKS_NAME}"
           az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
 
-      - name: Get UI service URL
-        id: get-ui-url
+      - name: Get UI service URLs for both colors
+        id: get-ui-urls
         run: |
-          ui_host=""
-          for i in {1..30}; do
-            ip=$(kubectl get svc ui-blue -n test -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-            if [ -z "${ip}" ]; then
-              hostname=$(kubectl get svc ui-blue -n test -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
-            else
-              hostname=""
+          ACTIVE_COLOR="${{ needs.detect-deployment-color-test.outputs.active-color }}"
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          
+          for color in ${ACTIVE_COLOR} ${TARGET_COLOR}; do
+            echo "Getting UI service URL for ui-${color}..."
+            ui_host=""
+            for i in {1..30}; do
+              ip=$(kubectl get svc ui-${color} -n test -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+              if [ -z "${ip}" ]; then
+                hostname=$(kubectl get svc ui-${color} -n test -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+              else
+                hostname=""
+              fi
+              ui_host=${ip:-$hostname}
+              if [ -n "${ui_host}" ]; then
+                echo "url-${color}=http://${ui_host}" >> $GITHUB_OUTPUT
+                echo "Got URL for ui-${color}: http://${ui_host}"
+                break
+              fi
+              sleep 2
+            done
+            if [ -z "${ui_host}" ]; then
+              echo "Failed to get UI service URL for ui-${color}" >&2
+              exit 1
             fi
-            ui_host=${ip:-$hostname}
-            if [ -n "${ui_host}" ]; then
-              echo "url=http://${ui_host}" >> $GITHUB_OUTPUT
-              break
-            fi
-            sleep 2
           done
-          if [ -z "${ui_host}" ]; then
-            echo "Failed to get UI service URL" >&2
-            exit 1
-          fi
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -652,10 +919,17 @@ jobs:
           sudo apt-get install -y google-chrome-stable
           google-chrome --version
 
-      - name: Run Selenium E2E Tests
+      - name: Run Selenium E2E Tests on Active Color
         working-directory: selenium
         env:
-          BASE_URL: ${{ steps.get-ui-url.outputs.url }}
+          BASE_URL: ${{ needs.detect-deployment-color-test.outputs.active-color == 'blue' && steps.get-ui-urls.outputs.url-blue || steps.get-ui-urls.outputs.url-green }}
+        run: |
+          mvn clean test
+
+      - name: Run Selenium E2E Tests on Target Color
+        working-directory: selenium
+        env:
+          BASE_URL: ${{ needs.detect-deployment-color-test.outputs.target-color == 'blue' && steps.get-ui-urls.outputs.url-blue || steps.get-ui-urls.outputs.url-green }}
         run: |
           mvn clean test
 
@@ -666,6 +940,79 @@ jobs:
           name: selenium-test-reports-test
           path: selenium/target/surefire-reports/
           retention-days: 7
+
+  teardown-test:
+    name: Teardown Inactive Deployment for Test
+    runs-on: ubuntu-latest
+    needs: [selenium-tests-test, detect-deployment-color-test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Teardown inactive deployments and services
+        run: |
+          ACTIVE_COLOR="${{ needs.detect-deployment-color-test.outputs.active-color }}"
+          echo "Teardown inactive deployment (${ACTIVE_COLOR})"
+          
+          # Get the list of services
+          services=("order" "product" "user" "ui")
+          
+          # Delete deployments and services for the inactive color
+          for svc in "${services[@]}"; do
+            echo "Deleting ${svc}-${ACTIVE_COLOR}..."
+            kubectl delete deployment ${svc}-${ACTIVE_COLOR} -n test --ignore-not-found=true || true
+            kubectl delete service ${svc}-${ACTIVE_COLOR} -n test --ignore-not-found=true || true
+          done
+
+  update-state-test:
+    name: Update Deployment State for Test
+    runs-on: ubuntu-latest
+    needs: [teardown-test, detect-deployment-color-test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Update ConfigMap with new active color
+        run: |
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          echo "Updating deployment state to mark ${TARGET_COLOR} as active"
+          kubectl patch configmap deployment-state -n test --type merge -p "{\"data\":{\"active-color\":\"${TARGET_COLOR}\"}}"
 
   # TODO: Add deploy-staging job
   # - Separate namespace: staging

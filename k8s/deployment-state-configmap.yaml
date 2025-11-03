@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-state
+  namespace: dev
+data:
+  active-color: "blue"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deployment-state
+  namespace: test
+data:
+  active-color: "blue"
+

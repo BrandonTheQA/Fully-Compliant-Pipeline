@@ -18,6 +18,11 @@ spec:
           image: rgpocacr9021.azurecr.io/ui:latest
           ports:
             - containerPort: 80
+          env:
+            - name: DEPLOYMENT_COLOR
+              value: "blue"
+            - name: NAMESPACE
+              value: "dev"
           readinessProbe:
             httpGet:
               path: /health
