@@ -206,6 +206,8 @@ jobs:
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: dev
+          commonLabels:
+            deployment-color: ${TARGET_COLOR}
           resources:
             - deployment.yaml
             - service.yaml
@@ -269,6 +271,8 @@ jobs:
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: dev
+          commonLabels:
+            deployment-color: ${TARGET_COLOR}
           resources:
             - deployment.yaml
             - service.yaml
@@ -660,6 +664,8 @@ jobs:
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: test
+          commonLabels:
+            deployment-color: ${TARGET_COLOR}
           resources:
             - deployment.yaml
             - service.yaml
@@ -723,6 +729,8 @@ jobs:
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: test
+          commonLabels:
+            deployment-color: ${TARGET_COLOR}
           resources:
             - deployment.yaml
             - service.yaml
