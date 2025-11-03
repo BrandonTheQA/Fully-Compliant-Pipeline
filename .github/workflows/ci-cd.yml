@@ -151,7 +151,7 @@ jobs:
         run: |
           tmpdir=$(mktemp -d)
           pushd "$tmpdir"
-          cat > kustomization.yaml << 'EOF'
+          cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -blue
@@ -208,7 +208,7 @@ jobs:
         run: |
           tmpdir=$(mktemp -d)
           pushd "$tmpdir"
-          cat > kustomization.yaml << 'EOF'
+          cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -blue
@@ -406,7 +406,7 @@ jobs:
         run: |
           tmpdir=$(mktemp -d)
           pushd "$tmpdir"
-          cat > kustomization.yaml << 'EOF'
+          cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -blue
@@ -463,7 +463,7 @@ jobs:
         run: |
           tmpdir=$(mktemp -d)
           pushd "$tmpdir"
-          cat > kustomization.yaml << 'EOF'
+          cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -blue
