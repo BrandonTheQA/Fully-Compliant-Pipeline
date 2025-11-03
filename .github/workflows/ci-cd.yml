@@ -157,8 +157,8 @@ jobs:
           nameSuffix: -blue
           namespace: dev
           resources:
-            - ../../k8s/${{ matrix.app }}/deployment.yaml
-            - ../../k8s/${{ matrix.app }}/service.yaml
+            - ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/deployment.yaml
+            - ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/service.yaml
           EOF
           kubectl apply -k .
           popd
@@ -214,8 +214,8 @@ jobs:
           nameSuffix: -blue
           namespace: dev
           resources:
-            - ../../k8s/ui/deployment.yaml
-            - ../../k8s/ui/service.yaml
+            - ${GITHUB_WORKSPACE}/k8s/ui/deployment.yaml
+            - ${GITHUB_WORKSPACE}/k8s/ui/service.yaml
           EOF
           kubectl apply -k .
           popd
@@ -412,8 +412,8 @@ jobs:
           nameSuffix: -blue
           namespace: test
           resources:
-            - ../../k8s/${{ matrix.app }}/deployment.yaml
-            - ../../k8s/${{ matrix.app }}/service.yaml
+            - ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/deployment.yaml
+            - ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/service.yaml
           EOF
           kubectl apply -k .
           popd
@@ -469,8 +469,8 @@ jobs:
           nameSuffix: -blue
           namespace: test
           resources:
-            - ../../k8s/ui/deployment.yaml
-            - ../../k8s/ui/service.yaml
+            - ${GITHUB_WORKSPACE}/k8s/ui/deployment.yaml
+            - ${GITHUB_WORKSPACE}/k8s/ui/service.yaml
           EOF
           kubectl apply -k .
           popd
