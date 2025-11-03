@@ -149,11 +149,23 @@ jobs:
 
       - name: Deploy manifest
         run: |
-          kubectl apply -f k8s/${{ matrix.app }} -n dev
+          tmpdir=$(mktemp -d)
+          pushd "$tmpdir"
+          cat > kustomization.yaml << 'EOF'
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+          nameSuffix: -blue
+          namespace: dev
+          resources:
+            - ../../k8s/${{ matrix.app }}/deployment.yaml
+            - ../../k8s/${{ matrix.app }}/service.yaml
+          EOF
+          kubectl apply -k .
+          popd
 
       - name: Update image to current SHA
         run: |
-          kubectl set image deployment/${{ matrix.app }} ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n dev
+          kubectl set image deployment/${{ matrix.app }}-blue ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n dev
 
       - name: Annotate deployment and service as -blue
         run: |
@@ -162,7 +174,7 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/${{ matrix.app }} -n dev --timeout=180s || exit 1
+          kubectl rollout status deployment/${{ matrix.app }}-blue -n dev --timeout=180s || exit 1
 
   deploy-dev-ui:
     name: Deploy UI to Dev
@@ -194,11 +206,23 @@ jobs:
 
       - name: Deploy manifest
         run: |
-          kubectl apply -f k8s/ui -n dev
+          tmpdir=$(mktemp -d)
+          pushd "$tmpdir"
+          cat > kustomization.yaml << 'EOF'
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+          nameSuffix: -blue
+          namespace: dev
+          resources:
+            - ../../k8s/ui/deployment.yaml
+            - ../../k8s/ui/service.yaml
+          EOF
+          kubectl apply -k .
+          popd
 
       - name: Update image to current SHA
         run: |
-          kubectl set image deployment/ui ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n dev
+          kubectl set image deployment/ui-blue ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n dev
 
       - name: Annotate UI deployment and service as -blue
         run: |
@@ -207,7 +231,7 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/ui -n dev --timeout=180s || exit 1
+          kubectl rollout status deployment/ui-blue -n dev --timeout=180s || exit 1
 
   health-check-dev:
     name: Health Check Services in Dev
@@ -241,7 +265,7 @@ jobs:
           set -euo pipefail
           # Wait for all LoadBalancer services to get external IPs
           echo "Waiting for LoadBalancer EXTERNAL-IPs..."
-          services=(order product user ui)
+          services=(order-blue product-blue user-blue ui-blue)
           declare -A service_hosts
           
           for svc in "${services[@]}"; do
@@ -270,7 +294,7 @@ jobs:
           
           # Perform health checks using LoadBalancer external IPs
           echo "Checking API services health via LoadBalancer..."
-          api_services=(order product user)
+          api_services=(order-blue product-blue user-blue)
           for svc in "${api_services[@]}"; do
             host=${service_hosts[${svc}]}
             echo "Checking health for ${svc} at http://${host}/actuator/health..."
@@ -380,14 +404,23 @@ jobs:
 
       - name: Deploy manifest
         run: |
-          # Replace namespace in manifests before applying
-          for file in k8s/${{ matrix.app }}/*.yaml; do
-            sed 's/namespace: dev/namespace: test/g' "$file" | kubectl apply -f -
-          done
+          tmpdir=$(mktemp -d)
+          pushd "$tmpdir"
+          cat > kustomization.yaml << 'EOF'
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+          nameSuffix: -blue
+          namespace: test
+          resources:
+            - ../../k8s/${{ matrix.app }}/deployment.yaml
+            - ../../k8s/${{ matrix.app }}/service.yaml
+          EOF
+          kubectl apply -k .
+          popd
 
       - name: Update image to current SHA
         run: |
-          kubectl set image deployment/${{ matrix.app }} ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n test
+          kubectl set image deployment/${{ matrix.app }}-blue ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n test
 
       - name: Annotate deployment and service as -blue
         run: |
@@ -396,7 +429,7 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/${{ matrix.app }} -n test --timeout=180s || exit 1
+          kubectl rollout status deployment/${{ matrix.app }}-blue -n test --timeout=180s || exit 1
 
   deploy-test-ui:
     name: Deploy UI to Test
@@ -428,14 +461,23 @@ jobs:
 
       - name: Deploy manifest
         run: |
-          # Replace namespace in manifests before applying
-          for file in k8s/ui/*.yaml; do
-            sed 's/namespace: dev/namespace: test/g' "$file" | kubectl apply -f -
-          done
+          tmpdir=$(mktemp -d)
+          pushd "$tmpdir"
+          cat > kustomization.yaml << 'EOF'
+          apiVersion: kustomize.config.k8s.io/v1beta1
+          kind: Kustomization
+          nameSuffix: -blue
+          namespace: test
+          resources:
+            - ../../k8s/ui/deployment.yaml
+            - ../../k8s/ui/service.yaml
+          EOF
+          kubectl apply -k .
+          popd
 
       - name: Update image to current SHA
         run: |
-          kubectl set image deployment/ui ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n test
+          kubectl set image deployment/ui-blue ui=${{ env.ACR_LOGIN_SERVER }}/ui:${{ github.sha }} -n test
 
       - name: Annotate UI deployment and service as -blue
         run: |
@@ -444,7 +486,7 @@ jobs:
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/ui -n test --timeout=180s || exit 1
+          kubectl rollout status deployment/ui-blue -n test --timeout=180s || exit 1
 
   health-check-test:
     name: Health Check Services in Test
@@ -478,7 +520,7 @@ jobs:
           set -euo pipefail
           # Wait for all LoadBalancer services to get external IPs
           echo "Waiting for LoadBalancer EXTERNAL-IPs..."
-          services=(order product user ui)
+          services=(order-blue product-blue user-blue ui-blue)
           declare -A service_hosts
           
           for svc in "${services[@]}"; do
@@ -507,7 +549,7 @@ jobs:
           
           # Perform health checks using LoadBalancer external IPs
           echo "Checking API services health via LoadBalancer..."
-          api_services=(order product user)
+          api_services=(order-blue product-blue user-blue)
           for svc in "${api_services[@]}"; do
             host=${service_hosts[${svc}]}
             echo "Checking health for ${svc} at http://${host}/actuator/health..."
@@ -572,9 +614,9 @@ jobs:
         run: |
           ui_host=""
           for i in {1..30}; do
-            ip=$(kubectl get svc ui -n test -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+            ip=$(kubectl get svc ui-blue -n test -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
             if [ -z "${ip}" ]; then
-              hostname=$(kubectl get svc ui -n test -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+              hostname=$(kubectl get svc ui-blue -n test -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
             else
               hostname=""
             fi
