@@ -500,7 +500,6 @@ jobs:
     name: Health Check Services in Test
     runs-on: ubuntu-latest
     needs: [deploy-test, deploy-test-ui]
-    environment: test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -594,7 +593,6 @@ jobs:
   selenium-tests-test:
     runs-on: ubuntu-latest
     needs: health-check-test
-    environment: test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
