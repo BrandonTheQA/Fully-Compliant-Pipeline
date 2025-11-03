@@ -317,17 +317,17 @@ jobs:
           done
           
           # Check UI service via LoadBalancer
-          ui_host=${service_hosts[ui]}
-          echo "Checking health for ui at http://${ui_host}/health..."
+          ui_host=${service_hosts[ui-blue]}
+          echo "Checking health for ui-blue at http://${ui_host}/health..."
           for i in {1..30}; do
             code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
             if [ "${code}" = "200" ]; then
-              echo "ui is healthy (HTTP 200)"
+              echo "ui-blue is healthy (HTTP 200)"
               break
             fi
             sleep 5
             if [ $i -eq 30 ]; then
-              echo "ui health check failed. Last code: ${code}" >&2
+              echo "ui-blue health check failed. Last code: ${code}" >&2
               exit 1
             fi
           done
@@ -576,17 +576,17 @@ jobs:
           done
           
           # Check UI service via LoadBalancer
-          ui_host=${service_hosts[ui]}
-          echo "Checking health for ui at http://${ui_host}/health..."
+          ui_host=${service_hosts[ui-blue]}
+          echo "Checking health for ui-blue at http://${ui_host}/health..."
           for i in {1..30}; do
             code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
             if [ "${code}" = "200" ]; then
-              echo "ui is healthy (HTTP 200)"
+              echo "ui-blue is healthy (HTTP 200)"
               break
             fi
             sleep 5
             if [ $i -eq 30 ]; then
-              echo "ui health check failed. Last code: ${code}" >&2
+              echo "ui-blue health check failed. Last code: ${code}" >&2
               exit 1
             fi
           done
