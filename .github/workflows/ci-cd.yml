@@ -173,6 +173,12 @@ jobs:
         with:
           version: 'latest'
 
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
@@ -201,39 +207,17 @@ jobs:
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/deployment.yaml .
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/service.yaml .
-          # Create strategic merge patch to add deployment-color
-          cat > selector-patch.yaml << EOF
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: ${{ matrix.app }}
-          spec:
-            selector:
-              matchLabels:
-                app: ${{ matrix.app }}
-                deployment-color: ${TARGET_COLOR}
-            template:
-              metadata:
-                labels:
-                  app: ${{ matrix.app }}
-                  deployment-color: ${TARGET_COLOR}
-          ---
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: ${{ matrix.app }}
-          spec:
-            selector:
-              app: ${{ matrix.app }}
-              deployment-color: ${TARGET_COLOR}
-          EOF
+          # Add deployment-color to deployment selector and pod labels using yq
+          yq eval ".spec.selector.matchLabels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
+          yq eval ".spec.template.metadata.labels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
+          # Add deployment-color to service selector using yq
+          yq eval ".spec.selector.deployment-color = \"${TARGET_COLOR}\"" -i service.yaml
+          # Apply kustomization with nameSuffix
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: dev
-          patchesStrategicMerge:
-            - selector-patch.yaml
           resources:
             - deployment.yaml
             - service.yaml
@@ -271,6 +255,12 @@ jobs:
         with:
           version: 'latest'
 
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
@@ -292,39 +282,17 @@ jobs:
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/ui/deployment.yaml .
           cp ${GITHUB_WORKSPACE}/k8s/ui/service.yaml .
-          # Create strategic merge patch to add deployment-color
-          cat > selector-patch.yaml << EOF
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: ui
-          spec:
-            selector:
-              matchLabels:
-                app: ui
-                deployment-color: ${TARGET_COLOR}
-            template:
-              metadata:
-                labels:
-                  app: ui
-                  deployment-color: ${TARGET_COLOR}
-          ---
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: ui
-          spec:
-            selector:
-              app: ui
-              deployment-color: ${TARGET_COLOR}
-          EOF
+          # Add deployment-color to deployment selector and pod labels using yq
+          yq eval ".spec.selector.matchLabels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
+          yq eval ".spec.template.metadata.labels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
+          # Add deployment-color to service selector using yq
+          yq eval ".spec.selector.deployment-color = \"${TARGET_COLOR}\"" -i service.yaml
+          # Apply kustomization with nameSuffix
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: dev
-          patchesStrategicMerge:
-            - selector-patch.yaml
           resources:
             - deployment.yaml
             - service.yaml
@@ -683,6 +651,12 @@ jobs:
         with:
           version: 'latest'
 
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
@@ -711,39 +685,17 @@ jobs:
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/deployment.yaml .
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/service.yaml .
-          # Create strategic merge patch to add deployment-color
-          cat > selector-patch.yaml << EOF
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: ${{ matrix.app }}
-          spec:
-            selector:
-              matchLabels:
-                app: ${{ matrix.app }}
-                deployment-color: ${TARGET_COLOR}
-            template:
-              metadata:
-                labels:
-                  app: ${{ matrix.app }}
-                  deployment-color: ${TARGET_COLOR}
-          ---
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: ${{ matrix.app }}
-          spec:
-            selector:
-              app: ${{ matrix.app }}
-              deployment-color: ${TARGET_COLOR}
-          EOF
+          # Add deployment-color to deployment selector and pod labels using yq
+          yq eval ".spec.selector.matchLabels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
+          yq eval ".spec.template.metadata.labels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
+          # Add deployment-color to service selector using yq
+          yq eval ".spec.selector.deployment-color = \"${TARGET_COLOR}\"" -i service.yaml
+          # Apply kustomization with nameSuffix
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: test
-          patchesStrategicMerge:
-            - selector-patch.yaml
           resources:
             - deployment.yaml
             - service.yaml
@@ -781,6 +733,12 @@ jobs:
         with:
           version: 'latest'
 
+      - name: Install yq
+        run: |
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+          yq --version
+
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
@@ -802,39 +760,17 @@ jobs:
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/ui/deployment.yaml .
           cp ${GITHUB_WORKSPACE}/k8s/ui/service.yaml .
-          # Create strategic merge patch to add deployment-color
-          cat > selector-patch.yaml << EOF
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: ui
-          spec:
-            selector:
-              matchLabels:
-                app: ui
-                deployment-color: ${TARGET_COLOR}
-            template:
-              metadata:
-                labels:
-                  app: ui
-                  deployment-color: ${TARGET_COLOR}
-          ---
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: ui
-          spec:
-            selector:
-              app: ui
-              deployment-color: ${TARGET_COLOR}
-          EOF
+          # Add deployment-color to deployment selector and pod labels using yq
+          yq eval ".spec.selector.matchLabels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
+          yq eval ".spec.template.metadata.labels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
+          # Add deployment-color to service selector using yq
+          yq eval ".spec.selector.deployment-color = \"${TARGET_COLOR}\"" -i service.yaml
+          # Apply kustomization with nameSuffix
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: test
-          patchesStrategicMerge:
-            - selector-patch.yaml
           resources:
             - deployment.yaml
             - service.yaml
