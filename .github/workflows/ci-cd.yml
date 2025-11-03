@@ -171,8 +171,8 @@ jobs:
 
       - name: Annotate deployment and service as -blue
         run: |
-          kubectl annotate deployment/${{ matrix.app }} app.kubernetes.io/instance=${{ matrix.app }}-blue -n dev --overwrite
-          kubectl annotate service/${{ matrix.app }} app.kubernetes.io/instance=${{ matrix.app }}-blue -n dev --overwrite
+          kubectl annotate deployment/${{ matrix.app }}-blue app.kubernetes.io/instance=${{ matrix.app }}-blue -n dev --overwrite
+          kubectl annotate service/${{ matrix.app }}-blue app.kubernetes.io/instance=${{ matrix.app }}-blue -n dev --overwrite
 
       - name: Wait for rollout
         run: |
@@ -230,8 +230,8 @@ jobs:
 
       - name: Annotate UI deployment and service as -blue
         run: |
-          kubectl annotate deployment/ui app.kubernetes.io/instance=ui-blue -n dev --overwrite
-          kubectl annotate service/ui app.kubernetes.io/instance=ui-blue -n dev --overwrite
+          kubectl annotate deployment/ui-blue app.kubernetes.io/instance=ui-blue -n dev --overwrite
+          kubectl annotate service/ui-blue app.kubernetes.io/instance=ui-blue -n dev --overwrite
 
       - name: Wait for rollout
         run: |
@@ -430,8 +430,8 @@ jobs:
 
       - name: Annotate deployment and service as -blue
         run: |
-          kubectl annotate deployment/${{ matrix.app }} app.kubernetes.io/instance=${{ matrix.app }}-blue -n test --overwrite
-          kubectl annotate service/${{ matrix.app }} app.kubernetes.io/instance=${{ matrix.app }}-blue -n test --overwrite
+          kubectl annotate deployment/${{ matrix.app }}-blue app.kubernetes.io/instance=${{ matrix.app }}-blue -n test --overwrite
+          kubectl annotate service/${{ matrix.app }}-blue app.kubernetes.io/instance=${{ matrix.app }}-blue -n test --overwrite
 
       - name: Wait for rollout
         run: |
@@ -489,8 +489,8 @@ jobs:
 
       - name: Annotate UI deployment and service as -blue
         run: |
-          kubectl annotate deployment/ui app.kubernetes.io/instance=ui-blue -n test --overwrite
-          kubectl annotate service/ui app.kubernetes.io/instance=ui-blue -n test --overwrite
+          kubectl annotate deployment/ui-blue app.kubernetes.io/instance=ui-blue -n test --overwrite
+          kubectl annotate service/ui-blue app.kubernetes.io/instance=ui-blue -n test --overwrite
 
       - name: Wait for rollout
         run: |
