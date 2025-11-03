@@ -201,15 +201,39 @@ jobs:
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/deployment.yaml .
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/service.yaml .
+          # Create strategic merge patch to add deployment-color
+          cat > selector-patch.yaml << EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: ${{ matrix.app }}
+          spec:
+            selector:
+              matchLabels:
+                app: ${{ matrix.app }}
+                deployment-color: ${TARGET_COLOR}
+            template:
+              metadata:
+                labels:
+                  app: ${{ matrix.app }}
+                  deployment-color: ${TARGET_COLOR}
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: ${{ matrix.app }}
+          spec:
+            selector:
+              app: ${{ matrix.app }}
+              deployment-color: ${TARGET_COLOR}
+          EOF
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: dev
-          labels:
-            - pairs:
-                deployment-color: ${TARGET_COLOR}
-              includeSelectors: false
+          patchesStrategicMerge:
+            - selector-patch.yaml
           resources:
             - deployment.yaml
             - service.yaml
@@ -268,15 +292,39 @@ jobs:
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/ui/deployment.yaml .
           cp ${GITHUB_WORKSPACE}/k8s/ui/service.yaml .
+          # Create strategic merge patch to add deployment-color
+          cat > selector-patch.yaml << EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: ui
+          spec:
+            selector:
+              matchLabels:
+                app: ui
+                deployment-color: ${TARGET_COLOR}
+            template:
+              metadata:
+                labels:
+                  app: ui
+                  deployment-color: ${TARGET_COLOR}
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: ui
+          spec:
+            selector:
+              app: ui
+              deployment-color: ${TARGET_COLOR}
+          EOF
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: dev
-          labels:
-            - pairs:
-                deployment-color: ${TARGET_COLOR}
-              includeSelectors: false
+          patchesStrategicMerge:
+            - selector-patch.yaml
           resources:
             - deployment.yaml
             - service.yaml
@@ -663,15 +711,39 @@ jobs:
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/deployment.yaml .
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/service.yaml .
+          # Create strategic merge patch to add deployment-color
+          cat > selector-patch.yaml << EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: ${{ matrix.app }}
+          spec:
+            selector:
+              matchLabels:
+                app: ${{ matrix.app }}
+                deployment-color: ${TARGET_COLOR}
+            template:
+              metadata:
+                labels:
+                  app: ${{ matrix.app }}
+                  deployment-color: ${TARGET_COLOR}
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: ${{ matrix.app }}
+          spec:
+            selector:
+              app: ${{ matrix.app }}
+              deployment-color: ${TARGET_COLOR}
+          EOF
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: test
-          labels:
-            - pairs:
-                deployment-color: ${TARGET_COLOR}
-              includeSelectors: false
+          patchesStrategicMerge:
+            - selector-patch.yaml
           resources:
             - deployment.yaml
             - service.yaml
@@ -730,15 +802,39 @@ jobs:
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/ui/deployment.yaml .
           cp ${GITHUB_WORKSPACE}/k8s/ui/service.yaml .
+          # Create strategic merge patch to add deployment-color
+          cat > selector-patch.yaml << EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: ui
+          spec:
+            selector:
+              matchLabels:
+                app: ui
+                deployment-color: ${TARGET_COLOR}
+            template:
+              metadata:
+                labels:
+                  app: ui
+                  deployment-color: ${TARGET_COLOR}
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: ui
+          spec:
+            selector:
+              app: ui
+              deployment-color: ${TARGET_COLOR}
+          EOF
           cat > kustomization.yaml << EOF
           apiVersion: kustomize.config.k8s.io/v1beta1
           kind: Kustomization
           nameSuffix: -${TARGET_COLOR}
           namespace: test
-          labels:
-            - pairs:
-                deployment-color: ${TARGET_COLOR}
-              includeSelectors: false
+          patchesStrategicMerge:
+            - selector-patch.yaml
           resources:
             - deployment.yaml
             - service.yaml
