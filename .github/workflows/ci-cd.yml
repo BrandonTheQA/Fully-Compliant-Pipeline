@@ -230,6 +230,16 @@ jobs:
           TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
           kubectl set image deployment/${{ matrix.app }}-${TARGET_COLOR} ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n dev
 
+      - name: Set color-specific env for order (dev)
+        if: matrix.app == 'order'
+        run: |
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          kubectl set env deployment/order-${TARGET_COLOR} \
+            DEPLOYMENT_COLOR=${TARGET_COLOR} \
+            NAMESPACE=dev \
+            USER_SERVICE_URL=http://user-${TARGET_COLOR}.dev.svc.cluster.local \
+            PRODUCT_SERVICE_URL=http://product-${TARGET_COLOR}.dev.svc.cluster.local -n dev
+
       - name: Annotate deployment and service
         run: |
           TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
@@ -828,6 +838,16 @@ jobs:
         run: |
           TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
           kubectl set image deployment/${{ matrix.app }}-${TARGET_COLOR} ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n test
+
+      - name: Set color-specific env for order (test)
+        if: matrix.app == 'order'
+        run: |
+          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
+          kubectl set env deployment/order-${TARGET_COLOR} \
+            DEPLOYMENT_COLOR=${TARGET_COLOR} \
+            NAMESPACE=test \
+            USER_SERVICE_URL=http://user-${TARGET_COLOR}.test.svc.cluster.local \
+            PRODUCT_SERVICE_URL=http://product-${TARGET_COLOR}.test.svc.cluster.local -n test
 
       - name: Annotate deployment and service
         run: |
