@@ -321,323 +321,323 @@ jobs:
           TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
           kubectl rollout status deployment/ui-${TARGET_COLOR} -n dev --timeout=180s || exit 1
 
-#   health-check-dev:
-#     name: Health Check Services in Dev
-#     runs-on: ubuntu-latest
-#     needs: [deploy-dev, deploy-dev-ui, detect-deployment-color-dev]
-#     environment: dev
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
-# 
-#       - name: Install kubectl
-#         uses: azure/setup-kubectl@v4
-#         with:
-#           version: 'latest'
-# 
-#       - name: Azure login (OIDC)
-#         uses: azure/login@v2
-#         with:
-#           client-id: ${{ secrets.AZURE_CLIENT_ID }}
-#           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-#           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-# 
-#       - name: Discover AKS and set context
-#         run: |
-#           AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
-#           echo "Using AKS cluster: ${AKS_NAME}"
-#           az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
-# 
-#       - name: Health check services on both blue and green
-#         run: |
-#           set -e
-#           ACTIVE_COLOR="${{ needs.detect-deployment-color-dev.outputs.active-color }}"
-#           TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
-#           
-#           # Check if active color services exist
-#           ACTIVE_EXISTS=false
-#           if kubectl get deployment order-${ACTIVE_COLOR} -n dev &>/dev/null; then
-#             ACTIVE_EXISTS=true
-#             echo "Active color (${ACTIVE_COLOR}) deployments found, will health check them"
-#           else
-#             echo "Active color (${ACTIVE_COLOR}) deployments not found, skipping health checks for active side"
-#           fi
-#           
-#           # Wait for LoadBalancer services to get external IPs
-#           echo "Waiting for LoadBalancer EXTERNAL-IPs for target color (${TARGET_COLOR})..."
-#           target_services=(order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR} ui-${TARGET_COLOR})
-#           declare -A service_hosts
-#           
-#           # Always check target color
-#           for svc in "${target_services[@]}"; do
-#             echo "Waiting for LoadBalancer EXTERNAL-IP for ${svc}..."
-#             host=""
-#             for i in {1..60}; do
-#               ip=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-#               if [ -z "${ip}" ]; then
-#                 hostname=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
-#               else
-#                 hostname=""
-#               fi
-#               host=${ip:-$hostname}
-#               if [ -n "${host}" ]; then
-#                 echo "${svc} endpoint: ${host}"
-#                 service_hosts[${svc}]=${host}
-#                 break
-#               fi
-#               sleep 5
-#             done
-#             if [ -z "${host}" ]; then
-#               echo "Timed out waiting for EXTERNAL-IP/hostname for ${svc}" >&2
-#               exit 1
-#             fi
-#           done
-#           
-#           # Optionally check active color if it exists
-#           if [ "$ACTIVE_EXISTS" = "true" ]; then
-#             echo "Waiting for LoadBalancer EXTERNAL-IPs for active color (${ACTIVE_COLOR})..."
-#             active_services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR} ui-${ACTIVE_COLOR})
-#             for svc in "${active_services[@]}"; do
-#               echo "Waiting for LoadBalancer EXTERNAL-IP for ${svc}..."
-#               host=""
-#               for i in {1..60}; do
-#                 ip=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-#                 if [ -z "${ip}" ]; then
-#                   hostname=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
-#                 else
-#                   hostname=""
-#                 fi
-#                 host=${ip:-$hostname}
-#                 if [ -n "${host}" ]; then
-#                   echo "${svc} endpoint: ${host}"
-#                   service_hosts[${svc}]=${host}
-#                   break
-#                 fi
-#                 sleep 5
-#               done
-#               if [ -z "${host}" ]; then
-#                 echo "Warning: Timed out waiting for EXTERNAL-IP/hostname for ${svc}, but continuing as active side is optional" >&2
-#               fi
-#             done
-#           fi
-#           
-#           # Perform health checks using LoadBalancer external IPs
-#           echo "Checking API services health via LoadBalancer for target color (${TARGET_COLOR})..."
-#           target_api_services=(order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR})
-#           for svc in "${target_api_services[@]}"; do
-#             host=${service_hosts[${svc}]}
-#             echo "Checking health for ${svc} at http://${host}/actuator/health..."
-#             for i in {1..30}; do
-#               code=$(curl -s -o /dev/null -w "%{http_code}" http://${host}/actuator/health || echo "000")
-#               if [ "${code}" = "200" ]; then
-#                 echo "${svc} is healthy (HTTP 200)"
-#                 break
-#               fi
-#               sleep 5
-#               if [ $i -eq 30 ]; then
-#                 echo "${svc} health check failed. Last code: ${code}" >&2
-#                 exit 1
-#               fi
-#             done
-#           done
-#           
-#           # Optionally check active color API services if they exist
-#           if [ "$ACTIVE_EXISTS" = "true" ]; then
-#             echo "Checking API services health via LoadBalancer for active color (${ACTIVE_COLOR})..."
-#             active_api_services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR})
-#             for svc in "${active_api_services[@]}"; do
-#               host=${service_hosts[${svc}]:-}
-#               if [ -n "${host}" ]; then
-#                 echo "Checking health for ${svc} at http://${host}/actuator/health..."
-#                 for i in {1..30}; do
-#                   code=$(curl -s -o /dev/null -w "%{http_code}" http://${host}/actuator/health || echo "000")
-#                   if [ "${code}" = "200" ]; then
-#                     echo "${svc} is healthy (HTTP 200)"
-#                     break
-#                   fi
-#                   sleep 5
-#                   if [ $i -eq 30 ]; then
-#                     echo "Warning: ${svc} health check failed. Last code: ${code}, but continuing as active side is optional" >&2
-#                   fi
-#                 done
-#               else
-#                 echo "Skipping health check for ${svc} (service not available)"
-#               fi
-#             done
-#           fi
-#           
-#           # Check UI service for target color (required)
-#           ui_host=${service_hosts[ui-${TARGET_COLOR}]}
-#           echo "Checking health for ui-${TARGET_COLOR} at http://${ui_host}/health..."
-#           for i in {1..30}; do
-#             code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
-#             if [ "${code}" = "200" ]; then
-#               echo "ui-${TARGET_COLOR} is healthy (HTTP 200)"
-#               break
-#             fi
-#             sleep 5
-#             if [ $i -eq 30 ]; then
-#               echo "ui-${TARGET_COLOR} health check failed. Last code: ${code}" >&2
-#               exit 1
-#             fi
-#           done
-#           
-#           # Optionally check active color UI if it exists
-#           if [ "$ACTIVE_EXISTS" = "true" ]; then
-#             ui_host=${service_hosts[ui-${ACTIVE_COLOR}]:-}
-#             if [ -n "${ui_host}" ]; then
-#               echo "Checking health for ui-${ACTIVE_COLOR} at http://${ui_host}/health..."
-#               for i in {1..30}; do
-#                 code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
-#                 if [ "${code}" = "200" ]; then
-#                   echo "ui-${ACTIVE_COLOR} is healthy (HTTP 200)"
-#                   break
-#                 fi
-#                 sleep 5
-#                 if [ $i -eq 30 ]; then
-#                   echo "Warning: ui-${ACTIVE_COLOR} health check failed. Last code: ${code}, but continuing as active side is optional" >&2
-#                 fi
-#               done
-#             else
-#               echo "Skipping health check for ui-${ACTIVE_COLOR} (service not available)"
-#             fi
-#           fi
-# 
-#   selenium-tests-dev:
-#     runs-on: ubuntu-latest
-#     needs: [health-check-dev, detect-deployment-color-dev]
-#     environment: dev
-#     steps:
-#       - name: Checkout
-#         uses: actions/checkout@v4
-# 
-#       - name: Install kubectl
-#         uses: azure/setup-kubectl@v4
-#         with:
-#           version: 'latest'
-# 
-#       - name: Azure login (OIDC)
-#         uses: azure/login@v2
-#         with:
-#           client-id: ${{ secrets.AZURE_CLIENT_ID }}
-#           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-#           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-# 
-#       - name: Discover AKS and set context
-#         run: |
-#           AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
-#           echo "Using AKS cluster: ${AKS_NAME}"
-#           az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
-# 
-#       - name: Get UI service URLs
-#         id: get-ui-urls
-#         run: |
-#           ACTIVE_COLOR="${{ needs.detect-deployment-color-dev.outputs.active-color }}"
-#           TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
-#           
-#           # Check if active color UI exists
-#           ACTIVE_UI_EXISTS=false
-#           if kubectl get deployment ui-${ACTIVE_COLOR} -n dev &>/dev/null; then
-#             ACTIVE_UI_EXISTS=true
-#             echo "Active color (${ACTIVE_COLOR}) UI deployment found"
-#           else
-#             echo "Active color (${ACTIVE_COLOR}) UI deployment not found, will skip selenium tests for active side"
-#           fi
-#           
-#           # Always get target color URL (required)
-#           echo "Getting UI service URL for ui-${TARGET_COLOR}..."
-#           ui_host=""
-#           for i in {1..30}; do
-#             ip=$(kubectl get svc ui-${TARGET_COLOR} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-#             if [ -z "${ip}" ]; then
-#               hostname=$(kubectl get svc ui-${TARGET_COLOR} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
-#             else
-#               hostname=""
-#             fi
-#             ui_host=${ip:-$hostname}
-#             if [ -n "${ui_host}" ]; then
-#               echo "url-${TARGET_COLOR}=http://${ui_host}" >> $GITHUB_OUTPUT
-#               echo "Got URL for ui-${TARGET_COLOR}: http://${ui_host}"
-#               break
-#             fi
-#             sleep 2
-#           done
-#           if [ -z "${ui_host}" ]; then
-#             echo "Failed to get UI service URL for ui-${TARGET_COLOR}" >&2
-#             exit 1
-#           fi
-#           
-#           # Optionally get active color URL if it exists
-#           if [ "$ACTIVE_UI_EXISTS" = "true" ]; then
-#             echo "Getting UI service URL for ui-${ACTIVE_COLOR}..."
-#             ui_host=""
-#             for i in {1..30}; do
-#               ip=$(kubectl get svc ui-${ACTIVE_COLOR} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
-#               if [ -z "${ip}" ]; then
-#                 hostname=$(kubectl get svc ui-${ACTIVE_COLOR} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
-#               else
-#                 hostname=""
-#               fi
-#               ui_host=${ip:-$hostname}
-#               if [ -n "${ui_host}" ]; then
-#                 echo "url-${ACTIVE_COLOR}=http://${ui_host}" >> $GITHUB_OUTPUT
-#                 echo "Got URL for ui-${ACTIVE_COLOR}: http://${ui_host}"
-#                 break
-#               fi
-#               sleep 2
-#             done
-#             if [ -z "${ui_host}" ]; then
-#               echo "Warning: Failed to get UI service URL for ui-${ACTIVE_COLOR}, but continuing as active side is optional" >&2
-#               echo "active-ui-exists=false" >> $GITHUB_OUTPUT
-#             else
-#               echo "active-ui-exists=true" >> $GITHUB_OUTPUT
-#             fi
-#           else
-#             echo "active-ui-exists=false" >> $GITHUB_OUTPUT
-#           fi
-# 
-#       - name: Set up Java
-#         uses: actions/setup-java@v4
-#         with:
-#           distribution: temurin
-#           java-version: ${{ env.JAVA_VERSION }}
-#           cache: 'maven'
-#           cache-dependency-path: selenium/pom.xml
-# 
-#       - name: Install Chrome
-#         run: |
-#           sudo apt-get update
-#           sudo apt-get install -y google-chrome-stable
-#           google-chrome --version
-# 
-#       - name: Run Selenium E2E Tests on Active Color
-#         if: steps.get-ui-urls.outputs.active-ui-exists == 'true'
-#         working-directory: selenium
-#         continue-on-error: true
-#         env:
-#           BASE_URL: ${{ needs.detect-deployment-color-dev.outputs.active-color == 'blue' && steps.get-ui-urls.outputs.url-blue || steps.get-ui-urls.outputs.url-green }}
-#         run: |
-#           mvn clean test
-# 
-#       - name: Run Selenium E2E Tests on Target Color
-#         working-directory: selenium
-#         env:
-#           BASE_URL: ${{ needs.detect-deployment-color-dev.outputs.target-color == 'blue' && steps.get-ui-urls.outputs.url-blue || steps.get-ui-urls.outputs.url-green }}
-#         run: |
-#           mvn clean test
-# 
-#       - name: Upload test reports on failure
-#         if: failure()
-#         uses: actions/upload-artifact@v4
-#         with:
-#           name: selenium-test-reports
-#           path: selenium/target/surefire-reports/
-#           retention-days: 7
-# 
+  health-check-dev:
+    name: Health Check Services in Dev
+    runs-on: ubuntu-latest
+    needs: [deploy-dev, deploy-dev-ui, detect-deployment-color-dev]
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Health check services on both blue and green
+        run: |
+          set -e
+          ACTIVE_COLOR="${{ needs.detect-deployment-color-dev.outputs.active-color }}"
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          
+          # Check if active color services exist
+          ACTIVE_EXISTS=false
+          if kubectl get deployment order-${ACTIVE_COLOR} -n dev &>/dev/null; then
+            ACTIVE_EXISTS=true
+            echo "Active color (${ACTIVE_COLOR}) deployments found, will health check them"
+          else
+            echo "Active color (${ACTIVE_COLOR}) deployments not found, skipping health checks for active side"
+          fi
+          
+          # Wait for LoadBalancer services to get external IPs
+          echo "Waiting for LoadBalancer EXTERNAL-IPs for target color (${TARGET_COLOR})..."
+          target_services=(order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR} ui-${TARGET_COLOR})
+          declare -A service_hosts
+          
+          # Always check target color
+          for svc in "${target_services[@]}"; do
+            echo "Waiting for LoadBalancer EXTERNAL-IP for ${svc}..."
+            host=""
+            for i in {1..60}; do
+              ip=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+              if [ -z "${ip}" ]; then
+                hostname=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+              else
+                hostname=""
+              fi
+              host=${ip:-$hostname}
+              if [ -n "${host}" ]; then
+                echo "${svc} endpoint: ${host}"
+                service_hosts[${svc}]=${host}
+                break
+              fi
+              sleep 5
+            done
+            if [ -z "${host}" ]; then
+              echo "Timed out waiting for EXTERNAL-IP/hostname for ${svc}" >&2
+              exit 1
+            fi
+          done
+          
+          # Optionally check active color if it exists
+          if [ "$ACTIVE_EXISTS" = "true" ]; then
+            echo "Waiting for LoadBalancer EXTERNAL-IPs for active color (${ACTIVE_COLOR})..."
+            active_services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR} ui-${ACTIVE_COLOR})
+            for svc in "${active_services[@]}"; do
+              echo "Waiting for LoadBalancer EXTERNAL-IP for ${svc}..."
+              host=""
+              for i in {1..60}; do
+                ip=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+                if [ -z "${ip}" ]; then
+                  hostname=$(kubectl get svc ${svc} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+                else
+                  hostname=""
+                fi
+                host=${ip:-$hostname}
+                if [ -n "${host}" ]; then
+                  echo "${svc} endpoint: ${host}"
+                  service_hosts[${svc}]=${host}
+                  break
+                fi
+                sleep 5
+              done
+              if [ -z "${host}" ]; then
+                echo "Warning: Timed out waiting for EXTERNAL-IP/hostname for ${svc}, but continuing as active side is optional" >&2
+              fi
+            done
+          fi
+          
+          # Perform health checks using LoadBalancer external IPs
+          echo "Checking API services health via LoadBalancer for target color (${TARGET_COLOR})..."
+          target_api_services=(order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR})
+          for svc in "${target_api_services[@]}"; do
+            host=${service_hosts[${svc}]}
+            echo "Checking health for ${svc} at http://${host}/actuator/health..."
+            for i in {1..30}; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" http://${host}/actuator/health || echo "000")
+              if [ "${code}" = "200" ]; then
+                echo "${svc} is healthy (HTTP 200)"
+                break
+              fi
+              sleep 5
+              if [ $i -eq 30 ]; then
+                echo "${svc} health check failed. Last code: ${code}" >&2
+                exit 1
+              fi
+            done
+          done
+          
+          # Optionally check active color API services if they exist
+          if [ "$ACTIVE_EXISTS" = "true" ]; then
+            echo "Checking API services health via LoadBalancer for active color (${ACTIVE_COLOR})..."
+            active_api_services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR})
+            for svc in "${active_api_services[@]}"; do
+              host=${service_hosts[${svc}]:-}
+              if [ -n "${host}" ]; then
+                echo "Checking health for ${svc} at http://${host}/actuator/health..."
+                for i in {1..30}; do
+                  code=$(curl -s -o /dev/null -w "%{http_code}" http://${host}/actuator/health || echo "000")
+                  if [ "${code}" = "200" ]; then
+                    echo "${svc} is healthy (HTTP 200)"
+                    break
+                  fi
+                  sleep 5
+                  if [ $i -eq 30 ]; then
+                    echo "Warning: ${svc} health check failed. Last code: ${code}, but continuing as active side is optional" >&2
+                  fi
+                done
+              else
+                echo "Skipping health check for ${svc} (service not available)"
+              fi
+            done
+          fi
+          
+          # Check UI service for target color (required)
+          ui_host=${service_hosts[ui-${TARGET_COLOR}]}
+          echo "Checking health for ui-${TARGET_COLOR} at http://${ui_host}/health..."
+          for i in {1..30}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
+            if [ "${code}" = "200" ]; then
+              echo "ui-${TARGET_COLOR} is healthy (HTTP 200)"
+              break
+            fi
+            sleep 5
+            if [ $i -eq 30 ]; then
+              echo "ui-${TARGET_COLOR} health check failed. Last code: ${code}" >&2
+              exit 1
+            fi
+          done
+          
+          # Optionally check active color UI if it exists
+          if [ "$ACTIVE_EXISTS" = "true" ]; then
+            ui_host=${service_hosts[ui-${ACTIVE_COLOR}]:-}
+            if [ -n "${ui_host}" ]; then
+              echo "Checking health for ui-${ACTIVE_COLOR} at http://${ui_host}/health..."
+              for i in {1..30}; do
+                code=$(curl -s -o /dev/null -w "%{http_code}" http://${ui_host}/health || echo "000")
+                if [ "${code}" = "200" ]; then
+                  echo "ui-${ACTIVE_COLOR} is healthy (HTTP 200)"
+                  break
+                fi
+                sleep 5
+                if [ $i -eq 30 ]; then
+                  echo "Warning: ui-${ACTIVE_COLOR} health check failed. Last code: ${code}, but continuing as active side is optional" >&2
+                fi
+              done
+            else
+              echo "Skipping health check for ui-${ACTIVE_COLOR} (service not available)"
+            fi
+          fi
+
+  selenium-tests-dev:
+    runs-on: ubuntu-latest
+    needs: [health-check-dev, detect-deployment-color-dev]
+    environment: dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Discover AKS and set context
+        run: |
+          AKS_NAME=$(az aks list -g "${AKS_RESOURCE_GROUP}" --query "[0].name" -o tsv)
+          echo "Using AKS cluster: ${AKS_NAME}"
+          az aks get-credentials -g "${AKS_RESOURCE_GROUP}" -n "${AKS_NAME}" --overwrite-existing
+
+      - name: Get UI service URLs
+        id: get-ui-urls
+        run: |
+          ACTIVE_COLOR="${{ needs.detect-deployment-color-dev.outputs.active-color }}"
+          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
+          
+          # Check if active color UI exists
+          ACTIVE_UI_EXISTS=false
+          if kubectl get deployment ui-${ACTIVE_COLOR} -n dev &>/dev/null; then
+            ACTIVE_UI_EXISTS=true
+            echo "Active color (${ACTIVE_COLOR}) UI deployment found"
+          else
+            echo "Active color (${ACTIVE_COLOR}) UI deployment not found, will skip selenium tests for active side"
+          fi
+          
+          # Always get target color URL (required)
+          echo "Getting UI service URL for ui-${TARGET_COLOR}..."
+          ui_host=""
+          for i in {1..30}; do
+            ip=$(kubectl get svc ui-${TARGET_COLOR} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+            if [ -z "${ip}" ]; then
+              hostname=$(kubectl get svc ui-${TARGET_COLOR} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+            else
+              hostname=""
+            fi
+            ui_host=${ip:-$hostname}
+            if [ -n "${ui_host}" ]; then
+              echo "url-${TARGET_COLOR}=http://${ui_host}" >> $GITHUB_OUTPUT
+              echo "Got URL for ui-${TARGET_COLOR}: http://${ui_host}"
+              break
+            fi
+            sleep 2
+          done
+          if [ -z "${ui_host}" ]; then
+            echo "Failed to get UI service URL for ui-${TARGET_COLOR}" >&2
+            exit 1
+          fi
+          
+          # Optionally get active color URL if it exists
+          if [ "$ACTIVE_UI_EXISTS" = "true" ]; then
+            echo "Getting UI service URL for ui-${ACTIVE_COLOR}..."
+            ui_host=""
+            for i in {1..30}; do
+              ip=$(kubectl get svc ui-${ACTIVE_COLOR} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || true)
+              if [ -z "${ip}" ]; then
+                hostname=$(kubectl get svc ui-${ACTIVE_COLOR} -n dev -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+              else
+                hostname=""
+              fi
+              ui_host=${ip:-$hostname}
+              if [ -n "${ui_host}" ]; then
+                echo "url-${ACTIVE_COLOR}=http://${ui_host}" >> $GITHUB_OUTPUT
+                echo "Got URL for ui-${ACTIVE_COLOR}: http://${ui_host}"
+                break
+              fi
+              sleep 2
+            done
+            if [ -z "${ui_host}" ]; then
+              echo "Warning: Failed to get UI service URL for ui-${ACTIVE_COLOR}, but continuing as active side is optional" >&2
+              echo "active-ui-exists=false" >> $GITHUB_OUTPUT
+            else
+              echo "active-ui-exists=true" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "active-ui-exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'maven'
+          cache-dependency-path: selenium/pom.xml
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          google-chrome --version
+
+      - name: Run Selenium E2E Tests on Active Color
+        if: steps.get-ui-urls.outputs.active-ui-exists == 'true'
+        working-directory: selenium
+        continue-on-error: true
+        env:
+          BASE_URL: ${{ needs.detect-deployment-color-dev.outputs.active-color == 'blue' && steps.get-ui-urls.outputs.url-blue || steps.get-ui-urls.outputs.url-green }}
+        run: |
+          mvn clean test
+
+      - name: Run Selenium E2E Tests on Target Color
+        working-directory: selenium
+        env:
+          BASE_URL: ${{ needs.detect-deployment-color-dev.outputs.target-color == 'blue' && steps.get-ui-urls.outputs.url-blue || steps.get-ui-urls.outputs.url-green }}
+        run: |
+          mvn clean test
+
+      - name: Upload test reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selenium-test-reports
+          path: selenium/target/surefire-reports/
+          retention-days: 7
+
   teardown-dev:
     name: Teardown Inactive Deployment for Dev
     runs-on: ubuntu-latest
-    needs: [deploy-dev, deploy-dev-ui, detect-deployment-color-dev]
+    needs: [selenium-tests-dev, detect-deployment-color-dev]
     environment: dev
     steps:
       - name: Checkout
@@ -759,7 +759,7 @@ jobs:
   deploy-test:
     name: Deploy to Test (${{ matrix.app }})
     runs-on: ubuntu-latest
-    needs: [discover-apps, build-push, detect-deployment-color-test]
+    needs: [discover-apps, build-push, selenium-tests-dev, detect-deployment-color-test]
     environment: test
     strategy:
       matrix: ${{ fromJson(needs.discover-apps.outputs.matrix) }}
@@ -843,7 +843,7 @@ jobs:
   deploy-test-ui:
     name: Deploy UI to Test
     runs-on: ubuntu-latest
-    needs: [build-push-ui, detect-deployment-color-test]
+    needs: [build-push-ui, selenium-tests-dev, detect-deployment-color-test]
     environment: test
     steps:
       - name: Checkout
