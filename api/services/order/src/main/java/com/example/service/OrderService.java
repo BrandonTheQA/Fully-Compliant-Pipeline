@@ -10,14 +10,19 @@ import com.example.model.OrderItem;
 import com.example.repository.OrderRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +32,8 @@ import java.util.UUID;
  */
 @Service
 public class OrderService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
     
     @Autowired
     private OrderRepository orderRepository;
@@ -42,6 +49,13 @@ public class OrderService {
     
     @Value("${services.product.base-url}")
     private String productServiceBaseUrl;
+    
+    @PostConstruct
+    public void logServiceConfiguration() {
+        logger.info("Order Service Configuration:");
+        logger.info("  User Service URL: {}", userServiceBaseUrl);
+        logger.info("  Product Service URL: {}", productServiceBaseUrl);
+    }
     
     /**
      * Create a new order
@@ -108,15 +122,31 @@ public class OrderService {
      * Verify user exists by calling User Service
      */
     private void verifyUserExists(String userId) {
+        String url = userServiceBaseUrl + "/users/" + userId;
+        logger.debug("Verifying user exists: userId={}, calling URL: {}", userId, url);
+        
         try {
-            String url = userServiceBaseUrl + "/users/" + userId;
-            restTemplate.getForEntity(url, Object.class);
+            ResponseEntity<Object> response = restTemplate.getForEntity(url, Object.class);
+            logger.debug("User verification successful: userId={}, status={}", userId, response.getStatusCode());
         } catch (HttpClientErrorException e) {
+            logger.error("User service HTTP error: userId={}, url={}, status={}, message={}", 
+                    userId, url, e.getStatusCode(), e.getMessage());
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                 throw new OrderValidationException("User not found: " + userId);
             }
-            throw new ServiceUnavailableException("User service error: " + e.getMessage(), e);
+            throw new ServiceUnavailableException("User service error: " + e.getMessage() + " (Status: " + e.getStatusCode() + ")", e);
+        } catch (ResourceAccessException e) {
+            logger.error("User service connection error: userId={}, url={}, message={}", 
+                    userId, url, e.getMessage());
+            throw new ServiceUnavailableException(
+                "Cannot connect to user service at " + url + ". Please verify the service is running and accessible. Error: " + e.getMessage(), e);
+        } catch (RestClientException e) {
+            logger.error("User service REST client error: userId={}, url={}, message={}", 
+                    userId, url, e.getMessage());
+            throw new ServiceUnavailableException("User service request failed: " + e.getMessage(), e);
         } catch (Exception e) {
+            logger.error("Unexpected error verifying user: userId={}, url={}, message={}", 
+                    userId, url, e.getMessage(), e);
             throw new ServiceUnavailableException("User service is unavailable: " + e.getMessage(), e);
         }
     }
@@ -125,8 +155,11 @@ public class OrderService {
      * Verify product availability and get product details
      */
     private JsonNode verifyProductAvailability(String productId, Integer requestedQuantity) {
+        String url = productServiceBaseUrl + "/products/" + productId;
+        logger.debug("Verifying product availability: productId={}, quantity={}, calling URL: {}", 
+                productId, requestedQuantity, url);
+        
         try {
-            String url = productServiceBaseUrl + "/products/" + productId;
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             
             JsonNode product = objectMapper.readTree(response.getBody());
@@ -145,15 +178,30 @@ public class OrderService {
                 throw new OrderValidationException("Product " + productId + " has no price");
             }
             
+            logger.debug("Product verification successful: productId={}, availableQuantity={}", 
+                    productId, availableQuantity);
             return product;
         } catch (HttpClientErrorException e) {
+            logger.error("Product service HTTP error: productId={}, url={}, status={}, message={}", 
+                    productId, url, e.getStatusCode(), e.getMessage());
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
                 throw new OrderValidationException("Product not found: " + productId);
             }
-            throw new ServiceUnavailableException("Product service error: " + e.getMessage(), e);
+            throw new ServiceUnavailableException("Product service error: " + e.getMessage() + " (Status: " + e.getStatusCode() + ")", e);
         } catch (OrderValidationException e) {
             throw e;
+        } catch (ResourceAccessException e) {
+            logger.error("Product service connection error: productId={}, url={}, message={}", 
+                    productId, url, e.getMessage());
+            throw new ServiceUnavailableException(
+                "Cannot connect to product service at " + url + ". Please verify the service is running and accessible. Error: " + e.getMessage(), e);
+        } catch (RestClientException e) {
+            logger.error("Product service REST client error: productId={}, url={}, message={}", 
+                    productId, url, e.getMessage());
+            throw new ServiceUnavailableException("Product service request failed: " + e.getMessage(), e);
         } catch (Exception e) {
+            logger.error("Unexpected error verifying product: productId={}, url={}, message={}", 
+                    productId, url, e.getMessage(), e);
             throw new ServiceUnavailableException("Product service is unavailable: " + e.getMessage(), e);
         }
     }
