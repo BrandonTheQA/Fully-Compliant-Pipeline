@@ -13,12 +13,23 @@ spec:
       labels:
         app: product
     spec:
-      nodeSelector:
-        kubernetes.azure.com/agentpool: spotnode
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.azure.com/agentpool
+                    operator: In
+                    values:
+                      - spotnode
       tolerations:
         - key: kubernetes.azure.com/scalesetpriority
           operator: Equal
           value: spot
+          effect: NoSchedule
+        - key: CriticalAddonsOnly
+          operator: Exists
           effect: NoSchedule
       containers:
         - name: product
