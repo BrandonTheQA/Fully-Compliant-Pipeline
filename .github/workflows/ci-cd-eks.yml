@@ -145,9 +145,17 @@ jobs:
         run: |
           aws eks update-kubeconfig --region ${{ env.AWS_REGION }} --name ${{ env.EKS_CLUSTER_NAME }}
 
+      - name: Ensure namespace exists
+        run: |
+          kubectl create namespace dev --dry-run=client -o yaml | kubectl apply -f -
+
       - name: Ensure ConfigMap exists
         run: |
-          kubectl get configmap deployment-state -n dev 2>/dev/null || kubectl apply -f k8s/deployment-state-configmap.yaml
+          kubectl get configmap deployment-state -n dev 2>/dev/null || \
+          kubectl create configmap deployment-state \
+            --from-literal=active-color=blue \
+            -n dev \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Detect deployment color
         id: detect-color

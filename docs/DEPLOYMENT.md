@@ -90,10 +90,11 @@ These are created through AWS IAM (Identity and Access Management):
 3. Enter a username (e.g., `github-actions-eks`)
 4. **Skip console access** (not needed for programmatic access) → **Next**
 5. **Attach policies directly**:
-   - Create a custom policy or use existing policies with these permissions:
-     - `AmazonEC2ContainerRegistryFullAccess` (for ECR)
-     - `AmazonEKSClusterPolicy` (for EKS cluster access)
-     - Or create a custom policy with the permissions listed in "AWS IAM permissions" section below
+   - **Required policies:**
+     - `AmazonEC2ContainerRegistryFullAccess` (for ECR push/pull operations)
+     - `AmazonEKSClusterPolicy` (for EKS cluster access - **REQUIRED** for `eks:DescribeCluster` and `eks:ListClusters`)
+   - Or create a custom policy with the permissions listed in "AWS IAM permissions" section below
+   - **Important:** The `AmazonEKSClusterPolicy` is essential for the `aws eks update-kubeconfig` command to work
 6. Click **Create user**
 7. **Create Access Keys**:
    - Select the user you just created
@@ -150,6 +151,179 @@ The AWS credentials used by GitHub Actions require the following permissions:
 - ECR: `ecr:GetAuthorizationToken`, `ecr:BatchCheckLayerAvailability`, `ecr:GetDownloadUrlForLayer`, `ecr:BatchGetImage`, `ecr:PutImage`, `ecr:InitiateLayerUpload`, `ecr:UploadLayerPart`, `ecr:CompleteLayerUpload`, `ecr:DescribeRepositories`, `ecr:CreateRepository`
 - EKS: `eks:DescribeCluster`, `eks:ListClusters`
 - EKS cluster access: The IAM user/role must have permissions to update kubeconfig and access the EKS cluster
+
+#### Creating a custom IAM policy for EKS deployment
+
+If you encounter an `AccessDeniedException` when calling `DescribeCluster`, the IAM user needs additional permissions. Create a custom policy with the following JSON:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "eks:DescribeCluster",
+        "eks:ListClusters"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage",
+        "ecr:PutImage",
+        "ecr:InitiateLayerUpload",
+        "ecr:UploadLayerPart",
+        "ecr:CompleteLayerUpload",
+        "ecr:DescribeRepositories",
+        "ecr:CreateRepository"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+**To attach this policy to your IAM user:**
+
+1. **Go to AWS Console** → **IAM** → **Users**
+2. **Select your user** (e.g., `k8s`)
+3. Click **Add permissions** → **Create inline policy** (or attach an existing policy)
+4. Switch to **JSON** tab and paste the policy above
+5. **Review and save** the policy
+
+**Alternatively, attach AWS managed policies:**
+
+- `AmazonEKSClusterPolicy` - Provides `eks:DescribeCluster` and `eks:ListClusters`
+- `AmazonEC2ContainerRegistryFullAccess` - Provides all ECR permissions
+
+**Note:** The `aws eks update-kubeconfig` command requires `eks:DescribeCluster` to retrieve cluster endpoint and certificate data. Without this permission, the deployment will fail at the "Configure kubectl for EKS" step.
+
+#### EKS Cluster Authentication (Kubernetes RBAC)
+
+After granting AWS IAM permissions, you also need to grant Kubernetes API access to your IAM user. EKS uses the `aws-auth` ConfigMap to map IAM users/roles to Kubernetes users.
+
+**If you get an error like:**
+```
+error validating data: failed to download openapi: the server has asked for the client to provide credentials
+```
+
+This means your IAM user has AWS permissions but is not mapped to a Kubernetes user in the EKS cluster.
+
+**To fix this, add your IAM user to the `aws-auth` ConfigMap:**
+
+1. **Get the current aws-auth ConfigMap:**
+   ```bash
+   kubectl get configmap aws-auth -n kube-system -o yaml > aws-auth.yaml
+   ```
+   (Note: You'll need cluster admin access to do this initially)
+
+2. **Edit `aws-auth.yaml` and add your IAM user under `mapUsers`:**
+   ```yaml
+   apiVersion: v1
+   kind: ConfigMap
+   metadata:
+     name: aws-auth
+     namespace: kube-system
+   data:
+     mapUsers: |
+       - userarn: arn:aws:iam::168034219143:user/k8s
+         username: k8s-user
+         groups:
+           - system:masters
+     mapRoles: |
+       # ... existing roles ...
+   ```
+   
+   **Note:** `system:masters` grants cluster-admin access. For production, use a more restrictive role like `system:authenticated` and bind it to specific RBAC roles.
+
+3. **Apply the updated ConfigMap:**
+   ```bash
+   kubectl apply -f aws-auth.yaml
+   ```
+
+**Alternative: Use IAM Role instead of IAM User (Recommended)**
+
+For better security and easier management, consider using an IAM role instead:
+
+1. Create an IAM role (e.g., `github-actions-eks-role`)
+2. Attach the same policies (`AmazonEKSClusterPolicy`, `AmazonEC2ContainerRegistryFullAccess`)
+3. Add the role to `aws-auth` ConfigMap under `mapRoles`:
+   ```yaml
+   mapRoles: |
+     - rolearn: arn:aws:iam::168034219143:role/github-actions-eks-role
+       username: github-actions
+       groups:
+         - system:masters
+   ```
+4. Update GitHub Actions secrets to use role-based authentication (requires additional setup for role assumption)
+
+**For production environments, create a restricted RBAC role:**
+
+Instead of `system:masters`, create a custom role with only the permissions needed:
+
+```bash
+# Create a ClusterRole with necessary permissions
+kubectl apply -f - <<EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: github-actions-deployer
+rules:
+# Namespace management
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+# ConfigMaps (for deployment state)
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Secrets (for database credentials)
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch"]
+# Deployments and ReplicaSets
+- apiGroups: ["apps"]
+  resources: ["deployments", "replicasets"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Services
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Pods (for health checks and rollout status)
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+EOF
+
+# Create ClusterRoleBinding
+kubectl apply -f - <<EOF
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: github-actions-deployer-binding
+subjects:
+- kind: User
+  name: k8s-user
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: github-actions-deployer
+  apiGroup: rbac.authorization.k8s.io
+EOF
+```
+
+Then use `system:authenticated` in the aws-auth ConfigMap instead of `system:masters`.
+
+**Note:** If you're still getting permission errors after adding the user to `aws-auth`, verify:
+1. The `aws-auth` ConfigMap was applied successfully: `kubectl get configmap aws-auth -n kube-system -o yaml`
+2. The IAM user ARN matches exactly: `arn:aws:iam::168034219143:user/k8s`
+3. The groups include `system:masters` (for full access) or the custom RBAC role is properly bound
+4. Wait a few seconds after updating `aws-auth` for changes to propagate
 
 ### Workflow
 - File: `.github/workflows/ci-cd-eks.yml`
