@@ -14,7 +14,12 @@ spec:
         app: order
     spec:
       nodeSelector:
-        agentpool: spotnode
+        kubernetes.azure.com/agentpool: spotnode
+      tolerations:
+        - key: kubernetes.azure.com/scalesetpriority
+          operator: Equal
+          value: spot
+          effect: NoSchedule
       containers:
         - name: order
           image: rgpocacr9021.azurecr.io/order:latest
