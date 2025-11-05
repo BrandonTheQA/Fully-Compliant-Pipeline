@@ -24,7 +24,8 @@ k8s/
     │   ├── user-node-affinity.yaml
     │   └── ui-node-affinity.yaml
     └── eks/                       # EKS-specific configuration
-        └── kustomization.yaml
+        ├── kustomization.yaml
+        └── README.md
 ```
 
 ## Deployment Instructions
@@ -41,19 +42,32 @@ This overlay adds required node affinity to ensure all pods are scheduled on the
 
 ### For EKS (Amazon Elastic Kubernetes Service)
 
-Deployments have no node pool constraints:
+Deployments use AWS ECR for container images and have no node pool constraints:
 
 ```bash
+# First, update k8s/overlays/eks/kustomization.yaml with your AWS account ID and region
+# Then apply the overlay
 kubectl apply -k k8s/overlays/eks/
 ```
 
-This overlay uses the base configuration without any node affinity constraints.
+This overlay:
+- Transforms ACR image references to ECR automatically
+- Uses IAM roles for ECR authentication (no secrets required)
+- Has no node affinity constraints
+
+**Before deploying**, ensure:
+1. Update `k8s/overlays/eks/kustomization.yaml` with your AWS account ID and region
+2. ECR repositories exist in your AWS account
+3. Images are pushed to ECR
+4. IAM permissions are configured for ECR access
+
+See `k8s/overlays/eks/README.md` for detailed setup instructions.
 
 ## Features
 
-- **Base Configuration**: Contains common deployment and service manifests with tolerations for both AKS spot nodes and EKS CriticalAddonsOnly taints.
-- **AKS Overlay**: Adds required node affinity to target the `spotnode` node pool.
-- **EKS Overlay**: Uses base configuration without node pool constraints.
+- **Base Configuration**: Contains common deployment and service manifests with tolerations for both AKS spot nodes and EKS CriticalAddonsOnly taints. Images default to ACR.
+- **AKS Overlay**: Adds required node affinity to target the `spotnode` node pool. Uses Azure Container Registry (ACR) for images.
+- **EKS Overlay**: Uses base configuration without node pool constraints. Transforms images to AWS ECR. Uses IAM roles for ECR authentication.
 - **Cloud-Agnostic Tolerations**: Both overlays include tolerations that work on both cloud providers.
 
 ## Building Manifests
