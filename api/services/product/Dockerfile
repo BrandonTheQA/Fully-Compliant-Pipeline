@@ -1,10 +1,10 @@
-FROM maven:3.9.8-eclipse-temurin-17-alpine AS build
+FROM --platform=linux/arm64 maven:3.9.8-eclipse-temurin-17-alpine AS build
 WORKDIR /workspace
 COPY pom.xml .
 COPY src ./src
 RUN mvn -q -B -DskipTests package
 
-FROM eclipse-temurin:17-jre-alpine
+FROM --platform=linux/arm64 eclipse-temurin:17-jre-alpine
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 WORKDIR /app
 COPY --from=build /workspace/target/*.jar app.jar
