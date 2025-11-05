@@ -13,6 +13,8 @@ spec:
       labels:
         app: user
     spec:
+      nodeSelector:
+        agentpool: spotnode
       containers:
         - name: user
           image: rgpocacr9021.azurecr.io/user:latest

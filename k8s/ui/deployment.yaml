@@ -13,6 +13,8 @@ spec:
       labels:
         app: ui
     spec:
+      nodeSelector:
+        agentpool: spotnode
       containers:
         - name: ui
           image: rgpocacr9021.azurecr.io/ui:latest

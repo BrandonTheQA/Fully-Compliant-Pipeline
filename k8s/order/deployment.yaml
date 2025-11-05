@@ -13,6 +13,8 @@ spec:
       labels:
         app: order
     spec:
+      nodeSelector:
+        agentpool: spotnode
       containers:
         - name: order
           image: rgpocacr9021.azurecr.io/order:latest
