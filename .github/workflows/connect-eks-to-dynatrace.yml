@@ -63,6 +63,21 @@ jobs:
           fi
           echo "Dynatrace Operator is installed"
 
+      - name: Wait for Dynatrace CRDs to be installed
+        run: |
+          echo "Waiting for CRD dynakubes.dynatrace.com to be available..."
+          for i in {1..30}; do
+            if kubectl get crd dynakubes.dynatrace.com &>/dev/null; then
+              echo "CRD dynakubes.dynatrace.com is available"; break
+            fi
+            echo "CRD not found yet (attempt $i/30), sleeping 10s..."
+            sleep 10
+            if [ "$i" -eq 30 ]; then
+              echo "Timeout waiting for CRD dynakubes.dynatrace.com" >&2
+              exit 1
+            fi
+          done
+
       - name: Create Dynatrace secret if missing
         if: ${{ inputs.create_secret_if_missing }}
         env:

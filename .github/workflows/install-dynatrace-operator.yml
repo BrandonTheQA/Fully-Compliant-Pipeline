@@ -62,6 +62,21 @@ jobs:
             --namespace dynatrace \
             --create-namespace
 
+      - name: Wait for Dynatrace CRDs to be installed
+        run: |
+          echo "Waiting for CRD dynakubes.dynatrace.com to be available..."
+          for i in {1..30}; do
+            if kubectl get crd dynakubes.dynatrace.com &>/dev/null; then
+              echo "CRD dynakubes.dynatrace.com is available"; break
+            fi
+            echo "CRD not found yet (attempt $i/30), sleeping 10s..."
+            sleep 10
+            if [ "$i" -eq 30 ]; then
+              echo "Timeout waiting for CRD dynakubes.dynatrace.com" >&2
+              exit 1
+            fi
+          done
+
       - name: Optionally create Dynatrace tokens secret (dynakube)
         if: ${{ inputs.create_dynatrace_secret }}
         env:
