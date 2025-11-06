@@ -51,14 +51,10 @@ jobs:
         run: |
           kubectl create namespace dynatrace --dry-run=client -o yaml | kubectl apply -f -
 
-      - name: Add Dynatrace Helm repo
-        run: |
-          helm repo add dynatrace https://raw.githubusercontent.com/Dynatrace/helm-charts/master
-          helm repo update
-
       - name: Install/upgrade Dynatrace Operator
         run: |
-          helm upgrade --install dynatrace-operator dynatrace/dynatrace-operator \
+          # Install from Dynatrace's OCI registry (public.ecr.aws)
+          helm upgrade --install dynatrace-operator oci://public.ecr.aws/dynatrace/dynatrace-operator \
             --namespace dynatrace \
             --create-namespace
 
