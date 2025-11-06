@@ -134,11 +134,16 @@ jobs:
 
       - name: Create DynaKube Custom Resource
         run: |
-          # Extract environment ID from URL (remove https:// and .live.dynatrace.com)
-          ENV_ID=$(echo "${{ env.DYNATRACE_ENVIRONMENT_URL }}" | sed -E 's|https?://||' | sed -E 's|\.live\.dynatrace\.com.*||')
-          
+          # Determine served CRD version for DynaKube (e.g., v1beta3)
+          CRD_VERSION=$(kubectl get crd dynakubes.dynatrace.com -o jsonpath='{.spec.versions[?(@.served==true)].name}' | awk '{print $1}')
+          if [ -z "$CRD_VERSION" ]; then
+            echo "Error: Unable to determine served CRD version for dynakubes.dynatrace.com" >&2
+            kubectl get crd dynakubes.dynatrace.com -o yaml || true
+            exit 1
+          fi
+
           cat <<EOF | kubectl apply -f -
-          apiVersion: dynatrace.com/v1beta1
+          apiVersion: dynatrace.com/${CRD_VERSION}
           kind: DynaKube
           metadata:
             name: ${{ env.DYNAKUBE_NAME }}
@@ -147,8 +152,7 @@ jobs:
             apiUrl: ${{ env.DYNATRACE_ENVIRONMENT_URL }}/api
             tokens: ${{ env.DYNAKUBE_NAME }}
             oneAgent:
-              cloudNativeFullStack:
-                enabled: true
+              cloudNativeFullStack: {}
           EOF
 
       - name: Wait for DynaKube to be ready
