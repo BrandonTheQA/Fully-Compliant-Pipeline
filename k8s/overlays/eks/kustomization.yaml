@@ -4,6 +4,11 @@ kind: Kustomization
 resources:
   - ../../base
 
+patchesStrategicMerge:
+  - order-resources.yaml
+  - product-resources.yaml
+  - user-resources.yaml
+
 # Transform ACR images to ECR images
 # Replace <AWS_ACCOUNT_ID> and <REGION> with your actual AWS account ID and region
 images:

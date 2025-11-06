@@ -9,4 +9,7 @@ patchesStrategicMerge:
   - product-node-affinity.yaml
   - user-node-affinity.yaml
   - ui-node-affinity.yaml
+  - order-resources.yaml
+  - product-resources.yaml
+  - user-resources.yaml
 
