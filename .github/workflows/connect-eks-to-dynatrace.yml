@@ -151,6 +151,10 @@ jobs:
           spec:
             apiUrl: ${{ env.DYNATRACE_ENVIRONMENT_URL }}/api
             tokens: ${{ env.DYNAKUBE_NAME }}
+            activeGate:
+              capabilities:
+                - routing
+                - kubernetes-monitoring
             oneAgent:
               cloudNativeFullStack: {}
           EOF
@@ -166,6 +170,28 @@ jobs:
           }
           echo "DynaKube ${{ env.DYNAKUBE_NAME }} is ready"
 
+      - name: Wait for ActiveGate to be ready
+        run: |
+          echo "Waiting for ActiveGate StatefulSet to be created..."
+          for i in {1..60}; do
+            if kubectl get statefulset dynakube-activegate -n dynatrace &>/dev/null; then
+              echo "ActiveGate StatefulSet found, waiting for pod to be ready..."
+              kubectl wait --for=condition=ready pod/dynakube-activegate-0 -n dynatrace --timeout=300s || {
+                echo "Warning: ActiveGate pod did not become ready within 5 minutes"
+                kubectl describe pod dynakube-activegate-0 -n dynatrace || true
+              }
+              break
+            fi
+            echo "ActiveGate StatefulSet not found yet (attempt $i/60), sleeping 5s..."
+            sleep 5
+            if [ "$i" -eq 60 ]; then
+              echo "Warning: ActiveGate StatefulSet was not created" >&2
+              echo "Checking DynaKube status..."
+              kubectl get dynakube ${{ env.DYNAKUBE_NAME }} -n dynatrace -o yaml
+              exit 1
+            fi
+          done
+
       - name: Display connection status
         run: |
           echo "=== DynaKube Status ==="
@@ -173,4 +199,11 @@ jobs:
           echo ""
           echo "=== DynaKube Details ==="
           kubectl describe dynakube ${{ env.DYNAKUBE_NAME }} -n dynatrace | head -50
+          echo ""
+          echo "=== ActiveGate Status ==="
+          kubectl get statefulset dynakube-activegate -n dynatrace || echo "ActiveGate StatefulSet not found"
+          kubectl get pods -n dynatrace -l app.kubernetes.io/name=activegate || echo "ActiveGate pods not found"
+          echo ""
+          echo "=== All Dynatrace Pods ==="
+          kubectl get pods -n dynatrace
 
