@@ -1,0 +1,80 @@
+name: Install Dynatrace Operator on EKS
+
+on:
+  workflow_dispatch:
+    inputs:
+      eks_cluster_name:
+        description: "EKS cluster name"
+        required: true
+        type: string
+      aws_region:
+        description: "AWS region of the EKS cluster"
+        required: true
+        type: string
+      create_dynatrace_secret:
+        description: "Create Dynatrace secret (dynakube) with API/PAAS tokens"
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  install:
+    name: Install Dynatrace Operator
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ inputs.aws_region }}
+      DYNATRACE_API_URL: ${{ secrets.DYNATRACE_API_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Configure kubectl for EKS cluster
+        run: |
+          aws eks update-kubeconfig \
+            --name "${{ inputs.eks_cluster_name }}" \
+            --region "${{ inputs.aws_region }}"
+
+      - name: Create dynatrace namespace if missing
+        run: |
+          kubectl create namespace dynatrace --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Add Dynatrace Helm repo
+        run: |
+          helm repo add dynatrace https://raw.githubusercontent.com/Dynatrace/helm-charts/master
+          helm repo update
+
+      - name: Install/upgrade Dynatrace Operator
+        run: |
+          helm upgrade --install dynatrace-operator dynatrace/dynatrace-operator \
+            --namespace dynatrace \
+            --create-namespace
+
+      - name: Optionally create Dynatrace tokens secret (dynakube)
+        if: ${{ inputs.create_dynatrace_secret }}
+        env:
+          DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
+          DYNATRACE_PAAS_TOKEN: ${{ secrets.DYNATRACE_PAAS_TOKEN }}
+        run: |
+          if [ -z "${DYNATRACE_API_TOKEN}" ] || [ -z "${DYNATRACE_PAAS_TOKEN}" ]; then
+            echo "Dynatrace tokens not provided in secrets. Skipping secret creation." >&2
+            exit 1
+          fi
+          kubectl -n dynatrace create secret generic dynakube \
+            --from-literal=apiToken="${DYNATRACE_API_TOKEN}" \
+            --from-literal=paasToken="${DYNATRACE_PAAS_TOKEN}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+
