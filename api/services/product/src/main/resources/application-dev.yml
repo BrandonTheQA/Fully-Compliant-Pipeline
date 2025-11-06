@@ -3,8 +3,8 @@ spring:
     name: product-function-dev
   
   datasource:
-    url: jdbc:sqlserver://poc7029.database.windows.net:1433;database=SQL-POC;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30
-    username: bgarlock@poc7029
+    url: jdbc:sqlserver://sqlserverpoc121212.database.windows.net:1433;database=pocdb;encrypt=true;trustServerCertificate=false;loginTimeout=30
+    username: bgarlock
     password: ${SQL_SERVER_PASSWORD}
   
   jpa:

@@ -9,9 +9,9 @@ All services (user, product, and order) now use a shared Azure SQL Database inst
 ## Database Connection
 
 The services connect to:
-- **Server**: `poc7029.database.windows.net`
-- **Database**: `SQL-POC`
-- **Username**: `bgarlock@poc7029`
+- **Server**: `sqlserverpoc121212.database.windows.net`
+- **Database**: `pocdb`
+- **Username**: `bgarlock`
 - **Password**: Set via GitHub Secret (see below)
 
 ## Setting Up GitHub Secret
@@ -28,7 +28,7 @@ The database password must be configured as a GitHub Secret to securely deploy s
 2. **Add New Secret**
    - Click **New repository secret**
    - Name: `SQL_SERVER_PASSWORD`
-   - Value: Enter your Azure SQL Database password (the password for `bgarlock@poc7029`)
+   - Value: Enter your Azure SQL Database password (the password for `bgarlock`)
    - Click **Add secret**
 
 3. **Verify Secret**
@@ -123,12 +123,17 @@ kubectl create secret generic sql-db-secret \
 
 The connection string format is:
 ```
-jdbc:sqlserver://poc7029.database.windows.net:1433;database=SQL-POC;encrypt=true;trustServerCertificate=false;hostNameInCertificate=*.database.windows.net;loginTimeout=30
+jdbc:sqlserver://sqlserverpoc121212.database.windows.net:1433;database=pocdb;encrypt=true;trustServerCertificate=false;loginTimeout=30
 ```
+
+With username and password:
+- **Username**: `bgarlock`
+- **Password**: Set via `SQL_SERVER_PASSWORD` environment variable
 
 Make sure:
 - The server name is correct
 - The database name is correct
-- The username format is `username@server` (e.g., `bgarlock@poc7029`)
+- The username is correct
+- The password is set correctly in GitHub Secrets or environment variables
 - Network access to Azure SQL is allowed (check firewall rules)
 
