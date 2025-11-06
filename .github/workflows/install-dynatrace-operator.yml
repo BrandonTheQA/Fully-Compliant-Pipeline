@@ -58,17 +58,38 @@ jobs:
             --namespace dynatrace \
             --create-namespace
 
-      - name: Wait for Dynatrace CRDs to be installed
+      - name: Wait for Dynatrace Operator to be ready
         run: |
-          echo "Waiting for CRD dynakubes.dynatrace.com to be available..."
-          for i in {1..30}; do
+          echo "Waiting for Dynatrace Operator deployment to be ready..."
+          kubectl wait --for=condition=available deployment/dynatrace-operator -n dynatrace --timeout=300s || {
+            echo "Error: Dynatrace Operator deployment did not become ready" >&2
+            kubectl describe deployment dynatrace-operator -n dynatrace
+            exit 1
+          }
+          echo "Dynatrace Operator is ready"
+
+      - name: Wait for Dynatrace CRDs to be installed and established
+        run: |
+          echo "Waiting for CRD dynakubes.dynatrace.com to be available and established..."
+          for i in {1..60}; do
             if kubectl get crd dynakubes.dynatrace.com &>/dev/null; then
-              echo "CRD dynakubes.dynatrace.com is available"; break
+              # Check if CRD is established (not just exists)
+              ESTABLISHED=$(kubectl get crd dynakubes.dynatrace.com -o jsonpath='{.status.conditions[?(@.type=="Established")].status}' 2>/dev/null || echo "")
+              if [ "$ESTABLISHED" = "True" ]; then
+                echo "CRD dynakubes.dynatrace.com is established"
+                # Give it a moment to fully register
+                sleep 5
+                break
+              else
+                echo "CRD exists but not yet established (attempt $i/60)..."
+              fi
+            else
+              echo "CRD not found yet (attempt $i/60)..."
             fi
-            echo "CRD not found yet (attempt $i/30), sleeping 10s..."
-            sleep 10
-            if [ "$i" -eq 30 ]; then
-              echo "Timeout waiting for CRD dynakubes.dynatrace.com" >&2
+            sleep 5
+            if [ "$i" -eq 60 ]; then
+              echo "Timeout waiting for CRD dynakubes.dynatrace.com to be established" >&2
+              kubectl get crd dynakubes.dynatrace.com -o yaml || echo "CRD does not exist"
               exit 1
             fi
           done
