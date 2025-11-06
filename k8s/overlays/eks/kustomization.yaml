@@ -13,11 +13,11 @@ patchesStrategicMerge:
 # Replace <AWS_ACCOUNT_ID> and <REGION> with your actual AWS account ID and region
 images:
   - name: rgpocacr9021.azurecr.io/order
-    newName: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/order
+    newName: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order
   - name: rgpocacr9021.azurecr.io/product
-    newName: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/product
+    newName: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/product
   - name: rgpocacr9021.azurecr.io/user
-    newName: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/user
+    newName: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/user
   - name: rgpocacr9021.azurecr.io/ui
-    newName: <AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/ui
+    newName: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ui
 
