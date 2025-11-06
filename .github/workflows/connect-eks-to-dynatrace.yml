@@ -25,6 +25,11 @@ on:
         required: false
         default: true
         type: boolean
+      storage_class_name:
+        description: "StorageClass name for ActiveGate PVC (default: auto-detect from cluster)"
+        required: false
+        default: ""
+        type: string
 
 jobs:
   connect:
@@ -99,6 +104,42 @@ jobs:
             fi
           done
 
+      - name: Detect StorageClass for ActiveGate
+        id: storage-class
+        run: |
+          if [ -n "${{ inputs.storage_class_name }}" ]; then
+            STORAGE_CLASS="${{ inputs.storage_class_name }}"
+            echo "Using provided StorageClass: ${STORAGE_CLASS}"
+          else
+            # Try to find default storage class
+            STORAGE_CLASS=$(kubectl get storageclass -o jsonpath='{.items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")].metadata.name}' 2>/dev/null || echo "")
+            
+            if [ -z "${STORAGE_CLASS}" ]; then
+              # If no default, try to find gp3 or gp2 (common EKS storage classes)
+              STORAGE_CLASS=$(kubectl get storageclass -o jsonpath='{.items[?(@.metadata.name=="gp3")].metadata.name}' 2>/dev/null || echo "")
+            fi
+            
+            if [ -z "${STORAGE_CLASS}" ]; then
+              STORAGE_CLASS=$(kubectl get storageclass -o jsonpath='{.items[?(@.metadata.name=="gp2")].metadata.name}' 2>/dev/null || echo "")
+            fi
+            
+            if [ -z "${STORAGE_CLASS}" ]; then
+              # Get the first available storage class
+              STORAGE_CLASS=$(kubectl get storageclass -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+            fi
+            
+            if [ -z "${STORAGE_CLASS}" ]; then
+              echo "Error: No StorageClass found in cluster. Please specify one via storage_class_name input." >&2
+              kubectl get storageclass
+              exit 1
+            fi
+            
+            echo "Auto-detected StorageClass: ${STORAGE_CLASS}"
+          fi
+          
+          echo "storage_class=${STORAGE_CLASS}" >> $GITHUB_OUTPUT
+          echo "Using StorageClass: ${STORAGE_CLASS}"
+
       - name: Create Dynatrace secret and DynaKube from template
         env:
           DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
@@ -116,6 +157,7 @@ jobs:
           # Substitute template variables
           export DYNAKUBE_NAME="${{ env.DYNAKUBE_NAME }}"
           export DYNATRACE_API_URL="${{ env.DYNATRACE_ENVIRONMENT_URL }}/api"
+          export STORAGE_CLASS_NAME="${{ steps.storage-class.outputs.storage_class }}"
           export API_TOKEN_B64
           export DATA_INGEST_TOKEN_B64
 
