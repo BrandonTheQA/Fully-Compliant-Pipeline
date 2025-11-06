@@ -8,6 +8,9 @@ spec:
     spec:
       containers:
         - name: order
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "aks"
           resources:
             requests:
               cpu: "200m"
