@@ -44,6 +44,8 @@ spec:
                 secretKeyRef:
                   name: sql-db-secret
                   key: password
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=70 -XX:InitialRAMPercentage=30"
           readinessProbe:
             httpGet:
               path: /actuator/health
