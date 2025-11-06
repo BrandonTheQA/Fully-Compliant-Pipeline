@@ -133,7 +133,6 @@ jobs:
     name: Detect Deployment Color for Dev (EKS)
     runs-on: ubuntu-latest
     needs: [discover-apps, build-push-ecr, build-push-ui-ecr]
-    environment: dev
     outputs:
       active-color: ${{ steps.detect-color.outputs.active-color }}
       target-color: ${{ steps.detect-color.outputs.target-color }}

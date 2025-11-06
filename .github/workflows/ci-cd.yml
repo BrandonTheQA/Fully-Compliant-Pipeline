@@ -114,7 +114,6 @@ jobs:
     name: Detect Deployment Color for Dev
     runs-on: ubuntu-latest
     needs: [discover-apps, build-push, build-push-ui]
-    environment: dev
     outputs:
       active-color: ${{ steps.detect-color.outputs.active-color }}
       target-color: ${{ steps.detect-color.outputs.target-color }}
@@ -723,7 +722,6 @@ jobs:
     name: Detect Deployment Color for Test
     runs-on: ubuntu-latest
     needs: [discover-apps, build-push, build-push-ui]
-    environment: test
     outputs:
       active-color: ${{ steps.detect-color.outputs.active-color }}
       target-color: ${{ steps.detect-color.outputs.target-color }}
