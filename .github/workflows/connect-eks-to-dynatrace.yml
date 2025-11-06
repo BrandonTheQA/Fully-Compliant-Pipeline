@@ -68,21 +68,24 @@ jobs:
         env:
           DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
           DYNATRACE_PAAS_TOKEN: ${{ secrets.DYNATRACE_PAAS_TOKEN }}
+          DYNATRACE_DATA_INGEST_TOKEN: ${{ secrets.DYNATRACE_DATA_INGEST_TOKEN }}
         run: |
           if [ -z "${DYNATRACE_API_TOKEN}" ] || [ -z "${DYNATRACE_PAAS_TOKEN}" ]; then
             echo "Error: DYNATRACE_API_TOKEN and DYNATRACE_PAAS_TOKEN secrets are required" >&2
             exit 1
           fi
-          
-          # Check if secret already exists
-          if kubectl get secret "${{ env.DYNAKUBE_NAME }}" -n dynatrace &>/dev/null; then
-            echo "Secret ${{ env.DYNAKUBE_NAME }} already exists, skipping creation"
-          else
-            echo "Creating secret ${{ env.DYNAKUBE_NAME }}"
-            kubectl -n dynatrace create secret generic "${{ env.DYNAKUBE_NAME }}" \
-              --from-literal=apiToken="${DYNATRACE_API_TOKEN}" \
-              --from-literal=paasToken="${DYNATRACE_PAAS_TOKEN}"
+
+          EXTRA_ARGS=""
+          if [ -n "${DYNATRACE_DATA_INGEST_TOKEN}" ]; then
+            EXTRA_ARGS="${EXTRA_ARGS} --from-literal=dataIngestToken=\"${DYNATRACE_DATA_INGEST_TOKEN}\""
           fi
+
+          echo "Applying secret ${{ env.DYNAKUBE_NAME }} (idempotent)"
+          eval kubectl -n dynatrace create secret generic "${{ env.DYNAKUBE_NAME }}" \
+            --from-literal=apiToken=\"${DYNATRACE_API_TOKEN}\" \
+            --from-literal=paasToken=\"${DYNATRACE_PAAS_TOKEN}\" \
+            ${EXTRA_ARGS} \
+            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Verify Dynatrace secret exists
         run: |

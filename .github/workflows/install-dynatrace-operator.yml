@@ -67,14 +67,22 @@ jobs:
         env:
           DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
           DYNATRACE_PAAS_TOKEN: ${{ secrets.DYNATRACE_PAAS_TOKEN }}
+          DYNATRACE_DATA_INGEST_TOKEN: ${{ secrets.DYNATRACE_DATA_INGEST_TOKEN }}
         run: |
           if [ -z "${DYNATRACE_API_TOKEN}" ] || [ -z "${DYNATRACE_PAAS_TOKEN}" ]; then
             echo "Dynatrace tokens not provided in secrets. Skipping secret creation." >&2
             exit 1
           fi
-          kubectl -n dynatrace create secret generic dynakube \
-            --from-literal=apiToken="${DYNATRACE_API_TOKEN}" \
-            --from-literal=paasToken="${DYNATRACE_PAAS_TOKEN}" \
+          # Build args for data ingest token if provided
+          EXTRA_ARGS=""
+          if [ -n "${DYNATRACE_DATA_INGEST_TOKEN}" ]; then
+            EXTRA_ARGS="${EXTRA_ARGS} --from-literal=dataIngestToken=\"${DYNATRACE_DATA_INGEST_TOKEN}\""
+          fi
+          # Create/Update the dynakube secret including optional dataIngestToken
+          eval kubectl -n dynatrace create secret generic dynakube \
+            --from-literal=apiToken=\"${DYNATRACE_API_TOKEN}\" \
+            --from-literal=paasToken=\"${DYNATRACE_PAAS_TOKEN}\" \
+            ${EXTRA_ARGS} \
             --dry-run=client -o yaml | kubectl apply -f -
 
 
