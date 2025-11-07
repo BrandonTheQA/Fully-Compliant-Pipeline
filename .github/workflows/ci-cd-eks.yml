@@ -76,7 +76,7 @@ jobs:
           context: ${{ matrix.working-dir }}
           file: ${{ matrix.working-dir }}/Dockerfile
           push: true
-          platforms: linux/arm64
+          platforms: linux/amd64
           tags: |
             ${{ env.ECR_REGISTRY }}/${{ matrix.app }}:${{ github.sha }}
             ${{ env.ECR_REGISTRY }}/${{ matrix.app }}:latest
@@ -122,7 +122,7 @@ jobs:
           context: ./ui
           file: ./ui/Dockerfile
           push: true
-          platforms: linux/arm64
+          platforms: linux/amd64
           tags: |
             ${{ env.ECR_REGISTRY }}/ui:${{ github.sha }}
             ${{ env.ECR_REGISTRY }}/ui:latest
