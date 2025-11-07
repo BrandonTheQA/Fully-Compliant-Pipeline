@@ -229,6 +229,8 @@ jobs:
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/deployment.yaml .
           cp ${GITHUB_WORKSPACE}/k8s/${{ matrix.app }}/service.yaml .
+          # Replace ACR image references with ECR references
+          sed -i "s|rgpocacr9021.azurecr.io/${{ matrix.app }}:latest|${{ env.ECR_REGISTRY }}/${{ matrix.app }}:${{ github.sha }}|g" deployment.yaml
           # Add deployment-color to deployment selector and pod labels using yq
           yq eval ".spec.selector.matchLabels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
           yq eval ".spec.template.metadata.labels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
@@ -246,11 +248,6 @@ jobs:
           EOF
           kubectl apply -k .
           popd
-
-      - name: Update image to current SHA
-        run: |
-          TARGET_COLOR="${{ needs.detect-deployment-color-dev-eks.outputs.target-color }}"
-          kubectl set image deployment/${{ matrix.app }}-${TARGET_COLOR} ${{ matrix.app }}=${{ env.ECR_REGISTRY }}/${{ matrix.app }}:${{ github.sha }} -n dev
 
       - name: Set color-specific env for order (dev)
         if: matrix.app == 'order'
@@ -312,6 +309,8 @@ jobs:
           pushd "$tmpdir"
           cp ${GITHUB_WORKSPACE}/k8s/ui/deployment.yaml .
           cp ${GITHUB_WORKSPACE}/k8s/ui/service.yaml .
+          # Replace ACR image references with ECR references
+          sed -i "s|rgpocacr9021.azurecr.io/ui:latest|${{ env.ECR_REGISTRY }}/ui:${{ github.sha }}|g" deployment.yaml
           # Add deployment-color to deployment selector and pod labels using yq
           yq eval ".spec.selector.matchLabels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
           yq eval ".spec.template.metadata.labels.deployment-color = \"${TARGET_COLOR}\"" -i deployment.yaml
@@ -329,11 +328,6 @@ jobs:
           EOF
           kubectl apply -k .
           popd
-
-      - name: Update image to current SHA
-        run: |
-          TARGET_COLOR="${{ needs.detect-deployment-color-dev-eks.outputs.target-color }}"
-          kubectl set image deployment/ui-${TARGET_COLOR} ui=${{ env.ECR_REGISTRY }}/ui:${{ github.sha }} -n dev
 
       - name: Set environment variables for UI
         run: |
