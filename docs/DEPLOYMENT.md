@@ -2,6 +2,36 @@
 
 This repository deploys the `order`, `product`, and `user` Spring Boot services to both Azure Kubernetes Service (AKS) and AWS Elastic Kubernetes Service (EKS) using GitHub Actions. Both workflows run in parallel and independently.
 
+## Local Development with Minikube
+
+### Pre-commit Hook
+
+This repository includes a pre-commit hook that automatically runs minikube deployment tests before each commit. This ensures that all changes work correctly in a local Kubernetes environment.
+
+**Installation:**
+```bash
+./scripts/install-hooks.sh
+```
+
+**Usage:**
+- The hook runs automatically on `git commit`
+- It deploys all services to minikube and runs Postman integration tests
+- If tests fail, the commit is aborted
+- To skip tests: `SKIP_MINIKUBE_TESTS=1 git commit`
+
+**Requirements:**
+- Minikube must be running (`minikube start`)
+- All prerequisites from `scripts/deploy-minikube.sh` must be installed
+
+**Manual Testing:**
+```bash
+# Deploy and test
+./scripts/deploy-minikube.sh
+
+# Cleanup
+./scripts/deploy-minikube.sh --cleanup
+```
+
 ## AKS Deployment
 
 ### Azure resources

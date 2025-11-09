@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Pre-commit hook to run minikube deployment and Postman tests
+# Skip with: SKIP_MINIKUBE_TESTS=1 git commit
+
+if [ "${SKIP_MINIKUBE_TESTS:-}" = "1" ]; then
+  echo "Skipping minikube tests (SKIP_MINIKUBE_TESTS=1)"
+  exit 0
+fi
+
+# Get the script directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+DEPLOY_SCRIPT="$REPO_ROOT/scripts/deploy-minikube.sh"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${YELLOW}Running minikube deployment tests before commit...${NC}"
+
+# Check if minikube is running
+if ! minikube status >/dev/null 2>&1; then
+  echo -e "${RED}Error: Minikube is not running.${NC}"
+  echo -e "${YELLOW}Please start minikube with: minikube start${NC}"
+  echo -e "${YELLOW}Or skip tests with: SKIP_MINIKUBE_TESTS=1 git commit${NC}"
+  exit 1
+fi
+
+# Check if deploy script exists
+if [ ! -f "$DEPLOY_SCRIPT" ]; then
+  echo -e "${RED}Error: deploy-minikube.sh not found at $DEPLOY_SCRIPT${NC}"
+  exit 1
+fi
+
+# Run the deployment script
+if "$DEPLOY_SCRIPT"; then
+  echo -e "${GREEN}✓ Minikube deployment tests passed${NC}"
+  
+  # Cleanup after successful test
+  echo -e "${YELLOW}Cleaning up test deployment...${NC}"
+  "$DEPLOY_SCRIPT" --cleanup || true
+  
+  exit 0
+else
+  echo -e "${RED}✗ Minikube deployment tests failed${NC}"
+  echo -e "${YELLOW}Commit aborted. Fix the issues and try again.${NC}"
+  echo -e "${YELLOW}To skip tests: SKIP_MINIKUBE_TESTS=1 git commit${NC}"
+  
+  # Cleanup on failure
+  "$DEPLOY_SCRIPT" --cleanup || true
+  
+  exit 1
+fi
+
