@@ -36,6 +36,10 @@ if [ ! -f "$DEPLOY_SCRIPT" ]; then
   exit 1
 fi
 
+# Cleanup any existing deployments first
+echo -e "${YELLOW}Cleaning up any existing deployments...${NC}"
+"$DEPLOY_SCRIPT" --cleanup || true
+
 # Run the deployment script
 if "$DEPLOY_SCRIPT"; then
   echo -e "${GREEN}✓ Minikube deployment tests passed${NC}"
