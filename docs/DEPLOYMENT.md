@@ -6,20 +6,26 @@ This repository deploys the `order`, `product`, and `user` Spring Boot services 
 
 ### Pre-commit Hook
 
-This repository includes a pre-commit hook that automatically runs minikube deployment tests before each commit. This ensures that all changes work correctly in a local Kubernetes environment.
+This repository includes a pre-commit hook that automatically runs unit tests and minikube deployment tests before each commit. This ensures that all changes work correctly and maintain code quality.
 
 **Installation:**
 ```bash
 ./scripts/install-hooks.sh
 ```
 
+**What it does:**
+1. Runs unit tests for all Java services (user, product, order) using Maven
+2. Runs unit tests for UI using Jest
+3. If unit tests pass, deploys all services to minikube and runs Postman integration tests
+4. If any tests fail, the commit is aborted
+
 **Usage:**
 - The hook runs automatically on `git commit`
-- It deploys all services to minikube and runs Postman integration tests
-- If tests fail, the commit is aborted
 - To skip tests: `SKIP_MINIKUBE_TESTS=1 git commit`
 
 **Requirements:**
+- Maven (mvn) must be installed
+- npm must be installed
 - Minikube must be running (`minikube start`)
 - All prerequisites from `scripts/deploy-minikube.sh` must be installed
 
