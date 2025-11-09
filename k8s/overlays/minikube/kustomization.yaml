@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dev
+
+resources:
+  - ../../base
+  - ui-nginx-configmap.yaml
+
+images:
+  - name: rgpocacr9021.azurecr.io/order
+    newName: order
+    newTag: local
+  - name: rgpocacr9021.azurecr.io/product
+    newName: product
+    newTag: local
+  - name: rgpocacr9021.azurecr.io/user
+    newName: user
+    newTag: local
+  - name: rgpocacr9021.azurecr.io/ui
+    newName: ui
+    newTag: local
+
+patchesStrategicMerge:
+  - order-deployment-patch.yaml
+  - product-deployment-patch.yaml
+  - user-deployment-patch.yaml
+  - ui-deployment-patch.yaml
+

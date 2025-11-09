@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+  namespace: dev
+spec:
+  template:
+    spec:
+      # Remove cloud-specific tolerations
+      tolerations: []
+      containers:
+        - name: order
+          imagePullPolicy: Never
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: "local"
+            # Remove SQL_SERVER_PASSWORD since we're using H2
+            - name: USER_SERVICE_URL
+              value: "http://user/api"
+            - name: PRODUCT_SERVICE_URL
+              value: "http://product/api"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=70 -XX:InitialRAMPercentage=30"
+
