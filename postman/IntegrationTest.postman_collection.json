@@ -57,9 +57,9 @@
 					"raw": "{\n    \"name\": \"{{userName}}\",\n    \"email\": \"{{userEmail}}\",\n    \"password\": \"{{userPassword}}\"\n}"
 				},
 				"url": {
-					"raw": "{{userBaseUrl}}/users",
+					"raw": "{{apiBaseUrl}}/users",
 					"host": [
-						"{{userBaseUrl}}"
+						"{{apiBaseUrl}}"
 					],
 					"path": [
 						"users"
@@ -95,9 +95,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{userBaseUrl}}/users/{{userId}}",
+					"raw": "{{apiBaseUrl}}/users/{{userId}}",
 					"host": [
-						"{{userBaseUrl}}"
+						"{{apiBaseUrl}}"
 					],
 					"path": [
 						"users",
@@ -154,9 +154,9 @@
 					"raw": "{\n    \"name\": \"{{product1Name}}\",\n    \"description\": \"{{product1Description}}\",\n    \"price\": {{product1Price}},\n    \"quantity\": {{product1Quantity}},\n    \"category\": \"{{product1Category}}\"\n}"
 				},
 				"url": {
-					"raw": "{{productBaseUrl}}/products",
+					"raw": "{{apiBaseUrl}}/products",
 					"host": [
-						"{{productBaseUrl}}"
+						"{{apiBaseUrl}}"
 					],
 					"path": [
 						"products"
@@ -212,9 +212,9 @@
 					"raw": "{\n    \"name\": \"{{product2Name}}\",\n    \"description\": \"{{product2Description}}\",\n    \"price\": {{product2Price}},\n    \"quantity\": {{product2Quantity}},\n    \"category\": \"{{product2Category}}\"\n}"
 				},
 				"url": {
-					"raw": "{{productBaseUrl}}/products",
+					"raw": "{{apiBaseUrl}}/products",
 					"host": [
-						"{{productBaseUrl}}"
+						"{{apiBaseUrl}}"
 					],
 					"path": [
 						"products"
@@ -270,9 +270,9 @@
 					"raw": "{\n    \"name\": \"{{product3Name}}\",\n    \"description\": \"{{product3Description}}\",\n    \"price\": {{product3Price}},\n    \"quantity\": {{product3Quantity}},\n    \"category\": \"{{product3Category}}\"\n}"
 				},
 				"url": {
-					"raw": "{{productBaseUrl}}/products",
+					"raw": "{{apiBaseUrl}}/products",
 					"host": [
-						"{{productBaseUrl}}"
+						"{{apiBaseUrl}}"
 					],
 					"path": [
 						"products"
@@ -307,9 +307,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{productBaseUrl}}/products/{{productId1}}",
+					"raw": "{{apiBaseUrl}}/products/{{productId1}}",
 					"host": [
-						"{{productBaseUrl}}"
+						"{{apiBaseUrl}}"
 					],
 					"path": [
 						"products",
@@ -400,9 +400,9 @@
 					"raw": "{\n    \"userId\": \"{{userId}}\",\n    \"items\": [\n        {\n            \"productId\": \"{{productId1}}\",\n            \"quantity\": {{product1OrderQuantity}}\n        },\n        {\n            \"productId\": \"{{productId2}}\",\n            \"quantity\": {{product2OrderQuantity}}\n        },\n        {\n            \"productId\": \"{{productId3}}\",\n            \"quantity\": {{product3OrderQuantity}}\n        }\n    ]\n}"
 				},
 				"url": {
-					"raw": "{{orderBaseUrl}}/orders",
+					"raw": "{{apiBaseUrl}}/orders",
 					"host": [
-						"{{orderBaseUrl}}"
+						"{{apiBaseUrl}}"
 					],
 					"path": [
 						"orders"
@@ -454,9 +454,9 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{orderBaseUrl}}/orders/{{orderId}}",
+					"raw": "{{apiBaseUrl}}/orders/{{orderId}}",
 					"host": [
-						"{{orderBaseUrl}}"
+						"{{apiBaseUrl}}"
 					],
 					"path": [
 						"orders",
@@ -470,18 +470,8 @@
 	],
 	"variable": [
 		{
-			"key": "userBaseUrl",
-			"value": "https://joaz-func-user-9021-test.azurewebsites.net/api",
-			"type": "string"
-		},
-		{
-			"key": "productBaseUrl",
-			"value": "https://joaz-func-product-9021-test.azurewebsites.net/api",
-			"type": "string"
-		},
-		{
-			"key": "orderBaseUrl",
-			"value": "https://joaz-func-order-9021-test.azurewebsites.net/api",
+			"key": "apiBaseUrl",
+			"value": "https://monolith.example.com/api",
 			"type": "string"
 		},
 		{

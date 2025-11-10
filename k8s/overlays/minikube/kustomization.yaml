@@ -8,22 +8,14 @@ resources:
   - ui-nginx-configmap.yaml
 
 images:
-  - name: rgpocacr9021.azurecr.io/order
-    newName: order
-    newTag: local
-  - name: rgpocacr9021.azurecr.io/product
-    newName: product
-    newTag: local
-  - name: rgpocacr9021.azurecr.io/user
-    newName: user
+  - name: rgpocacr9021.azurecr.io/monolith
+    newName: monolith
     newTag: local
   - name: rgpocacr9021.azurecr.io/ui
     newName: ui
     newTag: local
 
 patchesStrategicMerge:
-  - order-deployment-patch.yaml
-  - product-deployment-patch.yaml
-  - user-deployment-patch.yaml
+  - monolith-deployment-patch.yaml
   - ui-deployment-patch.yaml
 

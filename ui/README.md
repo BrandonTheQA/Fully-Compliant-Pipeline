@@ -46,19 +46,7 @@ The app will be available at `http://localhost:5173`
 
 ### Environment Variables
 
-The app uses environment variables for API endpoints. Configure them in `.env` files:
-
-- `.env.development` - Dev environment
-- `.env.test` - Test environment
-- `.env.staging` - Staging environment
-- `.env.production` - Production environment
-
-Example:
-```
-VITE_USER_API_URL=https://joaz-func-user-9021-test.azurewebsites.net/api
-VITE_PRODUCT_API_URL=https://joaz-func-product-9021-test.azurewebsites.net/api
-VITE_ORDER_API_URL=https://joaz-func-order-9021-test.azurewebsites.net/api
-```
+The app now relies on a single backend API exposed at `/api`. For local development the Vite dev server proxies `/api` requests to the monolith running on `http://localhost:8080`, so no additional environment variables are required. In production the Nginx configuration included in the Docker image forwards `/api` to the monolith service automatically.
 
 ### Testing
 

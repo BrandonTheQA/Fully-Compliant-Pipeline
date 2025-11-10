@@ -16,48 +16,9 @@ data:
       gzip_min_length 1024;
       gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json application/javascript;
 
-      # BFF reverse proxy configuration for minikube (services without color suffix)
-      location /api/login {
-          proxy_pass http://user.dev.svc.cluster.local/api/login;
-          proxy_http_version 1.1;
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $scheme;
-          proxy_connect_timeout 60s;
-          proxy_send_timeout 60s;
-          proxy_read_timeout 60s;
-          proxy_buffering off;
-      }
-
-      location /api/users {
-          proxy_pass http://user.dev.svc.cluster.local/api/users;
-          proxy_http_version 1.1;
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $scheme;
-          proxy_connect_timeout 60s;
-          proxy_send_timeout 60s;
-          proxy_read_timeout 60s;
-          proxy_buffering off;
-      }
-
-      location /api/products {
-          proxy_pass http://product.dev.svc.cluster.local/api/products;
-          proxy_http_version 1.1;
-          proxy_set_header Host $host;
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $scheme;
-          proxy_connect_timeout 60s;
-          proxy_send_timeout 60s;
-          proxy_read_timeout 60s;
-          proxy_buffering off;
-      }
-
-      location /api/orders {
-          proxy_pass http://order.dev.svc.cluster.local/api/orders;
+      # BFF reverse proxy configuration for minikube (single monolith service)
+      location /api/ {
+          proxy_pass http://monolith.dev.svc.cluster.local/api/;
           proxy_http_version 1.1;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;

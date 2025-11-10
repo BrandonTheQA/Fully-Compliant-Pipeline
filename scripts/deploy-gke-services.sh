@@ -186,21 +186,11 @@ EOF
     # Apply kustomization
     kubectl apply -k "$TMPDIR"
     
-    # Set environment variables based on service
-    if [ "$SERVICE_NAME" = "order" ]; then
-        log_info "Setting environment variables for order service..."
-        kubectl set env deployment/order-${TARGET_COLOR} \
-            DEPLOYMENT_COLOR=${TARGET_COLOR} \
-            NAMESPACE=${NAMESPACE} \
-            USER_SERVICE_URL=http://user-${TARGET_COLOR}.${NAMESPACE}.svc.cluster.local \
-            PRODUCT_SERVICE_URL=http://product-${TARGET_COLOR}.${NAMESPACE}.svc.cluster.local \
-            -n "$NAMESPACE"
-    else
-        kubectl set env deployment/${SERVICE_NAME}-${TARGET_COLOR} \
-            DEPLOYMENT_COLOR=${TARGET_COLOR} \
-            NAMESPACE=${NAMESPACE} \
-            -n "$NAMESPACE"
-    fi
+    # Set environment variables
+    kubectl set env deployment/${SERVICE_NAME}-${TARGET_COLOR} \
+        DEPLOYMENT_COLOR=${TARGET_COLOR} \
+        NAMESPACE=${NAMESPACE} \
+        -n "$NAMESPACE"
     
     # Annotate deployment and service
     kubectl annotate deployment/$SERVICE_NAME-${TARGET_COLOR} \
@@ -217,21 +207,13 @@ EOF
 # Step 3: Deploy services in order
 log_info "Step 3: Deploying services..."
 
-# Deploy user first (dependency for order)
-deploy_service "user"
-
-# Deploy product
-deploy_service "product"
-
-# Deploy order (depends on user and product)
-deploy_service "order"
-
-# Deploy UI
-deploy_service "ui"
+for SERVICE in monolith ui; do
+    deploy_service "$SERVICE"
+done
 
 # Step 4: Wait for rollouts
 log_info "Step 4: Waiting for deployments to be ready..."
-for SERVICE in user product order ui; do
+for SERVICE in monolith ui; do
     log_info "Waiting for $SERVICE-$TARGET_COLOR rollout..."
     kubectl rollout status deployment/$SERVICE-${TARGET_COLOR} -n "$NAMESPACE" --timeout=300s || {
         log_error "Rollout failed for $SERVICE-$TARGET_COLOR"
@@ -263,7 +245,7 @@ kubectl get svc -n "$NAMESPACE" | grep -- "-${TARGET_COLOR}$"
 
 # Wait for LoadBalancer IPs
 log_info "Waiting for LoadBalancer external IPs (this may take a few minutes)..."
-for SERVICE in user product order ui; do
+for SERVICE in monolith ui; do
     log_info "Waiting for $SERVICE-$TARGET_COLOR LoadBalancer IP..."
     for i in {1..60}; do
         EXTERNAL_IP=$(kubectl get svc ${SERVICE}-${TARGET_COLOR} -n "$NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
@@ -286,7 +268,7 @@ done
 
 # Health checks
 log_info "Performing health checks..."
-for SERVICE in user product order; do
+for SERVICE in monolith; do
     EXTERNAL_IP=$(kubectl get svc ${SERVICE}-${TARGET_COLOR} -n "$NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "")
     if [ -z "$EXTERNAL_IP" ]; then
         EXTERNAL_HOSTNAME=$(kubectl get svc ${SERVICE}-${TARGET_COLOR} -n "$NAMESPACE" -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")

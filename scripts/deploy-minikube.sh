@@ -84,24 +84,10 @@ build_images() {
   # Set docker environment to use minikube's docker daemon
   eval $(minikube docker-env)
   
-  # Build order service
-  log_info "Building order service..."
-  docker build -t order:local "$ROOT_DIR/api/services/order" >/dev/null 2>&1 || {
-    log_error "Failed to build order service"
-    exit 1
-  }
-  
-  # Build product service
-  log_info "Building product service..."
-  docker build -t product:local "$ROOT_DIR/api/services/product" >/dev/null 2>&1 || {
-    log_error "Failed to build product service"
-    exit 1
-  }
-  
-  # Build user service
-  log_info "Building user service..."
-  docker build -t user:local "$ROOT_DIR/api/services/user" >/dev/null 2>&1 || {
-    log_error "Failed to build user service"
+  # Build monolith service
+  log_info "Building monolith service..."
+  docker build -t monolith:local "$ROOT_DIR/api/services/monolith" >/dev/null 2>&1 || {
+    log_error "Failed to build monolith service"
     exit 1
   }
   
@@ -160,7 +146,7 @@ deploy() {
 wait_for_deployments() {
   log_info "Waiting for deployments to be ready..."
   
-  local deployments=("user" "product" "order" "ui")
+  local deployments=("monolith" "ui")
   local timeout=300  # 5 minutes
   
   for deployment in "${deployments[@]}"; do
@@ -182,45 +168,24 @@ wait_for_deployments() {
 get_service_urls() {
   log_info "Getting service URLs..."
   
-  # Use port-forwarding for reliable access
-  log_info "Starting port-forwarding for services..."
-  
-  # Kill any existing port-forwards
+  log_info "Starting port-forwarding for monolith service..."
   cleanup_port_forwards
   
-  # Start port-forwarding in background
-  kubectl port-forward -n "$NAMESPACE" svc/user 8081:80 >/dev/null 2>&1 &
-  local user_pf=$!
-  kubectl port-forward -n "$NAMESPACE" svc/product 8082:80 >/dev/null 2>&1 &
-  local product_pf=$!
-  kubectl port-forward -n "$NAMESPACE" svc/order 8083:80 >/dev/null 2>&1 &
-  local order_pf=$!
+  kubectl port-forward -n "$NAMESPACE" svc/monolith 8080:80 >/dev/null 2>&1 &
+  local monolith_pf=$!
   
-  # Wait a moment for port-forward to establish
   sleep 3
   
-  # Verify port-forwards are working
-  if ! kill -0 $user_pf 2>/dev/null || ! kill -0 $product_pf 2>/dev/null || ! kill -0 $order_pf 2>/dev/null; then
+  if ! kill -0 $monolith_pf 2>/dev/null; then
     log_error "Port-forwarding failed to establish"
     cleanup_port_forwards
     exit 1
   fi
   
-  USER_URL="http://localhost:8081"
-  PRODUCT_URL="http://localhost:8082"
-  ORDER_URL="http://localhost:8083"
-  
-  # Store PIDs for cleanup
-  echo $user_pf > /tmp/minikube-pf-user.pid
-  echo $product_pf > /tmp/minikube-pf-product.pid
-  echo $order_pf > /tmp/minikube-pf-order.pid
-  
-  log_info "Port-forwarding established"
-  log_info "User service URL: $USER_URL"
-  log_info "Product service URL: $PRODUCT_URL"
-  log_info "Order service URL: $ORDER_URL"
-  
-  export USER_URL PRODUCT_URL ORDER_URL
+  MONOLITH_URL="http://localhost:8080"
+  echo $monolith_pf > /tmp/minikube-pf-monolith.pid
+  log_info "Monolith service URL: $MONOLITH_URL"
+  export MONOLITH_URL
 }
 
 # Run Postman tests
@@ -239,9 +204,7 @@ run_tests() {
   local user_email="john.doe+${random_suffix}@example.com"
   
   newman run "$collection" \
-    --env-var "userBaseUrl=$USER_URL/api" \
-    --env-var "productBaseUrl=$PRODUCT_URL/api" \
-    --env-var "orderBaseUrl=$ORDER_URL/api" \
+    --env-var "apiBaseUrl=$MONOLITH_URL/api" \
     --env-var "userName=John Doe" \
     --env-var "userEmail=$user_email" \
     --env-var "userPassword=SecurePassword123" \
@@ -274,17 +237,9 @@ run_tests() {
 
 # Cleanup port-forwards
 cleanup_port_forwards() {
-  if [ -f /tmp/minikube-pf-user.pid ]; then
-    kill $(cat /tmp/minikube-pf-user.pid) 2>/dev/null || true
-    rm -f /tmp/minikube-pf-user.pid
-  fi
-  if [ -f /tmp/minikube-pf-product.pid ]; then
-    kill $(cat /tmp/minikube-pf-product.pid) 2>/dev/null || true
-    rm -f /tmp/minikube-pf-product.pid
-  fi
-  if [ -f /tmp/minikube-pf-order.pid ]; then
-    kill $(cat /tmp/minikube-pf-order.pid) 2>/dev/null || true
-    rm -f /tmp/minikube-pf-order.pid
+  if [ -f /tmp/minikube-pf-monolith.pid ]; then
+    kill $(cat /tmp/minikube-pf-monolith.pid) 2>/dev/null || true
+    rm -f /tmp/minikube-pf-monolith.pid
   fi
 }
 

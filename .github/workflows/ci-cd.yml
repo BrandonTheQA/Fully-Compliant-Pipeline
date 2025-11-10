@@ -229,16 +229,6 @@ jobs:
           TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
           kubectl set image deployment/${{ matrix.app }}-${TARGET_COLOR} ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n dev
 
-      - name: Set color-specific env for order (dev)
-        if: matrix.app == 'order'
-        run: |
-          TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
-          kubectl set env deployment/order-${TARGET_COLOR} \
-            DEPLOYMENT_COLOR=${TARGET_COLOR} \
-            NAMESPACE=dev \
-            USER_SERVICE_URL=http://user-${TARGET_COLOR}.dev.svc.cluster.local \
-            PRODUCT_SERVICE_URL=http://product-${TARGET_COLOR}.dev.svc.cluster.local -n dev
-
       - name: Annotate deployment and service
         run: |
           TARGET_COLOR="${{ needs.detect-deployment-color-dev.outputs.target-color }}"
@@ -365,7 +355,7 @@ jobs:
           
           # Check if active color services exist
           ACTIVE_EXISTS=false
-          if kubectl get deployment order-${ACTIVE_COLOR} -n dev &>/dev/null; then
+          if kubectl get deployment monolith-${ACTIVE_COLOR} -n dev &>/dev/null; then
             ACTIVE_EXISTS=true
             echo "Active color (${ACTIVE_COLOR}) deployments found, will health check them"
           else
@@ -374,7 +364,7 @@ jobs:
           
           # Wait for LoadBalancer services to get external IPs
           echo "Waiting for LoadBalancer EXTERNAL-IPs for target color (${TARGET_COLOR})..."
-          target_services=(order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR} ui-${TARGET_COLOR})
+          target_services=(monolith-${TARGET_COLOR} ui-${TARGET_COLOR})
           declare -A service_hosts
           
           # Always check target color
@@ -405,7 +395,7 @@ jobs:
           # Optionally check active color if it exists
           if [ "$ACTIVE_EXISTS" = "true" ]; then
             echo "Waiting for LoadBalancer EXTERNAL-IPs for active color (${ACTIVE_COLOR})..."
-            active_services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR} ui-${ACTIVE_COLOR})
+            active_services=(monolith-${ACTIVE_COLOR} ui-${ACTIVE_COLOR})
             for svc in "${active_services[@]}"; do
               echo "Waiting for LoadBalancer EXTERNAL-IP for ${svc}..."
               host=""
@@ -432,7 +422,7 @@ jobs:
           
           # Perform health checks using LoadBalancer external IPs
           echo "Checking API services health via LoadBalancer for target color (${TARGET_COLOR})..."
-          target_api_services=(order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR})
+          target_api_services=(monolith-${TARGET_COLOR})
           for svc in "${target_api_services[@]}"; do
             host=${service_hosts[${svc}]}
             echo "Checking health for ${svc} at http://${host}/actuator/health..."
@@ -453,7 +443,7 @@ jobs:
           # Optionally check active color API services if they exist
           if [ "$ACTIVE_EXISTS" = "true" ]; then
             echo "Checking API services health via LoadBalancer for active color (${ACTIVE_COLOR})..."
-            active_api_services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR})
+            active_api_services=(monolith-${ACTIVE_COLOR})
             for svc in "${active_api_services[@]}"; do
               host=${service_hosts[${svc}]:-}
               if [ -n "${host}" ]; then
@@ -676,7 +666,7 @@ jobs:
           echo "Teardown inactive deployment (${ACTIVE_COLOR})"
           
           # Get the list of services
-          services=("order" "product" "user" "ui")
+          services=("monolith" "ui")
           
           # Delete deployments and services for the inactive color
           for svc in "${services[@]}"; do
@@ -837,16 +827,6 @@ jobs:
           TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
           kubectl set image deployment/${{ matrix.app }}-${TARGET_COLOR} ${{ matrix.app }}=${{ env.ACR_LOGIN_SERVER }}/${{ matrix.app }}:${{ github.sha }} -n test
 
-      - name: Set color-specific env for order (test)
-        if: matrix.app == 'order'
-        run: |
-          TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
-          kubectl set env deployment/order-${TARGET_COLOR} \
-            DEPLOYMENT_COLOR=${TARGET_COLOR} \
-            NAMESPACE=test \
-            USER_SERVICE_URL=http://user-${TARGET_COLOR}.test.svc.cluster.local \
-            PRODUCT_SERVICE_URL=http://product-${TARGET_COLOR}.test.svc.cluster.local -n test
-
       - name: Annotate deployment and service
         run: |
           TARGET_COLOR="${{ needs.detect-deployment-color-test.outputs.target-color }}"
@@ -972,7 +952,7 @@ jobs:
           
           # Wait for all LoadBalancer services to get external IPs for both colors
           echo "Waiting for LoadBalancer EXTERNAL-IPs..."
-          services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR} ui-${ACTIVE_COLOR} order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR} ui-${TARGET_COLOR})
+          services=(monolith-${ACTIVE_COLOR} ui-${ACTIVE_COLOR} monolith-${TARGET_COLOR} ui-${TARGET_COLOR})
           declare -A service_hosts
           
           for svc in "${services[@]}"; do
@@ -1001,7 +981,7 @@ jobs:
           
           # Perform health checks using LoadBalancer external IPs for both colors
           echo "Checking API services health via LoadBalancer..."
-          api_services=(order-${ACTIVE_COLOR} product-${ACTIVE_COLOR} user-${ACTIVE_COLOR} order-${TARGET_COLOR} product-${TARGET_COLOR} user-${TARGET_COLOR})
+          api_services=(monolith-${ACTIVE_COLOR} monolith-${TARGET_COLOR})
           for svc in "${api_services[@]}"; do
             host=${service_hosts[${svc}]}
             echo "Checking health for ${svc} at http://${host}/actuator/health..."
@@ -1160,7 +1140,7 @@ jobs:
           echo "Teardown inactive deployment (${ACTIVE_COLOR})"
           
           # Get the list of services
-          services=("order" "product" "user" "ui")
+          services=("monolith" "ui")
           
           # Delete deployments and services for the inactive color
           for svc in "${services[@]}"; do

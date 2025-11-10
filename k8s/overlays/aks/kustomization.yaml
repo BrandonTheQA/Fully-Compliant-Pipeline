@@ -5,11 +5,7 @@ resources:
   - ../../base
 
 patchesStrategicMerge:
-  - order-node-affinity.yaml
-  - product-node-affinity.yaml
-  - user-node-affinity.yaml
+  - monolith-node-affinity.yaml
   - ui-node-affinity.yaml
-  - order-resources.yaml
-  - product-resources.yaml
-  - user-resources.yaml
+  - monolith-resources.yaml
 

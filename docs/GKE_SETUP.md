@@ -120,15 +120,15 @@ You can customize the setup by setting these environment variables:
    - `sql-db-secret` with SQL password
 
 2. **Deploy services as green deployment**
-   - Deploys in order: user → product → order → ui
+   - Deploys monolith (API) followed by ui
    - Modifies manifests:
      - Replaces ACR image references with GCR
      - Adds `deployment-color=green` labels
      - Adds name suffix `-green`
      - Removes Azure-specific node affinity
-   - Sets environment variables:
-     - Order service: `USER_SERVICE_URL`, `PRODUCT_SERVICE_URL`, `DEPLOYMENT_COLOR`, `NAMESPACE`
-     - Other services: `DEPLOYMENT_COLOR`, `NAMESPACE`
+   - Sets environment variables on each deployment:
+     - `DEPLOYMENT_COLOR`
+     - `NAMESPACE`
 
 3. **Wait for rollouts**
    - Waits for all deployments to be ready (5 minute timeout)

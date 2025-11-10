@@ -5,19 +5,13 @@ resources:
   - ../../base
 
 patchesStrategicMerge:
-  - order-resources.yaml
-  - product-resources.yaml
-  - user-resources.yaml
+  - monolith-resources.yaml
 
 # Transform ACR images to ECR images
 # Replace <AWS_ACCOUNT_ID> and <REGION> with your actual AWS account ID and region
 images:
-  - name: rgpocacr9021.azurecr.io/order
-    newName: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/order
-  - name: rgpocacr9021.azurecr.io/product
-    newName: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/product
-  - name: rgpocacr9021.azurecr.io/user
-    newName: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/user
+  - name: rgpocacr9021.azurecr.io/monolith
+    newName: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/monolith
   - name: rgpocacr9021.azurecr.io/ui
     newName: ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/ui
 
