@@ -1,7 +1,32 @@
 import axios from 'axios';
 
-const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') || '/api';
+type AppEnv = {
+  VITE_API_BASE_URL?: string;
+};
+
+const getEnv = (): AppEnv => {
+  if (typeof globalThis !== 'undefined' && (globalThis as { __APP_ENV__?: AppEnv }).__APP_ENV__) {
+    return (globalThis as { __APP_ENV__?: AppEnv }).__APP_ENV__ as AppEnv;
+  }
+
+  if (typeof process !== 'undefined') {
+    return {
+      VITE_API_BASE_URL: process.env.VITE_API_BASE_URL,
+    };
+  }
+
+  return {};
+};
+
+const normalizeBaseUrl = (value?: string): string => {
+  if (!value || value.trim().length === 0) {
+    return '/api';
+  }
+
+  return value.replace(/\/+$/, '') || '/api';
+};
+
+const apiBaseUrl = normalizeBaseUrl(getEnv().VITE_API_BASE_URL);
 
 // Unified API instance using BFF pattern - all requests go through configured API base URL
 const api = axios.create({
