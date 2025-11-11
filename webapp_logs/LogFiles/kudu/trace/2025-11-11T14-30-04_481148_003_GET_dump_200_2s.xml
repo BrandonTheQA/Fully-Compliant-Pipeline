@@ -1,4 +1,0 @@
-<step title="Incoming Request" date="2025-11-11T14:30:04.628" instance="481148" url="/dump" method="GET" type="request" pid="768,1,5" Host="aks-poc-ecompoc.scm.azurewebsites.net" User-Agent="AZURECLI/2.68.0 (HOMEBREW)" Accept-Encoding="identity" Authorization="Bas..." x-ms-client-request-id="e8758646-bf0a-11f0-9f5d-be2988ce1c21" X-ARR-LOG-ID="e8758646-bf0a-11f0-9f5d-be2988ce1c21" CLIENT-IP="100.6.81.196:64811" X-SITE-DEPLOYMENT-ID="aks-poc-ecompoc" WAS-DEFAULT-HOSTNAME="aks-poc-ecompoc.scm.azurewebsites.net" X-Forwarded-Proto="https" X-AppService-Proto="https" X-Forwarded-TlsVersion="1.3" X-WAWS-Unencoded-URL="/dump" X-Client-IP="100.6.81.196" X-Client-Port="64811" >
-  <step title="Cleanup Xml Logs" date="2025-11-11T14:30:04.634" /><!-- duration: 13ms -->
-  <step title="Outgoing response" date="2025-11-11T14:30:06.288" type="response" statusCode="200" statusText="OK" /><!-- duration: 3ms -->
-</step><!-- duration: 1667ms -->

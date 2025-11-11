@@ -27,6 +27,8 @@ Thumbs.db
 # Logs
 *.log
 logs/
+webapp_logs/
+webapp_logs.zip
 
 # Temporary files
 *.tmp
