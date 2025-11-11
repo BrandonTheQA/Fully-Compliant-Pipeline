@@ -396,7 +396,7 @@ jobs:
           
           # Check if active color services exist
           ACTIVE_EXISTS=false
-          if kubectl get deployment monolith-${ACTIVE_COLOR} -n dev &>/dev/null; then
+          if kubectl get deployment ecompoc-${ACTIVE_COLOR} -n dev &>/dev/null; then
             ACTIVE_EXISTS=true
             echo "Active color (${ACTIVE_COLOR}) deployments found, will health check them"
           else
@@ -405,7 +405,7 @@ jobs:
           
           # Wait for LoadBalancer services to get external IPs
           echo "Waiting for LoadBalancer EXTERNAL-IPs for target color (${TARGET_COLOR})..."
-          target_services=(monolith-${TARGET_COLOR} ui-${TARGET_COLOR})
+          target_services=(ecompoc-${TARGET_COLOR} ui-${TARGET_COLOR})
           declare -A service_hosts
           
           # Always check target color
@@ -436,7 +436,7 @@ jobs:
           # Optionally check active color if it exists
           if [ "$ACTIVE_EXISTS" = "true" ]; then
             echo "Waiting for LoadBalancer EXTERNAL-IPs for active color (${ACTIVE_COLOR})..."
-            active_services=(monolith-${ACTIVE_COLOR} ui-${ACTIVE_COLOR})
+            active_services=(ecompoc-${ACTIVE_COLOR} ui-${ACTIVE_COLOR})
             for svc in "${active_services[@]}"; do
               echo "Waiting for LoadBalancer EXTERNAL-IP for ${svc}..."
               host=""
@@ -463,7 +463,7 @@ jobs:
           
           # Perform health checks using LoadBalancer external IPs
           echo "Checking API services health via LoadBalancer for target color (${TARGET_COLOR})..."
-          target_api_services=(monolith-${TARGET_COLOR})
+          target_api_services=(ecompoc-${TARGET_COLOR})
           for svc in "${target_api_services[@]}"; do
             host=${service_hosts[${svc}]}
             echo "Checking health for ${svc} at http://${host}/actuator/health..."
@@ -484,7 +484,7 @@ jobs:
           # Optionally check active color API services if they exist
           if [ "$ACTIVE_EXISTS" = "true" ]; then
             echo "Checking API services health via LoadBalancer for active color (${ACTIVE_COLOR})..."
-            active_api_services=(monolith-${ACTIVE_COLOR})
+            active_api_services=(ecompoc-${ACTIVE_COLOR})
             for svc in "${active_api_services[@]}"; do
               host=${service_hosts[${svc}]:-}
               if [ -n "${host}" ]; then
@@ -578,7 +578,7 @@ jobs:
           echo "Teardown inactive deployment (${ACTIVE_COLOR})"
           
           # Get the list of services
-          services=("monolith" "ui")
+          services=("ecompoc" "ui")
           
           # Delete deployments and services for the inactive color
           for svc in "${services[@]}"; do

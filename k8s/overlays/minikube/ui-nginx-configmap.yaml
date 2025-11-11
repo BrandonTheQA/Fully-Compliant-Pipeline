@@ -16,9 +16,9 @@ data:
       gzip_min_length 1024;
       gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss application/json application/javascript;
 
-      # BFF reverse proxy configuration for minikube (single monolith service)
+      # BFF reverse proxy configuration for minikube (single ecompoc service)
       location /api/ {
-          proxy_pass http://monolith.dev.svc.cluster.local/api/;
+          proxy_pass http://ecompoc.dev.svc.cluster.local/api/;
           proxy_http_version 1.1;
           proxy_set_header Host $host;
           proxy_set_header X-Real-IP $remote_addr;

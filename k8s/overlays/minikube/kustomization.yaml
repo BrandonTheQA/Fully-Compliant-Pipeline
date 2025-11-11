@@ -8,14 +8,14 @@ resources:
   - ui-nginx-configmap.yaml
 
 images:
-  - name: rgpocacr9021.azurecr.io/monolith
-    newName: monolith
+  - name: rgpocacr9021.azurecr.io/ecompoc
+    newName: ecompoc
     newTag: local
   - name: rgpocacr9021.azurecr.io/ui
     newName: ui
     newTag: local
 
 patchesStrategicMerge:
-  - monolith-deployment-patch.yaml
+  - ecompoc-deployment-patch.yaml
   - ui-deployment-patch.yaml
 

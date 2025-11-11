@@ -471,7 +471,7 @@
 	"variable": [
 		{
 			"key": "apiBaseUrl",
-			"value": "https://monolith.example.com/api",
+			"value": "https://ecompoc.example.com/api",
 			"type": "string"
 		},
 		{

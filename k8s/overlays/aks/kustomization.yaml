@@ -5,7 +5,7 @@ resources:
   - ../../base
 
 patchesStrategicMerge:
-  - monolith-node-affinity.yaml
+  - ecompoc-node-affinity.yaml
   - ui-node-affinity.yaml
-  - monolith-resources.yaml
+  - ecompoc-resources.yaml
 

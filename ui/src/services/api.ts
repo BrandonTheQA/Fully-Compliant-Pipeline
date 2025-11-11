@@ -1,8 +1,11 @@
 import axios from 'axios';
 
-// Unified API instance using BFF pattern - all requests go through /api
+const apiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, '') || '/api';
+
+// Unified API instance using BFF pattern - all requests go through configured API base URL
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },

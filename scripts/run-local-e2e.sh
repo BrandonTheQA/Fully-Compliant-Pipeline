@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Starts monolith service and UI locally, waits for readiness, runs Postman tests via Newman,
+# Starts ecompoc service and UI locally, waits for readiness, runs Postman tests via Newman,
 # and cleans up background processes on exit.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-MONOLITH_DIR="$ROOT_DIR/api/services/monolith"
+ECOMPOC_DIR="$ROOT_DIR/api/services/ecompoc"
 UI_DIR="$ROOT_DIR/ui"
 
-MONOLITH_PORT=8080
+ECOMPOC_PORT=8080
 UI_PORT=8084
 
 # Exclude security for local runs so endpoints are open
@@ -18,7 +18,7 @@ SEC_EXCLUDE="org.springframework.boot.autoconfigure.security.servlet.SecurityAut
 
 cleanup() {
   echo "\nCleaning up..." >&2
-  for p in "$MONOLITH_PORT" "$UI_PORT"; do
+  for p in "$ECOMPOC_PORT" "$UI_PORT"; do
     if lsof -ti tcp:"$p" >/dev/null 2>&1; then
       kill -9 $(lsof -ti tcp:"$p") || true
     fi
@@ -39,19 +39,19 @@ wait_for_port() {
   return 1
 }
 
-echo "Killing any existing services on ports $MONOLITH_PORT,$UI_PORT..."
-for p in "$MONOLITH_PORT" "$UI_PORT"; do
+echo "Killing any existing services on ports $ECOMPOC_PORT,$UI_PORT..."
+for p in "$ECOMPOC_PORT" "$UI_PORT"; do
   lsof -ti tcp:"$p" | xargs -r kill -9 || true
 done
 
-echo "Starting monolith service (:$MONOLITH_PORT)..."
+echo "Starting ecompoc service (:$ECOMPOC_PORT)..."
 (
-  cd "$MONOLITH_DIR"
-  SPRING_PROFILES_ACTIVE=local SERVER_PORT="$MONOLITH_PORT" mvn -q spring-boot:run \
+  cd "$ECOMPOC_DIR"
+  SPRING_PROFILES_ACTIVE=local SERVER_PORT="$ECOMPOC_PORT" mvn -q spring-boot:run \
     -Dspring-boot.run.jvmArguments="-Dspring.autoconfigure.exclude=$SEC_EXCLUDE" &
 ) >/dev/null 2>&1 &
 
-wait_for_port "$MONOLITH_PORT" "monolith"
+wait_for_port "$ECOMPOC_PORT" "ecompoc"
 
 echo "Starting UI service (:$UI_PORT)..."
 (
@@ -63,7 +63,7 @@ wait_for_port "$UI_PORT" "ui"
 
 # Optional: basic health checks
 for ep in \
-  "http://localhost:$MONOLITH_PORT/actuator/health"; do
+  "http://localhost:$ECOMPOC_PORT/actuator/health"; do
   curl -sf "$ep" >/dev/null || {
     echo "Health check failed: $ep" >&2
     exit 1
@@ -85,7 +85,7 @@ COLLECTION="$ROOT_DIR/postman/IntegrationTest.postman_collection.json"
 
 echo "Running Postman tests with Newman..."
 newman run "$COLLECTION" \
-  --env-var apiBaseUrl="http://localhost:$MONOLITH_PORT/api" \
+  --env-var apiBaseUrl="http://localhost:$ECOMPOC_PORT/api" \
   --env-var userName="John Doe" \
   --env-var userEmail="john.doe+${RAND}@example.com" \
   --env-var userPassword="SecurePassword123" \

@@ -120,7 +120,7 @@ You can customize the setup by setting these environment variables:
    - `sql-db-secret` with SQL password
 
 2. **Deploy services as green deployment**
-   - Deploys monolith (API) followed by ui
+   - Deploys eComPOC (API) followed by ui
    - Modifies manifests:
      - Replaces ACR image references with GCR
      - Adds `deployment-color=green` labels

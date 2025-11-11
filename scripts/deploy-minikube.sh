@@ -84,10 +84,10 @@ build_images() {
   # Set docker environment to use minikube's docker daemon
   eval $(minikube docker-env)
   
-  # Build monolith service
-  log_info "Building monolith service..."
-  docker build -t monolith:local "$ROOT_DIR/api/services/monolith" >/dev/null 2>&1 || {
-    log_error "Failed to build monolith service"
+  # Build ecompoc service
+  log_info "Building ecompoc service..."
+  docker build -t ecompoc:local "$ROOT_DIR/api/services/ecompoc" >/dev/null 2>&1 || {
+    log_error "Failed to build ecompoc service"
     exit 1
   }
   
@@ -146,7 +146,7 @@ deploy() {
 wait_for_deployments() {
   log_info "Waiting for deployments to be ready..."
   
-  local deployments=("monolith" "ui")
+  local deployments=("ecompoc" "ui")
   local timeout=300  # 5 minutes
   
   for deployment in "${deployments[@]}"; do
@@ -168,24 +168,24 @@ wait_for_deployments() {
 get_service_urls() {
   log_info "Getting service URLs..."
   
-  log_info "Starting port-forwarding for monolith service..."
+  log_info "Starting port-forwarding for ecompoc service..."
   cleanup_port_forwards
   
-  kubectl port-forward -n "$NAMESPACE" svc/monolith 8080:80 >/dev/null 2>&1 &
-  local monolith_pf=$!
+  kubectl port-forward -n "$NAMESPACE" svc/ecompoc 8080:80 >/dev/null 2>&1 &
+  local ecompoc_pf=$!
   
   sleep 3
   
-  if ! kill -0 $monolith_pf 2>/dev/null; then
+  if ! kill -0 $ecompoc_pf 2>/dev/null; then
     log_error "Port-forwarding failed to establish"
     cleanup_port_forwards
     exit 1
   fi
   
-  MONOLITH_URL="http://localhost:8080"
-  echo $monolith_pf > /tmp/minikube-pf-monolith.pid
-  log_info "Monolith service URL: $MONOLITH_URL"
-  export MONOLITH_URL
+  ECOMPOC_URL="http://localhost:8080"
+  echo $ecompoc_pf > /tmp/minikube-pf-ecompoc.pid
+  log_info "eComPOC service URL: $ECOMPOC_URL"
+  export ECOMPOC_URL
 }
 
 # Run Postman tests
@@ -204,7 +204,7 @@ run_tests() {
   local user_email="john.doe+${random_suffix}@example.com"
   
   newman run "$collection" \
-    --env-var "apiBaseUrl=$MONOLITH_URL/api" \
+    --env-var "apiBaseUrl=$ECOMPOC_URL/api" \
     --env-var "userName=John Doe" \
     --env-var "userEmail=$user_email" \
     --env-var "userPassword=SecurePassword123" \
@@ -237,9 +237,9 @@ run_tests() {
 
 # Cleanup port-forwards
 cleanup_port_forwards() {
-  if [ -f /tmp/minikube-pf-monolith.pid ]; then
-    kill $(cat /tmp/minikube-pf-monolith.pid) 2>/dev/null || true
-    rm -f /tmp/minikube-pf-monolith.pid
+  if [ -f /tmp/minikube-pf-ecompoc.pid ]; then
+    kill $(cat /tmp/minikube-pf-ecompoc.pid) 2>/dev/null || true
+    rm -f /tmp/minikube-pf-ecompoc.pid
   fi
 }
 

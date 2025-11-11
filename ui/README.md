@@ -46,7 +46,7 @@ The app will be available at `http://localhost:5173`
 
 ### Environment Variables
 
-The app now relies on a single backend API exposed at `/api`. For local development the Vite dev server proxies `/api` requests to the monolith running on `http://localhost:8080`, so no additional environment variables are required. In production the Nginx configuration included in the Docker image forwards `/api` to the monolith service automatically.
+The app now relies on a single backend API exposed at `/api`. For local development the Vite dev server proxies `/api` requests to the eComPOC service running on `http://localhost:8080`, so no additional environment variables are required. In production the Nginx configuration included in the Docker image forwards `/api` to the eComPOC service automatically.
 
 ### Testing
 
