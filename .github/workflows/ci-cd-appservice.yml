@@ -162,16 +162,34 @@ jobs:
       - name: Deploy backend
         run: |
           set -euo pipefail
+          # Create backend web app if it doesn't exist
+          if ! az webapp show --name "${{ matrix.backend_app }}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
+            echo "Creating backend web app: ${{ matrix.backend_app }}"
+            az webapp create \
+              --name "${{ matrix.backend_app }}" \
+              --resource-group "${AZURE_RESOURCE_GROUP}" \
+              --plan "${{ matrix.backend_plan }}" \
+              --runtime "JAVA:17-java17" \
+              --https-only true
+          fi
+          # Configure web app
+          az webapp config set \
+            --name "${{ matrix.backend_app }}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --linux-fx-version "JAVA:17-java17"
+          # Deploy the application
           az webapp deploy \
             --name "${{ matrix.backend_app }}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --type zip \
             --src-path artifacts/backend/ecompoc-backend.zip \
             --clean true
+          # Set startup command
           az webapp config set \
             --name "${{ matrix.backend_app }}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --startup-file "java -jar /home/site/wwwroot/ecompoc-service.jar"
+          # Restart the web app
           az webapp restart \
             --name "${{ matrix.backend_app }}" \
             --resource-group "${AZURE_RESOURCE_GROUP}"
@@ -185,7 +203,6 @@ jobs:
               --resource-group "${AZURE_RESOURCE_GROUP}" \
               --plan "${{ matrix.ui_plan }}" \
               --runtime "NODE:20-lts" \
-              --deployment-local-git false \
               --https-only true
           fi
           az webapp config set \
