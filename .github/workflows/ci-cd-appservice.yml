@@ -109,29 +109,11 @@ jobs:
       - name: Provision App Service plans
         run: ./scripts/provision-ecompoc-appservice.sh
 
-  deploy-appservice:
-    name: Deploy to Azure App Service (${{ matrix.environment }})
+  deploy-dev:
+    name: Deploy to Dev Environment
     runs-on: ubuntu-latest
     needs: [ensure-appservice-plans]
-    environment: ${{ matrix.environment }}
-    strategy:
-      matrix:
-        include:
-          - environment: dev
-            backend_plan: asp-ecompoc-dev-backend-westus3
-            backend_app: app-ecompoc-dev-backend
-            ui_plan: asp-ecompoc-dev-ui-westus3
-            ui_app: app-ecompoc-dev-ui
-          - environment: qa
-            backend_plan: asp-ecompoc-qa-backend-westus3
-            backend_app: app-ecompoc-qa-backend
-            ui_plan: asp-ecompoc-qa-ui-westus3
-            ui_app: app-ecompoc-qa-ui
-          - environment: prod
-            backend_plan: asp-ecompoc-prod-backend-westus3
-            backend_app: app-ecompoc-prod-backend
-            ui_plan: asp-ecompoc-prod-ui-westus3
-            ui_app: app-ecompoc-prod-ui
+    environment: dev
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -162,79 +144,407 @@ jobs:
       - name: Deploy backend
         run: |
           set -euo pipefail
+          BACKEND_APP="app-ecompoc-dev-backend"
+          BACKEND_PLAN="asp-ecompoc-dev-backend-westus3"
           # Create backend web app if it doesn't exist
-          if ! az webapp show --name "${{ matrix.backend_app }}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
-            echo "Creating backend web app: ${{ matrix.backend_app }}"
+          if ! az webapp show --name "${BACKEND_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
+            echo "Creating backend web app: ${BACKEND_APP}"
             az webapp create \
-              --name "${{ matrix.backend_app }}" \
+              --name "${BACKEND_APP}" \
               --resource-group "${AZURE_RESOURCE_GROUP}" \
-              --plan "${{ matrix.backend_plan }}" \
+              --plan "${BACKEND_PLAN}" \
               --runtime "JAVA:17-java17" \
               --https-only true
           fi
           # Configure web app
           az webapp config set \
-            --name "${{ matrix.backend_app }}" \
+            --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --linux-fx-version "JAVA:17-java17"
           # Deploy the application
           az webapp deploy \
-            --name "${{ matrix.backend_app }}" \
+            --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --type zip \
             --src-path artifacts/backend/ecompoc-backend.zip \
             --clean true
           # Set startup command
           az webapp config set \
-            --name "${{ matrix.backend_app }}" \
+            --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --startup-file "java -jar /home/site/wwwroot/ecompoc-service.jar"
           # Restart the web app
           az webapp restart \
-            --name "${{ matrix.backend_app }}" \
+            --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}"
 
       - name: Ensure UI web app exists
         run: |
           set -euo pipefail
-          if ! az webapp show --name "${{ matrix.ui_app }}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
+          UI_APP="app-ecompoc-dev-ui"
+          UI_PLAN="asp-ecompoc-dev-ui-westus3"
+          if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             az webapp create \
-              --name "${{ matrix.ui_app }}" \
+              --name "${UI_APP}" \
               --resource-group "${AZURE_RESOURCE_GROUP}" \
-              --plan "${{ matrix.ui_plan }}" \
+              --plan "${UI_PLAN}" \
               --runtime "NODE:20-lts" \
               --https-only true
           fi
           az webapp config set \
-            --name "${{ matrix.ui_app }}" \
+            --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --linux-fx-version "NODE:20-lts"
           az webapp config appsettings set \
-            --name "${{ matrix.ui_app }}" \
+            --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --settings WEBSITES_PORT=8080
 
       - name: Deploy UI
         run: |
           set -euo pipefail
+          UI_APP="app-ecompoc-dev-ui"
           az webapp deploy \
-            --name "${{ matrix.ui_app }}" \
+            --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --type zip \
             --src-path artifacts/ui/ecompoc-ui.zip \
             --clean true
           az webapp config set \
-            --name "${{ matrix.ui_app }}" \
+            --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --startup-file "pm2 serve /home/site/wwwroot --no-daemon --spa"
           az webapp restart \
-            --name "${{ matrix.ui_app }}" \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}"
+
+      - name: Output endpoints
+        id: endpoints
+        run: |
+          set -euo pipefail
+          BACKEND_APP="app-ecompoc-dev-backend"
+          UI_APP="app-ecompoc-dev-ui"
+          backend_host=$(az webapp show --name "${BACKEND_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" --query defaultHostName -o tsv)
+          ui_host=$(az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" --query defaultHostName -o tsv)
+          echo "backend_url=https://${backend_host}" >> $GITHUB_OUTPUT
+          echo "ui_url=https://${ui_host}" >> $GITHUB_OUTPUT
+          echo "Backend URL: https://${backend_host}"
+          echo "UI URL: https://${ui_host}"
+
+      - name: Wait for services to be ready
+        run: |
+          set -euo pipefail
+          BACKEND_APP="app-ecompoc-dev-backend"
+          UI_APP="app-ecompoc-dev-ui"
+          backend_url="${{ steps.endpoints.outputs.backend_url }}"
+          ui_url="${{ steps.endpoints.outputs.ui_url }}"
+          
+          echo "Waiting for backend service to be ready..."
+          max_attempts=30
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -f -s "${backend_url}/actuator/health" >/dev/null 2>&1 || curl -f -s "${backend_url}/health" >/dev/null 2>&1; then
+              echo "Backend service is ready"
+              break
+            fi
+            attempt=$((attempt + 1))
+            echo "Attempt $attempt/$max_attempts: Backend not ready yet, waiting 10 seconds..."
+            sleep 10
+          done
+          
+          if [ $attempt -eq $max_attempts ]; then
+            echo "Warning: Backend service may not be fully ready, but proceeding..."
+          fi
+          
+          echo "Waiting for UI service to be ready..."
+          attempt=0
+          while [ $attempt -lt $max_attempts ]; do
+            if curl -f -s "${ui_url}" >/dev/null 2>&1; then
+              echo "UI service is ready"
+              break
+            fi
+            attempt=$((attempt + 1))
+            echo "Attempt $attempt/$max_attempts: UI not ready yet, waiting 10 seconds..."
+            sleep 10
+          done
+          
+          if [ $attempt -eq $max_attempts ]; then
+            echo "Warning: UI service may not be fully ready, but proceeding..."
+          fi
+
+  test-dev:
+    name: Run Selenium Tests Against Dev
+    runs-on: ubuntu-latest
+    needs: [deploy-dev]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set Azure subscription
+        run: |
+          if [ -n "${{ secrets.AZURE_SUBSCRIPTION_ID }}" ]; then
+            az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          fi
+
+      - name: Get dev UI URL
+        id: get-ui-url
+        run: |
+          set -euo pipefail
+          UI_APP="app-ecompoc-dev-ui"
+          ui_host=$(az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" --query defaultHostName -o tsv)
+          ui_url="https://${ui_host}"
+          echo "ui_url=${ui_url}" >> $GITHUB_OUTPUT
+          echo "Dev UI URL: ${ui_url}"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run Selenium tests
+        working-directory: selenium
+        env:
+          BASE_URL: ${{ steps.get-ui-url.outputs.ui_url }}
+        run: |
+          set -euo pipefail
+          echo "Running Selenium E2E tests against: ${BASE_URL}"
+          mvn clean test
+
+  deploy-qa:
+    name: Deploy to QA Environment
+    runs-on: ubuntu-latest
+    needs: [test-dev]
+    environment: qa
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set Azure subscription
+        run: |
+          if [ -n "${{ secrets.AZURE_SUBSCRIPTION_ID }}" ]; then
+            az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          fi
+
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ecompoc-backend
+          path: artifacts/backend
+
+      - name: Download UI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ecompoc-ui
+          path: artifacts/ui
+
+      - name: Deploy backend
+        run: |
+          set -euo pipefail
+          BACKEND_APP="app-ecompoc-qa-backend"
+          BACKEND_PLAN="asp-ecompoc-qa-backend-westus3"
+          # Create backend web app if it doesn't exist
+          if ! az webapp show --name "${BACKEND_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
+            echo "Creating backend web app: ${BACKEND_APP}"
+            az webapp create \
+              --name "${BACKEND_APP}" \
+              --resource-group "${AZURE_RESOURCE_GROUP}" \
+              --plan "${BACKEND_PLAN}" \
+              --runtime "JAVA:17-java17" \
+              --https-only true
+          fi
+          # Configure web app
+          az webapp config set \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --linux-fx-version "JAVA:17-java17"
+          # Deploy the application
+          az webapp deploy \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --type zip \
+            --src-path artifacts/backend/ecompoc-backend.zip \
+            --clean true
+          # Set startup command
+          az webapp config set \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --startup-file "java -jar /home/site/wwwroot/ecompoc-service.jar"
+          # Restart the web app
+          az webapp restart \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}"
+
+      - name: Ensure UI web app exists
+        run: |
+          set -euo pipefail
+          UI_APP="app-ecompoc-qa-ui"
+          UI_PLAN="asp-ecompoc-qa-ui-westus3"
+          if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
+            az webapp create \
+              --name "${UI_APP}" \
+              --resource-group "${AZURE_RESOURCE_GROUP}" \
+              --plan "${UI_PLAN}" \
+              --runtime "NODE:20-lts" \
+              --https-only true
+          fi
+          az webapp config set \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --linux-fx-version "NODE:20-lts"
+          az webapp config appsettings set \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --settings WEBSITES_PORT=8080
+
+      - name: Deploy UI
+        run: |
+          set -euo pipefail
+          UI_APP="app-ecompoc-qa-ui"
+          az webapp deploy \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --type zip \
+            --src-path artifacts/ui/ecompoc-ui.zip \
+            --clean true
+          az webapp config set \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --startup-file "pm2 serve /home/site/wwwroot --no-daemon --spa"
+          az webapp restart \
+            --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}"
 
       - name: Output endpoints
         run: |
-          backend_host=$(az webapp show --name "${{ matrix.backend_app }}" --resource-group "${AZURE_RESOURCE_GROUP}" --query defaultHostName -o tsv)
-          ui_host=$(az webapp show --name "${{ matrix.ui_app }}" --resource-group "${AZURE_RESOURCE_GROUP}" --query defaultHostName -o tsv)
+          backend_host=$(az webapp show --name "app-ecompoc-qa-backend" --resource-group "${AZURE_RESOURCE_GROUP}" --query defaultHostName -o tsv)
+          ui_host=$(az webapp show --name "app-ecompoc-qa-ui" --resource-group "${AZURE_RESOURCE_GROUP}" --query defaultHostName -o tsv)
+          echo "Backend URL: https://${backend_host}"
+          echo "UI URL: https://${ui_host}"
+
+  deploy-prod:
+    name: Deploy to Prod Environment
+    runs-on: ubuntu-latest
+    needs: [deploy-qa]
+    environment: prod
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set Azure subscription
+        run: |
+          if [ -n "${{ secrets.AZURE_SUBSCRIPTION_ID }}" ]; then
+            az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          fi
+
+      - name: Download backend artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ecompoc-backend
+          path: artifacts/backend
+
+      - name: Download UI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ecompoc-ui
+          path: artifacts/ui
+
+      - name: Deploy backend
+        run: |
+          set -euo pipefail
+          BACKEND_APP="app-ecompoc-prod-backend"
+          BACKEND_PLAN="asp-ecompoc-prod-backend-westus3"
+          # Create backend web app if it doesn't exist
+          if ! az webapp show --name "${BACKEND_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
+            echo "Creating backend web app: ${BACKEND_APP}"
+            az webapp create \
+              --name "${BACKEND_APP}" \
+              --resource-group "${AZURE_RESOURCE_GROUP}" \
+              --plan "${BACKEND_PLAN}" \
+              --runtime "JAVA:17-java17" \
+              --https-only true
+          fi
+          # Configure web app
+          az webapp config set \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --linux-fx-version "JAVA:17-java17"
+          # Deploy the application
+          az webapp deploy \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --type zip \
+            --src-path artifacts/backend/ecompoc-backend.zip \
+            --clean true
+          # Set startup command
+          az webapp config set \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --startup-file "java -jar /home/site/wwwroot/ecompoc-service.jar"
+          # Restart the web app
+          az webapp restart \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}"
+
+      - name: Ensure UI web app exists
+        run: |
+          set -euo pipefail
+          UI_APP="app-ecompoc-prod-ui"
+          UI_PLAN="asp-ecompoc-prod-ui-westus3"
+          if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
+            az webapp create \
+              --name "${UI_APP}" \
+              --resource-group "${AZURE_RESOURCE_GROUP}" \
+              --plan "${UI_PLAN}" \
+              --runtime "NODE:20-lts" \
+              --https-only true
+          fi
+          az webapp config set \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --linux-fx-version "NODE:20-lts"
+          az webapp config appsettings set \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --settings WEBSITES_PORT=8080
+
+      - name: Deploy UI
+        run: |
+          set -euo pipefail
+          UI_APP="app-ecompoc-prod-ui"
+          az webapp deploy \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --type zip \
+            --src-path artifacts/ui/ecompoc-ui.zip \
+            --clean true
+          az webapp config set \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --startup-file "pm2 serve /home/site/wwwroot --no-daemon --spa"
+          az webapp restart \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}"
+
+      - name: Output endpoints
+        run: |
+          backend_host=$(az webapp show --name "app-ecompoc-prod-backend" --resource-group "${AZURE_RESOURCE_GROUP}" --query defaultHostName -o tsv)
+          ui_host=$(az webapp show --name "app-ecompoc-prod-ui" --resource-group "${AZURE_RESOURCE_GROUP}" --query defaultHostName -o tsv)
           echo "Backend URL: https://${backend_host}"
           echo "UI URL: https://${ui_host}"
 
