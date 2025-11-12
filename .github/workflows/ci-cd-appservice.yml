@@ -159,23 +159,6 @@ jobs:
           name: ecompoc-ui
           path: artifacts/ui
 
-      - name: Ensure backend web app exists
-        run: |
-          set -euo pipefail
-          if ! az webapp show --name "${{ matrix.backend_app }}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
-            az webapp create \
-              --name "${{ matrix.backend_app }}" \
-              --resource-group "${AZURE_RESOURCE_GROUP}" \
-              --plan "${{ matrix.backend_plan }}" \
-              --runtime "JAVA:17-java17" \
-              --deployment-local-git false \
-              --https-only true
-          fi
-          az webapp config set \
-            --name "${{ matrix.backend_app }}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --linux-fx-version "JAVA:17-java17"
-
       - name: Deploy backend
         run: |
           set -euo pipefail
