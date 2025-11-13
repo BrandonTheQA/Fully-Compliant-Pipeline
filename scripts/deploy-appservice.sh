@@ -8,11 +8,13 @@ ECOMPOC_APP_NAME="aks-poc-ecompoc"
 UI_APP_NAME="aks-poc-ui"
 ECOMPOC_RUNTIME="JAVA:17-java17"
 UI_RUNTIME="NODE:20-lts"
-ECOMPOC_STARTUP="java -jar /home/site/wwwroot/ecompoc-service-1.0.0.jar"
+ECOMPOC_STARTUP="startup.sh"
 UI_STARTUP="pm2 serve /home/site/wwwroot --no-daemon --spa"
 UI_PORT="8080"
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
 ECOMPOC_PROJECT_DIR="${ROOT_DIR}/api/services/ecompoc"
 ECOMPOC_JAR="${ECOMPOC_PROJECT_DIR}/target/ecompoc-service-1.0.0.jar"
 UI_DIR="${ROOT_DIR}/ui"
@@ -36,8 +38,18 @@ package_ecompoc() {
   ensure_ecompoc_artifact
   local ecompoc_zip
   ecompoc_zip="$(mktemp)"
-  info "Packaging ecompoc jar into ${ecompoc_zip}"
-  zip -j "${ecompoc_zip}" "${ECOMPOC_JAR}" >/dev/null
+  local startup_script="${SCRIPT_DIR}/startup.sh"
+  info "Packaging ecompoc jar and startup script into ${ecompoc_zip}"
+  # Create a temporary directory for packaging
+  local temp_dir
+  temp_dir="$(mktemp -d)"
+  cp "${ECOMPOC_JAR}" "${temp_dir}/ecompoc-service-1.0.0.jar"
+  if [[ -f "${startup_script}" ]]; then
+    cp "${startup_script}" "${temp_dir}/startup.sh"
+    chmod +x "${temp_dir}/startup.sh"
+  fi
+  (cd "${temp_dir}" && zip -r "${ecompoc_zip}" . >/dev/null)
+  rm -rf "${temp_dir}"
   printf '%s' "${ecompoc_zip}"
 }
 
