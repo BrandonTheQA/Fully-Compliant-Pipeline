@@ -21,6 +21,8 @@ spec:
               value: ""
             - name: NAMESPACE
               value: "dev"
+            - name: VITE_API_BASE_URL
+              value: ""  # Will be set to ecompoc service LoadBalancer URL after deployment
       volumes:
         - name: nginx-config
           configMap:
