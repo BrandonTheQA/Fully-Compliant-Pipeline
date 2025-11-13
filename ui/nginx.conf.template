@@ -21,6 +21,18 @@ server {
         proxy_send_timeout 60s;
         proxy_read_timeout 60s;
         proxy_buffering off;
+        
+        # Intercept non-200 responses and return descriptive error
+        proxy_intercept_errors on;
+        error_page 400 401 403 404 405 408 409 410 411 412 413 414 415 416 417 418 421 422 423 424 425 426 428 429 431 451 500 501 502 503 504 505 506 507 508 510 511 = @proxy_error;
+    }
+    
+    # Custom error handler for proxy errors
+    # Note: Returns 200 with original status in JSON body since nginx return directive doesn't support variable status codes
+    location @proxy_error {
+        default_type application/json;
+        add_header Content-Type application/json always;
+        return 200 '{"error": "Backend service error", "status": $status, "url": "$scheme://$host$request_uri", "message": "The backend service returned a non-200 response"}';
     }
 
     # Serve static files for all other requests
