@@ -155,25 +155,72 @@ jobs:
               --plan "${BACKEND_PLAN}" \
               --runtime "JAVA:17-java17" \
               --https-only true
+            # Wait for app service to be fully provisioned
+            echo "Waiting for app service to be ready..."
+            sleep 30
           fi
+          
+          # Ensure app service is running
+          echo "Ensuring app service is started..."
+          az webapp start \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" || true
+          
           # Configure web app
+          echo "Configuring web app runtime..."
           az webapp config set \
             --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --linux-fx-version "JAVA:17-java17"
-          # Deploy the application
-          az webapp deploy \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --type zip \
-            --src-path artifacts/backend/ecompoc-backend.zip \
-            --clean true
-          # Set startup command
+          
+          # Set startup command before deployment
+          echo "Setting startup command..."
           az webapp config set \
             --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --startup-file "java -jar /home/site/wwwroot/ecompoc-service.jar"
-          # Restart the web app
+          
+          # Wait a bit for configuration to propagate
+          sleep 10
+          
+          # Verify zip file exists and is valid
+          if [[ ! -f "artifacts/backend/ecompoc-backend.zip" ]]; then
+            echo "Error: Deployment artifact not found at artifacts/backend/ecompoc-backend.zip" >&2
+            exit 1
+          fi
+          
+          # Deploy with retry logic
+          echo "Deploying application..."
+          max_retries=3
+          retry_count=0
+          while [ $retry_count -lt $max_retries ]; do
+            if az webapp deploy \
+              --name "${BACKEND_APP}" \
+              --resource-group "${AZURE_RESOURCE_GROUP}" \
+              --type zip \
+              --src-path artifacts/backend/ecompoc-backend.zip \
+              --clean true; then
+              echo "Deployment successful"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              if [ $retry_count -lt $max_retries ]; then
+                echo "Deployment failed, retrying in 30 seconds (attempt $retry_count/$max_retries)..."
+                sleep 30
+                # Restart app service before retry
+                az webapp restart \
+                  --name "${BACKEND_APP}" \
+                  --resource-group "${AZURE_RESOURCE_GROUP}" || true
+                sleep 10
+              else
+                echo "Deployment failed after $max_retries attempts" >&2
+                exit 1
+              fi
+            fi
+          done
+          
+          # Restart the web app to ensure clean state
+          echo "Restarting web app..."
           az webapp restart \
             --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}"
@@ -362,25 +409,72 @@ jobs:
               --plan "${BACKEND_PLAN}" \
               --runtime "JAVA:17-java17" \
               --https-only true
+            # Wait for app service to be fully provisioned
+            echo "Waiting for app service to be ready..."
+            sleep 30
           fi
+          
+          # Ensure app service is running
+          echo "Ensuring app service is started..."
+          az webapp start \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" || true
+          
           # Configure web app
+          echo "Configuring web app runtime..."
           az webapp config set \
             --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --linux-fx-version "JAVA:17-java17"
-          # Deploy the application
-          az webapp deploy \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --type zip \
-            --src-path artifacts/backend/ecompoc-backend.zip \
-            --clean true
-          # Set startup command
+          
+          # Set startup command before deployment
+          echo "Setting startup command..."
           az webapp config set \
             --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --startup-file "java -jar /home/site/wwwroot/ecompoc-service.jar"
-          # Restart the web app
+          
+          # Wait a bit for configuration to propagate
+          sleep 10
+          
+          # Verify zip file exists and is valid
+          if [[ ! -f "artifacts/backend/ecompoc-backend.zip" ]]; then
+            echo "Error: Deployment artifact not found at artifacts/backend/ecompoc-backend.zip" >&2
+            exit 1
+          fi
+          
+          # Deploy with retry logic
+          echo "Deploying application..."
+          max_retries=3
+          retry_count=0
+          while [ $retry_count -lt $max_retries ]; do
+            if az webapp deploy \
+              --name "${BACKEND_APP}" \
+              --resource-group "${AZURE_RESOURCE_GROUP}" \
+              --type zip \
+              --src-path artifacts/backend/ecompoc-backend.zip \
+              --clean true; then
+              echo "Deployment successful"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              if [ $retry_count -lt $max_retries ]; then
+                echo "Deployment failed, retrying in 30 seconds (attempt $retry_count/$max_retries)..."
+                sleep 30
+                # Restart app service before retry
+                az webapp restart \
+                  --name "${BACKEND_APP}" \
+                  --resource-group "${AZURE_RESOURCE_GROUP}" || true
+                sleep 10
+              else
+                echo "Deployment failed after $max_retries attempts" >&2
+                exit 1
+              fi
+            fi
+          done
+          
+          # Restart the web app to ensure clean state
+          echo "Restarting web app..."
           az webapp restart \
             --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}"
@@ -478,25 +572,72 @@ jobs:
               --plan "${BACKEND_PLAN}" \
               --runtime "JAVA:17-java17" \
               --https-only true
+            # Wait for app service to be fully provisioned
+            echo "Waiting for app service to be ready..."
+            sleep 30
           fi
+          
+          # Ensure app service is running
+          echo "Ensuring app service is started..."
+          az webapp start \
+            --name "${BACKEND_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" || true
+          
           # Configure web app
+          echo "Configuring web app runtime..."
           az webapp config set \
             --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --linux-fx-version "JAVA:17-java17"
-          # Deploy the application
-          az webapp deploy \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --type zip \
-            --src-path artifacts/backend/ecompoc-backend.zip \
-            --clean true
-          # Set startup command
+          
+          # Set startup command before deployment
+          echo "Setting startup command..."
           az webapp config set \
             --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --startup-file "java -jar /home/site/wwwroot/ecompoc-service.jar"
-          # Restart the web app
+          
+          # Wait a bit for configuration to propagate
+          sleep 10
+          
+          # Verify zip file exists and is valid
+          if [[ ! -f "artifacts/backend/ecompoc-backend.zip" ]]; then
+            echo "Error: Deployment artifact not found at artifacts/backend/ecompoc-backend.zip" >&2
+            exit 1
+          fi
+          
+          # Deploy with retry logic
+          echo "Deploying application..."
+          max_retries=3
+          retry_count=0
+          while [ $retry_count -lt $max_retries ]; do
+            if az webapp deploy \
+              --name "${BACKEND_APP}" \
+              --resource-group "${AZURE_RESOURCE_GROUP}" \
+              --type zip \
+              --src-path artifacts/backend/ecompoc-backend.zip \
+              --clean true; then
+              echo "Deployment successful"
+              break
+            else
+              retry_count=$((retry_count + 1))
+              if [ $retry_count -lt $max_retries ]; then
+                echo "Deployment failed, retrying in 30 seconds (attempt $retry_count/$max_retries)..."
+                sleep 30
+                # Restart app service before retry
+                az webapp restart \
+                  --name "${BACKEND_APP}" \
+                  --resource-group "${AZURE_RESOURCE_GROUP}" || true
+                sleep 10
+              else
+                echo "Deployment failed after $max_retries attempts" >&2
+                exit 1
+              fi
+            fi
+          done
+          
+          # Restart the web app to ensure clean state
+          echo "Restarting web app..."
           az webapp restart \
             --name "${BACKEND_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}"
