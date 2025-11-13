@@ -15,7 +15,7 @@ const Navigation: React.FC = () => {
     <nav className="main-nav">
       <div className="nav-container">
         <Link to="/" className="nav-logo">
-          E-Commerce
+          E-Commerce <span className="version-badge">v{__APP_VERSION__}</span>
         </Link>
         <div className="nav-links">
           <Link to="/">Home</Link>

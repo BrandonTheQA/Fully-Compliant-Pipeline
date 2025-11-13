@@ -23,6 +23,13 @@
   text-decoration: none;
 }
 
+.version-badge {
+  font-size: 0.875rem;
+  font-weight: normal;
+  opacity: 0.8;
+  margin-left: 0.5rem;
+}
+
 .nav-links {
   display: flex;
   gap: 1.5rem;
