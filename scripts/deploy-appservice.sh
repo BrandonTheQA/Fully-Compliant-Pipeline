@@ -59,8 +59,9 @@ ensure_ui_build() {
   else
     info "Installing UI dependencies"
     (cd "${UI_DIR}" && npm ci)
-    info "Building UI bundle"
-    (cd "${UI_DIR}" && npm run build)
+    info "Building UI bundle with backend URL: https://${ECOMPOC_APP_NAME}.azurewebsites.net/api"
+    # Set VITE_API_BASE_URL during build so the UI knows where to send API requests
+    (cd "${UI_DIR}" && VITE_API_BASE_URL="https://${ECOMPOC_APP_NAME}.azurewebsites.net/api" npm run build)
   fi
 }
 
@@ -68,6 +69,27 @@ package_ui() {
   ensure_ui_build
   local ui_zip
   ui_zip="$(mktemp)"
+  
+  # Inject backend URL configuration into index.html for runtime configuration
+  local backend_url="https://${ECOMPOC_APP_NAME}.azurewebsites.net/api"
+  info "Injecting backend URL (${backend_url}) into UI build"
+  local index_html="${UI_DIST_DIR}/index.html"
+  if [[ -f "${index_html}" ]]; then
+    # Inject configuration script before closing </head> tag
+    if grep -q "__APP_CONFIG__" "${index_html}" 2>/dev/null; then
+      info "Backend URL already configured in index.html"
+    else
+      # Use sed to inject the config script before </head>
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s|</head>|<script>window.__APP_CONFIG__={VITE_API_BASE_URL:'${backend_url}'};</script></head>|" "${index_html}"
+      else
+        sed -i "s|</head>|<script>window.__APP_CONFIG__={VITE_API_BASE_URL:'${backend_url}'};</script></head>|" "${index_html}"
+      fi
+    fi
+  else
+    info "Warning: index.html not found, skipping runtime config injection"
+  fi
+  
   info "Packaging UI assets into ${ui_zip}"
   (cd "${UI_DIST_DIR}" && zip -r "${ui_zip}" . >/dev/null)
   printf '%s' "${ui_zip}"

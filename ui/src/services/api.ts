@@ -5,14 +5,28 @@ type AppEnv = {
 };
 
 const getEnv = (): AppEnv => {
+  // Check for runtime configuration from window (for App Service deployments)
+  if (typeof window !== 'undefined' && (window as any).__APP_CONFIG__) {
+    const config = (window as any).__APP_CONFIG__;
+    if (config.VITE_API_BASE_URL) {
+      return { VITE_API_BASE_URL: config.VITE_API_BASE_URL };
+    }
+  }
+
+  // Check for build-time configuration from globalThis
   if (typeof globalThis !== 'undefined' && (globalThis as { __APP_ENV__?: AppEnv }).__APP_ENV__) {
     return (globalThis as { __APP_ENV__?: AppEnv }).__APP_ENV__ as AppEnv;
   }
 
-  if (typeof process !== 'undefined') {
-    return {
-      VITE_API_BASE_URL: process.env.VITE_API_BASE_URL,
-    };
+  // Check for meta tag (alternative runtime configuration)
+  if (typeof document !== 'undefined') {
+    const metaTag = document.querySelector('meta[name="api-base-url"]');
+    if (metaTag) {
+      const content = metaTag.getAttribute('content');
+      if (content) {
+        return { VITE_API_BASE_URL: content };
+      }
+    }
   }
 
   return {};
