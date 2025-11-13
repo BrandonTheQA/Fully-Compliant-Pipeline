@@ -28,7 +28,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(List.of(
-            "https://aks-poc-ui.azurewebsites.net",
+            "https://ecompoc-ui.azurewebsites.net",
             "http://localhost:8084",
             "http://localhost:5173"
         ));

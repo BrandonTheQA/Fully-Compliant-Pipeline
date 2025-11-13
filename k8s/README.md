@@ -1,84 +1,50 @@
 # Kubernetes Deployment Structure
 
-This directory uses Kustomize to manage cloud-specific configurations for AKS (Azure Kubernetes Service) and EKS (Amazon Elastic Kubernetes Service).
+**Note:** This directory is for **local development only** using Minikube. Production deployments use Azure App Service, not Kubernetes.
 
 ## Directory Structure
 
 ```
 k8s/
-├── base/                          # Base manifests (shared across all clouds)
+├── base/                          # Base manifests (shared configurations)
 │   ├── kustomization.yaml
-│   ├── order-deployment.yaml
-│   ├── order-service.yaml
-│   ├── product-deployment.yaml
-│   ├── product-service.yaml
-│   ├── user-deployment.yaml
-│   ├── user-service.yaml
+│   ├── ecompoc-deployment.yaml
+│   ├── ecompoc-service.yaml
 │   ├── ui-deployment.yaml
 │   └── ui-service.yaml
 └── overlays/
-    ├── aks/                       # AKS-specific configuration
-    │   ├── kustomization.yaml
-    │   ├── order-node-affinity.yaml
-    │   ├── product-node-affinity.yaml
-    │   ├── user-node-affinity.yaml
-    │   └── ui-node-affinity.yaml
-    └── eks/                       # EKS-specific configuration
+    └── minikube/                  # Minikube-specific configuration
         ├── kustomization.yaml
-        └── README.md
+        ├── ecompoc-deployment-patch.yaml
+        ├── ui-deployment-patch.yaml
+        └── ui-nginx-configmap.yaml
 ```
 
-## Deployment Instructions
+## Local Development with Minikube
 
-### For AKS (Azure Kubernetes Service)
+This Kubernetes configuration is used for local development and testing with Minikube. It is not used for production deployments.
 
-Deployments will **require** the `spotnode` node pool:
+### Deployment Instructions
+
+To deploy to Minikube for local testing:
 
 ```bash
-kubectl apply -k k8s/overlays/aks/
+kubectl apply -k k8s/overlays/minikube/
 ```
 
-This overlay adds required node affinity to ensure all pods are scheduled on the `spotnode` node pool.
-
-### For EKS (Amazon Elastic Kubernetes Service)
-
-Deployments use AWS ECR for container images and have no node pool constraints:
-
-```bash
-# First, update k8s/overlays/eks/kustomization.yaml with your AWS account ID and region
-# Then apply the overlay
-kubectl apply -k k8s/overlays/eks/
-```
-
-This overlay:
-- Transforms ACR image references to ECR automatically
-- Uses IAM roles for ECR authentication (no secrets required)
-- Has no node affinity constraints
-
-**Before deploying**, ensure:
-1. Update `k8s/overlays/eks/kustomization.yaml` with your AWS account ID and region
-2. ECR repositories exist in your AWS account
-3. Images are pushed to ECR
-4. IAM permissions are configured for ECR access
-
-See `k8s/overlays/eks/README.md` for detailed setup instructions.
+See `scripts/deploy-minikube.sh` for a complete deployment script that handles building, pushing images, and deploying to Minikube.
 
 ## Features
 
-- **Base Configuration**: Contains common deployment and service manifests with tolerations for both AKS spot nodes and EKS CriticalAddonsOnly taints. Images default to ACR.
-- **AKS Overlay**: Adds required node affinity to target the `spotnode` node pool. Uses Azure Container Registry (ACR) for images.
-- **EKS Overlay**: Uses base configuration without node pool constraints. Transforms images to AWS ECR. Uses IAM roles for ECR authentication.
-- **Cloud-Agnostic Tolerations**: Both overlays include tolerations that work on both cloud providers.
+- **Base Configuration**: Contains common deployment and service manifests for local development
+- **Minikube Overlay**: Adds Minikube-specific patches and configurations for local testing
 
 ## Building Manifests
 
 To preview the generated manifests:
 
 ```bash
-# Preview AKS manifests
-kubectl kustomize k8s/overlays/aks/
-
-# Preview EKS manifests
-kubectl kustomize k8s/overlays/eks/
+# Preview Minikube manifests
+kubectl kustomize k8s/overlays/minikube/
 ```
 

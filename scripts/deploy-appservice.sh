@@ -2,10 +2,10 @@
 set -euo pipefail
 
 # Configuration
-RESOURCE_GROUP="AKS-POC_group"
+RESOURCE_GROUP="ecompoc-appservice-group"
 APP_SERVICE_PLAN="ASP-AKSPOCgroup-8f3c"
-ECOMPOC_APP_NAME="aks-poc-ecompoc"
-UI_APP_NAME="aks-poc-ui"
+ECOMPOC_APP_NAME="ecompoc-appservice"
+UI_APP_NAME="ecompoc-ui"
 ECOMPOC_RUNTIME="JAVA:17-java17"
 UI_RUNTIME="NODE:20-lts"
 ECOMPOC_STARTUP="startup.sh"
