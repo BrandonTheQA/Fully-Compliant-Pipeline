@@ -130,6 +130,12 @@ jobs:
           name: ecompoc-ui
           path: artifacts/ui
 
+      - name: Extract UI artifact
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/ui-extracted
+          unzip -q artifacts/ui/ecompoc-ui.zip -d artifacts/ui-extracted
+
       - name: Ensure backend web app exists
         run: |
           BACKEND_APP="app-ecompoc-dev-backend"
@@ -176,24 +182,18 @@ jobs:
               WEBSITES_PORT=8080 \
               BACKEND_URL="${BACKEND_URL}"
 
-      - name: Deploy UI
+      - name: Deploy UI to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-ecompoc-dev-ui
+          package: artifacts/ui-extracted
+
+      - name: Configure UI startup command
         run: |
-          set -euo pipefail
-          UI_APP="app-ecompoc-dev-ui"
-          UI_ZIP="artifacts/ui/ecompoc-ui.zip"
-          az webapp deploy \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --type zip \
-            --src-path "${UI_ZIP}" \
-            --clean true
           az webapp config set \
-            --name "${UI_APP}" \
+            --name "app-ecompoc-dev-ui" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --startup-file "pm2 serve /home/site/wwwroot --no-daemon --spa"
-          az webapp restart \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}"
 
       - name: Output endpoints
         id: endpoints
@@ -372,6 +372,12 @@ jobs:
           name: ecompoc-ui
           path: artifacts/ui
 
+      - name: Extract UI artifact
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/ui-extracted
+          unzip -q artifacts/ui/ecompoc-ui.zip -d artifacts/ui-extracted
+
       - name: Ensure backend web app exists
         run: |
           BACKEND_APP="app-ecompoc-qa-backend"
@@ -418,24 +424,18 @@ jobs:
               WEBSITES_PORT=8080 \
               BACKEND_URL="${BACKEND_URL}"
 
-      - name: Deploy UI
+      - name: Deploy UI to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-ecompoc-qa-ui
+          package: artifacts/ui-extracted
+
+      - name: Configure UI startup command
         run: |
-          set -euo pipefail
-          UI_APP="app-ecompoc-qa-ui"
-          UI_ZIP="artifacts/ui/ecompoc-ui.zip"
-          az webapp deploy \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --type zip \
-            --src-path "${UI_ZIP}" \
-            --clean true
           az webapp config set \
-            --name "${UI_APP}" \
+            --name "app-ecompoc-qa-ui" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --startup-file "pm2 serve /home/site/wwwroot --no-daemon --spa"
-          az webapp restart \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}"
 
       - name: Output endpoints
         run: |
@@ -475,6 +475,12 @@ jobs:
         with:
           name: ecompoc-ui
           path: artifacts/ui
+
+      - name: Extract UI artifact
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/ui-extracted
+          unzip -q artifacts/ui/ecompoc-ui.zip -d artifacts/ui-extracted
 
       - name: Ensure backend web app exists
         run: |
@@ -522,24 +528,18 @@ jobs:
               WEBSITES_PORT=8080 \
               BACKEND_URL="${BACKEND_URL}"
 
-      - name: Deploy UI
+      - name: Deploy UI to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-ecompoc-prod-ui
+          package: artifacts/ui-extracted
+
+      - name: Configure UI startup command
         run: |
-          set -euo pipefail
-          UI_APP="app-ecompoc-prod-ui"
-          UI_ZIP="artifacts/ui/ecompoc-ui.zip"
-          az webapp deploy \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --type zip \
-            --src-path "${UI_ZIP}" \
-            --clean true
           az webapp config set \
-            --name "${UI_APP}" \
+            --name "app-ecompoc-prod-ui" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --startup-file "pm2 serve /home/site/wwwroot --no-daemon --spa"
-          az webapp restart \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}"
 
       - name: Output endpoints
         run: |
