@@ -171,10 +171,13 @@ deploy_ui() {
     --startup-file "${UI_STARTUP}" >/dev/null
 
   info "Setting port configuration for ${UI_APP_NAME}"
+  local backend_url="https://${ECOMPOC_APP_NAME}.azurewebsites.net/api"
   az webapp config appsettings set \
     --resource-group "${RESOURCE_GROUP}" \
     --name "${UI_APP_NAME}" \
-    --settings "WEBSITES_PORT=${UI_PORT}" >/dev/null
+    --settings \
+      "WEBSITES_PORT=${UI_PORT}" \
+      "VITE_API_BASE_URL=${backend_url}" >/dev/null
 
   info "Restarting ${UI_APP_NAME}"
   az webapp restart \
