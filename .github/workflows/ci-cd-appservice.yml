@@ -66,7 +66,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts/ui
+          # Copy built dist files
           cp -R ui/dist/. artifacts/ui/
+          # Copy server files and package files (for dependency installation)
+          cp ui/server.js artifacts/ui/
+          cp ui/package.json artifacts/ui/
+          cp ui/package-lock.json artifacts/ui/
+          # Create zip archive (dependencies will be installed during deployment)
           (cd artifacts/ui && zip -qr ../ecompoc-ui.zip .)
 
       - name: Upload UI artifact
@@ -136,6 +142,10 @@ jobs:
           mkdir -p artifacts/ui-extracted
           unzip -q artifacts/ui/ecompoc-ui.zip -d artifacts/ui-extracted
 
+      - name: Install UI production dependencies
+        working-directory: artifacts/ui-extracted
+        run: npm ci --production
+
       - name: Ensure backend web app exists
         run: |
           BACKEND_APP="app-ecompoc-dev-backend"
@@ -193,7 +203,7 @@ jobs:
           az webapp config set \
             --name "app-ecompoc-dev-ui" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "pm2 serve /home/site/wwwroot --no-daemon --spa"
+            --startup-file "npm start"
 
       - name: Output endpoints
         id: endpoints
@@ -378,6 +388,10 @@ jobs:
           mkdir -p artifacts/ui-extracted
           unzip -q artifacts/ui/ecompoc-ui.zip -d artifacts/ui-extracted
 
+      - name: Install UI production dependencies
+        working-directory: artifacts/ui-extracted
+        run: npm ci --production
+
       - name: Ensure backend web app exists
         run: |
           BACKEND_APP="app-ecompoc-qa-backend"
@@ -435,7 +449,7 @@ jobs:
           az webapp config set \
             --name "app-ecompoc-qa-ui" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "pm2 serve /home/site/wwwroot --no-daemon --spa"
+            --startup-file "npm start"
 
       - name: Output endpoints
         run: |
@@ -481,6 +495,10 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts/ui-extracted
           unzip -q artifacts/ui/ecompoc-ui.zip -d artifacts/ui-extracted
+
+      - name: Install UI production dependencies
+        working-directory: artifacts/ui-extracted
+        run: npm ci --production
 
       - name: Ensure backend web app exists
         run: |
@@ -539,7 +557,7 @@ jobs:
           az webapp config set \
             --name "app-ecompoc-prod-ui" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "pm2 serve /home/site/wwwroot --no-daemon --spa"
+            --startup-file "npm start"
 
       - name: Output endpoints
         run: |
