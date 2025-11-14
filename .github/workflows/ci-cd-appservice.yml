@@ -29,28 +29,17 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ env.JAVA_VERSION }}
+          cache: 'maven'
 
-      - name: Build service
+      - name: Build service with Maven
         working-directory: api/services/ecompoc
         run: mvn -B package -DskipTests
-
-      - name: Package service artifact
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts/backend
-          JAR_PATH=$(find api/services/ecompoc/target -maxdepth 1 -type f -name "*.jar" ! -name "*-sources.jar" ! -name "*-javadoc.jar" | head -n 1)
-          if [[ -z "${JAR_PATH}" ]]; then
-            echo "No JAR produced by build" >&2
-            exit 1
-          fi
-          cp "${JAR_PATH}" artifacts/backend/ecompoc-service.jar
-          (cd artifacts/backend && zip -q ../ecompoc-backend.zip ecompoc-service.jar)
 
       - name: Upload backend artifact
         uses: actions/upload-artifact@v4
         with:
           name: ecompoc-backend
-          path: artifacts/ecompoc-backend.zip
+          path: api/services/ecompoc/target/*.jar
           retention-days: 3
 
   build-ui:
@@ -141,12 +130,10 @@ jobs:
           name: ecompoc-ui
           path: artifacts/ui
 
-      - name: Deploy backend
+      - name: Ensure backend web app exists
         run: |
-          set -euo pipefail
           BACKEND_APP="app-ecompoc-dev-backend"
           BACKEND_PLAN="asp-ecompoc-dev-backend-westus3"
-          # Create backend web app if it doesn't exist
           if ! az webapp show --name "${BACKEND_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             echo "Creating backend web app: ${BACKEND_APP}"
             az webapp create \
@@ -155,75 +142,13 @@ jobs:
               --plan "${BACKEND_PLAN}" \
               --runtime "JAVA:17-java17" \
               --https-only true
-            # Wait for app service to be fully provisioned
-            echo "Waiting for app service to be ready..."
-            sleep 30
           fi
-          
-          # Ensure app service is running
-          echo "Ensuring app service is started..."
-          az webapp start \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" || true
-          
-          # Configure web app
-          echo "Configuring web app runtime..."
-          az webapp config set \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --linux-fx-version "JAVA:17-java17"
-          
-          # Set startup command before deployment
-          echo "Setting startup command..."
-          az webapp config set \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "java -jar /home/site/wwwroot/ecompoc-service.jar"
-          
-          # Wait a bit for configuration to propagate
-          sleep 10
-          
-          # Verify zip file exists and is valid
-          if [[ ! -f "artifacts/backend/ecompoc-backend.zip" ]]; then
-            echo "Error: Deployment artifact not found at artifacts/backend/ecompoc-backend.zip" >&2
-            exit 1
-          fi
-          
-          # Deploy with retry logic
-          echo "Deploying application..."
-          max_retries=3
-          retry_count=0
-          while [ $retry_count -lt $max_retries ]; do
-            if az webapp deploy \
-              --name "${BACKEND_APP}" \
-              --resource-group "${AZURE_RESOURCE_GROUP}" \
-              --type zip \
-              --src-path artifacts/backend/ecompoc-backend.zip \
-              --clean true; then
-              echo "Deployment successful"
-              break
-            else
-              retry_count=$((retry_count + 1))
-              if [ $retry_count -lt $max_retries ]; then
-                echo "Deployment failed, retrying in 30 seconds (attempt $retry_count/$max_retries)..."
-                sleep 30
-                # Restart app service before retry
-                az webapp restart \
-                  --name "${BACKEND_APP}" \
-                  --resource-group "${AZURE_RESOURCE_GROUP}" || true
-                sleep 10
-              else
-                echo "Deployment failed after $max_retries attempts" >&2
-                exit 1
-              fi
-            fi
-          done
-          
-          # Restart the web app to ensure clean state
-          echo "Restarting web app..."
-          az webapp restart \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}"
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-ecompoc-dev-backend
+          package: artifacts/backend/*.jar
 
       - name: Ensure UI web app exists
         run: |
@@ -400,12 +325,10 @@ jobs:
           name: ecompoc-ui
           path: artifacts/ui
 
-      - name: Deploy backend
+      - name: Ensure backend web app exists
         run: |
-          set -euo pipefail
           BACKEND_APP="app-ecompoc-qa-backend"
           BACKEND_PLAN="asp-ecompoc-qa-backend-westus3"
-          # Create backend web app if it doesn't exist
           if ! az webapp show --name "${BACKEND_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             echo "Creating backend web app: ${BACKEND_APP}"
             az webapp create \
@@ -414,75 +337,13 @@ jobs:
               --plan "${BACKEND_PLAN}" \
               --runtime "JAVA:17-java17" \
               --https-only true
-            # Wait for app service to be fully provisioned
-            echo "Waiting for app service to be ready..."
-            sleep 30
           fi
-          
-          # Ensure app service is running
-          echo "Ensuring app service is started..."
-          az webapp start \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" || true
-          
-          # Configure web app
-          echo "Configuring web app runtime..."
-          az webapp config set \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --linux-fx-version "JAVA:17-java17"
-          
-          # Set startup command before deployment
-          echo "Setting startup command..."
-          az webapp config set \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "java -jar /home/site/wwwroot/ecompoc-service.jar"
-          
-          # Wait a bit for configuration to propagate
-          sleep 10
-          
-          # Verify zip file exists and is valid
-          if [[ ! -f "artifacts/backend/ecompoc-backend.zip" ]]; then
-            echo "Error: Deployment artifact not found at artifacts/backend/ecompoc-backend.zip" >&2
-            exit 1
-          fi
-          
-          # Deploy with retry logic
-          echo "Deploying application..."
-          max_retries=3
-          retry_count=0
-          while [ $retry_count -lt $max_retries ]; do
-            if az webapp deploy \
-              --name "${BACKEND_APP}" \
-              --resource-group "${AZURE_RESOURCE_GROUP}" \
-              --type zip \
-              --src-path artifacts/backend/ecompoc-backend.zip \
-              --clean true; then
-              echo "Deployment successful"
-              break
-            else
-              retry_count=$((retry_count + 1))
-              if [ $retry_count -lt $max_retries ]; then
-                echo "Deployment failed, retrying in 30 seconds (attempt $retry_count/$max_retries)..."
-                sleep 30
-                # Restart app service before retry
-                az webapp restart \
-                  --name "${BACKEND_APP}" \
-                  --resource-group "${AZURE_RESOURCE_GROUP}" || true
-                sleep 10
-              else
-                echo "Deployment failed after $max_retries attempts" >&2
-                exit 1
-              fi
-            fi
-          done
-          
-          # Restart the web app to ensure clean state
-          echo "Restarting web app..."
-          az webapp restart \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}"
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-ecompoc-qa-backend
+          package: artifacts/backend/*.jar
 
       - name: Ensure UI web app exists
         run: |
@@ -568,12 +429,10 @@ jobs:
           name: ecompoc-ui
           path: artifacts/ui
 
-      - name: Deploy backend
+      - name: Ensure backend web app exists
         run: |
-          set -euo pipefail
           BACKEND_APP="app-ecompoc-prod-backend"
           BACKEND_PLAN="asp-ecompoc-prod-backend-westus3"
-          # Create backend web app if it doesn't exist
           if ! az webapp show --name "${BACKEND_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             echo "Creating backend web app: ${BACKEND_APP}"
             az webapp create \
@@ -582,75 +441,13 @@ jobs:
               --plan "${BACKEND_PLAN}" \
               --runtime "JAVA:17-java17" \
               --https-only true
-            # Wait for app service to be fully provisioned
-            echo "Waiting for app service to be ready..."
-            sleep 30
           fi
-          
-          # Ensure app service is running
-          echo "Ensuring app service is started..."
-          az webapp start \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" || true
-          
-          # Configure web app
-          echo "Configuring web app runtime..."
-          az webapp config set \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --linux-fx-version "JAVA:17-java17"
-          
-          # Set startup command before deployment
-          echo "Setting startup command..."
-          az webapp config set \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "java -jar /home/site/wwwroot/ecompoc-service.jar"
-          
-          # Wait a bit for configuration to propagate
-          sleep 10
-          
-          # Verify zip file exists and is valid
-          if [[ ! -f "artifacts/backend/ecompoc-backend.zip" ]]; then
-            echo "Error: Deployment artifact not found at artifacts/backend/ecompoc-backend.zip" >&2
-            exit 1
-          fi
-          
-          # Deploy with retry logic
-          echo "Deploying application..."
-          max_retries=3
-          retry_count=0
-          while [ $retry_count -lt $max_retries ]; do
-            if az webapp deploy \
-              --name "${BACKEND_APP}" \
-              --resource-group "${AZURE_RESOURCE_GROUP}" \
-              --type zip \
-              --src-path artifacts/backend/ecompoc-backend.zip \
-              --clean true; then
-              echo "Deployment successful"
-              break
-            else
-              retry_count=$((retry_count + 1))
-              if [ $retry_count -lt $max_retries ]; then
-                echo "Deployment failed, retrying in 30 seconds (attempt $retry_count/$max_retries)..."
-                sleep 30
-                # Restart app service before retry
-                az webapp restart \
-                  --name "${BACKEND_APP}" \
-                  --resource-group "${AZURE_RESOURCE_GROUP}" || true
-                sleep 10
-              else
-                echo "Deployment failed after $max_retries attempts" >&2
-                exit 1
-              fi
-            fi
-          done
-          
-          # Restart the web app to ensure clean state
-          echo "Restarting web app..."
-          az webapp restart \
-            --name "${BACKEND_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}"
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: app-ecompoc-prod-backend
+          package: artifacts/backend/*.jar
 
       - name: Ensure UI web app exists
         run: |
