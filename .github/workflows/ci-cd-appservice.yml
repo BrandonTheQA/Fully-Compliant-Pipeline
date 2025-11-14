@@ -249,10 +249,57 @@ jobs:
             echo "Warning: UI service may not be fully ready, but proceeding..."
           fi
 
+  test-postman-dev:
+    name: Run Postman Tests Against Dev
+    runs-on: ubuntu-latest
+    needs: [deploy-dev]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      - name: Run Postman tests
+        run: |
+          set -euo pipefail
+          RAND=$(date +%s)
+          BACKEND_URL="https://app-ecompoc-dev-backend.azurewebsites.net/api"
+          echo "Running Postman tests against: ${BACKEND_URL}"
+          newman run postman/IntegrationTest.postman_collection.json \
+            --env-var apiBaseUrl="${BACKEND_URL}" \
+            --env-var userName="John Doe" \
+            --env-var userEmail="john.doe+${RAND}@example.com" \
+            --env-var userPassword="SecurePassword123" \
+            --env-var product1Name="Laptop" \
+            --env-var product1Description="High-performance laptop" \
+            --env-var product1Price=999.99 \
+            --env-var product1Quantity=10 \
+            --env-var product1Category="Electronics" \
+            --env-var product1OrderQuantity=1 \
+            --env-var product2Name="Mouse" \
+            --env-var product2Description="Wireless mouse" \
+            --env-var product2Price=29.99 \
+            --env-var product2Quantity=50 \
+            --env-var product2Category="Electronics" \
+            --env-var product2OrderQuantity=2 \
+            --env-var product3Name="Keyboard" \
+            --env-var product3Description="Mechanical keyboard" \
+            --env-var product3Price=79.99 \
+            --env-var product3Quantity=25 \
+            --env-var product3Category="Electronics" \
+            --env-var product3OrderQuantity=1 \
+            --color on
+
   test-dev:
     name: Run Selenium Tests Against Dev
     runs-on: ubuntu-latest
-    needs: [deploy-dev]
+    needs: [test-postman-dev]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -296,7 +343,7 @@ jobs:
   deploy-qa:
     name: Deploy to QA Environment
     runs-on: ubuntu-latest
-    needs: [test-dev]
+    needs: [test-postman-dev]
     environment: qa
     steps:
       - name: Checkout repository
