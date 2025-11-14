@@ -231,7 +231,7 @@ jobs:
           UI_APP="app-ecompoc-dev-ui"
           UI_PLAN="asp-ecompoc-dev-ui-westus3"
           BACKEND_APP="app-ecompoc-dev-backend"
-          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net/api"
+          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net"
           if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             az webapp create \
               --name "${UI_APP}" \
@@ -249,28 +249,18 @@ jobs:
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --settings \
               WEBSITES_PORT=8080 \
-              VITE_API_BASE_URL="${BACKEND_URL}"
+              BACKEND_URL="${BACKEND_URL}"
 
       - name: Deploy UI
         run: |
           set -euo pipefail
           UI_APP="app-ecompoc-dev-ui"
-          BACKEND_APP="app-ecompoc-dev-backend"
-          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net/api"
-          # Inject backend URL into index.html before deployment
-          if [[ -f "artifacts/ui/index.html" ]]; then
-            # Remove any existing __APP_CONFIG__ script
-            sed -i '/<script>.*window\.__APP_CONFIG__.*<\/script>/d' artifacts/ui/index.html
-            # Inject configuration script before closing </head> tag
-            sed -i "s|</head>|<script>window.__APP_CONFIG__={VITE_API_BASE_URL:'${BACKEND_URL}'};</script></head>|" artifacts/ui/index.html
-            # Recreate zip with updated index.html
-            (cd artifacts/ui && zip -q -f ../ecompoc-ui.zip index.html)
-          fi
+          UI_ZIP="artifacts/ui/ecompoc-ui.zip"
           az webapp deploy \
             --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --type zip \
-            --src-path artifacts/ui/ecompoc-ui.zip \
+            --src-path "${UI_ZIP}" \
             --clean true
           az webapp config set \
             --name "${UI_APP}" \
@@ -500,7 +490,7 @@ jobs:
           UI_APP="app-ecompoc-qa-ui"
           UI_PLAN="asp-ecompoc-qa-ui-westus3"
           BACKEND_APP="app-ecompoc-qa-backend"
-          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net/api"
+          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net"
           if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             az webapp create \
               --name "${UI_APP}" \
@@ -518,28 +508,18 @@ jobs:
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --settings \
               WEBSITES_PORT=8080 \
-              VITE_API_BASE_URL="${BACKEND_URL}"
+              BACKEND_URL="${BACKEND_URL}"
 
       - name: Deploy UI
         run: |
           set -euo pipefail
           UI_APP="app-ecompoc-qa-ui"
-          BACKEND_APP="app-ecompoc-qa-backend"
-          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net/api"
-          # Inject backend URL into index.html before deployment
-          if [[ -f "artifacts/ui/index.html" ]]; then
-            # Remove any existing __APP_CONFIG__ script
-            sed -i '/<script>.*window\.__APP_CONFIG__.*<\/script>/d' artifacts/ui/index.html
-            # Inject configuration script before closing </head> tag
-            sed -i "s|</head>|<script>window.__APP_CONFIG__={VITE_API_BASE_URL:'${BACKEND_URL}'};</script></head>|" artifacts/ui/index.html
-            # Recreate zip with updated index.html
-            (cd artifacts/ui && zip -q -f ../ecompoc-ui.zip index.html)
-          fi
+          UI_ZIP="artifacts/ui/ecompoc-ui.zip"
           az webapp deploy \
             --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --type zip \
-            --src-path artifacts/ui/ecompoc-ui.zip \
+            --src-path "${UI_ZIP}" \
             --clean true
           az webapp config set \
             --name "${UI_APP}" \
@@ -678,7 +658,7 @@ jobs:
           UI_APP="app-ecompoc-prod-ui"
           UI_PLAN="asp-ecompoc-prod-ui-westus3"
           BACKEND_APP="app-ecompoc-prod-backend"
-          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net/api"
+          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net"
           if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             az webapp create \
               --name "${UI_APP}" \
@@ -696,28 +676,18 @@ jobs:
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --settings \
               WEBSITES_PORT=8080 \
-              VITE_API_BASE_URL="${BACKEND_URL}"
+              BACKEND_URL="${BACKEND_URL}"
 
       - name: Deploy UI
         run: |
           set -euo pipefail
           UI_APP="app-ecompoc-prod-ui"
-          BACKEND_APP="app-ecompoc-prod-backend"
-          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net/api"
-          # Inject backend URL into index.html before deployment
-          if [[ -f "artifacts/ui/index.html" ]]; then
-            # Remove any existing __APP_CONFIG__ script
-            sed -i '/<script>.*window\.__APP_CONFIG__.*<\/script>/d' artifacts/ui/index.html
-            # Inject configuration script before closing </head> tag
-            sed -i "s|</head>|<script>window.__APP_CONFIG__={VITE_API_BASE_URL:'${BACKEND_URL}'};</script></head>|" artifacts/ui/index.html
-            # Recreate zip with updated index.html
-            (cd artifacts/ui && zip -q -f ../ecompoc-ui.zip index.html)
-          fi
+          UI_ZIP="artifacts/ui/ecompoc-ui.zip"
           az webapp deploy \
             --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --type zip \
-            --src-path artifacts/ui/ecompoc-ui.zip \
+            --src-path "${UI_ZIP}" \
             --clean true
           az webapp config set \
             --name "${UI_APP}" \

@@ -1,48 +1,10 @@
 import axios from 'axios';
 
-type AppEnv = {
-  VITE_API_BASE_URL?: string;
-};
+// Use relative path - nginx will proxy /api requests to the backend
+// The backend URL is configured via Azure App Service BACKEND_URL setting
+const apiBaseUrl = '/api';
 
-const getEnv = (): AppEnv => {
-  // Check for runtime configuration from window (for App Service deployments)
-  if (typeof window !== 'undefined' && (window as any).__APP_CONFIG__) {
-    const config = (window as any).__APP_CONFIG__;
-    if (config.VITE_API_BASE_URL) {
-      return { VITE_API_BASE_URL: config.VITE_API_BASE_URL };
-    }
-  }
-
-  // Check for build-time configuration from globalThis
-  if (typeof globalThis !== 'undefined' && (globalThis as { __APP_ENV__?: AppEnv }).__APP_ENV__) {
-    return (globalThis as { __APP_ENV__?: AppEnv }).__APP_ENV__ as AppEnv;
-  }
-
-  // Check for meta tag (alternative runtime configuration)
-  if (typeof document !== 'undefined') {
-    const metaTag = document.querySelector('meta[name="api-base-url"]');
-    if (metaTag) {
-      const content = metaTag.getAttribute('content');
-      if (content) {
-        return { VITE_API_BASE_URL: content };
-      }
-    }
-  }
-
-  return {};
-};
-
-const normalizeBaseUrl = (value?: string): string => {
-  if (!value || value.trim().length === 0) {
-    return '/api';
-  }
-
-  return value.replace(/\/+$/, '') || '/api';
-};
-
-const apiBaseUrl = normalizeBaseUrl(getEnv().VITE_API_BASE_URL);
-
-// Unified API instance using BFF pattern - all requests go through configured API base URL
+// Unified API instance - all requests go through nginx reverse proxy
 const api = axios.create({
   baseURL: apiBaseUrl,
   headers: {
