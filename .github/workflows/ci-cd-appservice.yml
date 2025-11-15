@@ -72,6 +72,8 @@ jobs:
           cp ui/server.js artifacts/ui/
           cp ui/package.json artifacts/ui/
           cp ui/package-lock.json artifacts/ui/
+          # Copy PM2 ecosystem config file
+          cp ui/ecosystem.config.js artifacts/ui/
           # Create zip archive (dependencies will be installed during deployment)
           (cd artifacts/ui && zip -qr ../ecompoc-ui.zip .)
 
@@ -192,11 +194,11 @@ jobs:
               WEBSITES_PORT=8080 \
               BACKEND_URL="${BACKEND_URL}" \
               SCM_DO_BUILD_DURING_DEPLOYMENT=true
-          # Set startup command before deployment
+          # Set startup command before deployment - use PM2 for process management
           az webapp config set \
             --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "npm start"
+            --startup-file "pm2 start ecosystem.config.js --no-daemon"
 
       - name: Deploy UI to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -437,11 +439,11 @@ jobs:
               WEBSITES_PORT=8080 \
               BACKEND_URL="${BACKEND_URL}" \
               SCM_DO_BUILD_DURING_DEPLOYMENT=true
-          # Set startup command before deployment
+          # Set startup command before deployment - use PM2 for process management
           az webapp config set \
             --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "npm start"
+            --startup-file "pm2 start ecosystem.config.js --no-daemon"
 
       - name: Deploy UI to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -544,11 +546,11 @@ jobs:
               WEBSITES_PORT=8080 \
               BACKEND_URL="${BACKEND_URL}" \
               SCM_DO_BUILD_DURING_DEPLOYMENT=true
-          # Set startup command before deployment
+          # Set startup command before deployment - use PM2 for process management
           az webapp config set \
             --name "${UI_APP}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "npm start"
+            --startup-file "pm2 start ecosystem.config.js --no-daemon"
 
       - name: Deploy UI to Azure Web App
         uses: azure/webapps-deploy@v3

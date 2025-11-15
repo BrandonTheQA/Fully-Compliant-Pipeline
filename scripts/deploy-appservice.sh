@@ -9,7 +9,7 @@ UI_APP_NAME="app-ecompoc-dev-ui"
 ECOMPOC_RUNTIME="JAVA:17-java17"
 UI_RUNTIME="NODE:20-lts"
 ECOMPOC_STARTUP="startup.sh"
-UI_STARTUP="pm2 serve /home/site/wwwroot --no-daemon --spa"
+UI_STARTUP="pm2 start ecosystem.config.js --no-daemon"
 UI_PORT="8080"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -97,7 +97,19 @@ package_ui() {
   fi
   
   info "Packaging UI assets into ${ui_zip}"
-  (cd "${UI_DIST_DIR}" && zip -r "${ui_zip}" . >/dev/null)
+  # Create temporary directory for packaging
+  local temp_dir
+  temp_dir="$(mktemp -d)"
+  # Copy dist files
+  cp -R "${UI_DIST_DIR}"/* "${temp_dir}/"
+  # Copy server files and PM2 config
+  cp "${UI_DIR}/server.js" "${temp_dir}/"
+  cp "${UI_DIR}/package.json" "${temp_dir}/"
+  cp "${UI_DIR}/package-lock.json" "${temp_dir}/"
+  cp "${UI_DIR}/ecosystem.config.js" "${temp_dir}/"
+  # Create zip archive
+  (cd "${temp_dir}" && zip -r "${ui_zip}" . >/dev/null)
+  rm -rf "${temp_dir}"
   printf '%s' "${ui_zip}"
 }
 
