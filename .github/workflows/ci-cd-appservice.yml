@@ -62,26 +62,11 @@ jobs:
         working-directory: ui
         run: npm run build
 
-      - name: Package UI artifact
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts/ui
-          # Copy built dist files
-          cp -R ui/dist/. artifacts/ui/
-          # Copy server files and package files (for dependency installation)
-          cp ui/server.js artifacts/ui/
-          cp ui/package.json artifacts/ui/
-          cp ui/package-lock.json artifacts/ui/
-          # Copy PM2 ecosystem config file
-          cp ui/ecosystem.config.js artifacts/ui/
-          # Create zip archive (dependencies will be installed during deployment)
-          (cd artifacts/ui && zip -qr ../ecompoc-ui.zip .)
-
       - name: Upload UI artifact
         uses: actions/upload-artifact@v4
         with:
           name: ecompoc-ui
-          path: artifacts/ecompoc-ui.zip
+          path: ui
           retention-days: 3
 
   ensure-appservice-plans:
@@ -138,16 +123,6 @@ jobs:
           name: ecompoc-ui
           path: artifacts/ui
 
-      - name: Extract UI artifact
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts/ui-extracted
-          unzip -q artifacts/ui/ecompoc-ui.zip -d artifacts/ui-extracted
-          # Verify server.js exists
-          ls -la artifacts/ui-extracted/server.js || echo "WARNING: server.js not found"
-          # Verify package.json exists
-          ls -la artifacts/ui-extracted/package.json || echo "WARNING: package.json not found"
-
       - name: Ensure backend web app exists
         run: |
           BACKEND_APP="app-ecompoc-dev-backend"
@@ -170,11 +145,8 @@ jobs:
 
       - name: Ensure UI web app exists
         run: |
-          set -euo pipefail
           UI_APP="app-ecompoc-dev-ui"
           UI_PLAN="asp-ecompoc-dev-ui-westus3"
-          BACKEND_APP="app-ecompoc-dev-backend"
-          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net"
           if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             az webapp create \
               --name "${UI_APP}" \
@@ -183,28 +155,12 @@ jobs:
               --runtime "NODE:20-lts" \
               --https-only true
           fi
-          az webapp config set \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --linux-fx-version "NODE:20-lts"
-          az webapp config appsettings set \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --settings \
-              WEBSITES_PORT=8080 \
-              BACKEND_URL="${BACKEND_URL}" \
-              SCM_DO_BUILD_DURING_DEPLOYMENT=true
-          # Set startup command before deployment - use PM2 for process management
-          az webapp config set \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "pm2 start ecosystem.config.js --no-daemon"
 
       - name: Deploy UI to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: app-ecompoc-dev-ui
-          package: artifacts/ui-extracted
+          package: artifacts/ui
 
       - name: Output endpoints
         id: endpoints
@@ -383,16 +339,6 @@ jobs:
           name: ecompoc-ui
           path: artifacts/ui
 
-      - name: Extract UI artifact
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts/ui-extracted
-          unzip -q artifacts/ui/ecompoc-ui.zip -d artifacts/ui-extracted
-          # Verify server.js exists
-          ls -la artifacts/ui-extracted/server.js || echo "WARNING: server.js not found"
-          # Verify package.json exists
-          ls -la artifacts/ui-extracted/package.json || echo "WARNING: package.json not found"
-
       - name: Ensure backend web app exists
         run: |
           BACKEND_APP="app-ecompoc-qa-backend"
@@ -415,11 +361,8 @@ jobs:
 
       - name: Ensure UI web app exists
         run: |
-          set -euo pipefail
           UI_APP="app-ecompoc-qa-ui"
           UI_PLAN="asp-ecompoc-qa-ui-westus3"
-          BACKEND_APP="app-ecompoc-qa-backend"
-          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net"
           if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             az webapp create \
               --name "${UI_APP}" \
@@ -428,28 +371,12 @@ jobs:
               --runtime "NODE:20-lts" \
               --https-only true
           fi
-          az webapp config set \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --linux-fx-version "NODE:20-lts"
-          az webapp config appsettings set \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --settings \
-              WEBSITES_PORT=8080 \
-              BACKEND_URL="${BACKEND_URL}" \
-              SCM_DO_BUILD_DURING_DEPLOYMENT=true
-          # Set startup command before deployment - use PM2 for process management
-          az webapp config set \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "pm2 start ecosystem.config.js --no-daemon"
 
       - name: Deploy UI to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: app-ecompoc-qa-ui
-          package: artifacts/ui-extracted
+          package: artifacts/ui
 
       - name: Output endpoints
         run: |
@@ -490,16 +417,6 @@ jobs:
           name: ecompoc-ui
           path: artifacts/ui
 
-      - name: Extract UI artifact
-        run: |
-          set -euo pipefail
-          mkdir -p artifacts/ui-extracted
-          unzip -q artifacts/ui/ecompoc-ui.zip -d artifacts/ui-extracted
-          # Verify server.js exists
-          ls -la artifacts/ui-extracted/server.js || echo "WARNING: server.js not found"
-          # Verify package.json exists
-          ls -la artifacts/ui-extracted/package.json || echo "WARNING: package.json not found"
-
       - name: Ensure backend web app exists
         run: |
           BACKEND_APP="app-ecompoc-prod-backend"
@@ -522,11 +439,8 @@ jobs:
 
       - name: Ensure UI web app exists
         run: |
-          set -euo pipefail
           UI_APP="app-ecompoc-prod-ui"
           UI_PLAN="asp-ecompoc-prod-ui-westus3"
-          BACKEND_APP="app-ecompoc-prod-backend"
-          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net"
           if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             az webapp create \
               --name "${UI_APP}" \
@@ -535,28 +449,12 @@ jobs:
               --runtime "NODE:20-lts" \
               --https-only true
           fi
-          az webapp config set \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --linux-fx-version "NODE:20-lts"
-          az webapp config appsettings set \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --settings \
-              WEBSITES_PORT=8080 \
-              BACKEND_URL="${BACKEND_URL}" \
-              SCM_DO_BUILD_DURING_DEPLOYMENT=true
-          # Set startup command before deployment - use PM2 for process management
-          az webapp config set \
-            --name "${UI_APP}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --startup-file "pm2 start ecosystem.config.js --no-daemon"
 
       - name: Deploy UI to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: app-ecompoc-prod-ui
-          package: artifacts/ui-extracted
+          package: artifacts/ui
 
       - name: Output endpoints
         run: |
