@@ -4,7 +4,8 @@ set -euo pipefail
 #
 # Provision Azure App Service plans for the ecomPOC application.
 # - Creates/updates the shared resource group in the specified region.
-# - Ensures six Linux App Service plans exist (backend/ui for dev, qa, prod).
+# - Ensures three Linux App Service plans exist (one per environment: dev, qa, prod).
+# - Both backend and UI apps use the same App Service Plan per environment (UI plan).
 # - Enables Application Insights for all App Services in the resource group.
 # - Intended to be idempotent; rerunning will leave existing resources intact.
 #
@@ -107,7 +108,8 @@ ensure_plan() {
 
 provision_plans() {
   local environments=("dev" "qa" "prod")
-  local workloads=("backend" "ui")
+  # Only create UI plans - both backend and UI will use the same plan
+  local workloads=("ui")
 
   for env in "${environments[@]}"; do
     for workload in "${workloads[@]}"; do

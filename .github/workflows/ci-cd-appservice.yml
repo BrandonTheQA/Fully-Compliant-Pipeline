@@ -126,13 +126,13 @@ jobs:
       - name: Ensure backend web app exists
         run: |
           BACKEND_APP="app-ecompoc-dev-backend"
-          BACKEND_PLAN="asp-ecompoc-dev-backend-westus3"
+          UI_PLAN="asp-ecompoc-dev-ui-westus3"
           if ! az webapp show --name "${BACKEND_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             echo "Creating backend web app: ${BACKEND_APP}"
             az webapp create \
               --name "${BACKEND_APP}" \
               --resource-group "${AZURE_RESOURCE_GROUP}" \
-              --plan "${BACKEND_PLAN}" \
+              --plan "${UI_PLAN}" \
               --runtime "JAVA:17-java17" \
               --https-only true
           fi
@@ -348,13 +348,13 @@ jobs:
       - name: Ensure backend web app exists
         run: |
           BACKEND_APP="app-ecompoc-qa-backend"
-          BACKEND_PLAN="asp-ecompoc-qa-backend-westus3"
+          UI_PLAN="asp-ecompoc-qa-ui-westus3"
           if ! az webapp show --name "${BACKEND_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             echo "Creating backend web app: ${BACKEND_APP}"
             az webapp create \
               --name "${BACKEND_APP}" \
               --resource-group "${AZURE_RESOURCE_GROUP}" \
-              --plan "${BACKEND_PLAN}" \
+              --plan "${UI_PLAN}" \
               --runtime "JAVA:17-java17" \
               --https-only true
           fi
@@ -432,13 +432,13 @@ jobs:
       - name: Ensure backend web app exists
         run: |
           BACKEND_APP="app-ecompoc-prod-backend"
-          BACKEND_PLAN="asp-ecompoc-prod-backend-westus3"
+          UI_PLAN="asp-ecompoc-prod-ui-westus3"
           if ! az webapp show --name "${BACKEND_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             echo "Creating backend web app: ${BACKEND_APP}"
             az webapp create \
               --name "${BACKEND_APP}" \
               --resource-group "${AZURE_RESOURCE_GROUP}" \
-              --plan "${BACKEND_PLAN}" \
+              --plan "${UI_PLAN}" \
               --runtime "JAVA:17-java17" \
               --https-only true
           fi
