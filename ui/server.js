@@ -2,7 +2,7 @@ import express from 'express';
 import { createProxyMiddleware } from 'http-proxy-middleware';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -13,8 +13,21 @@ const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:8080';
 
 const distPath = join(__dirname, 'dist');
 
+// Log startup information
+console.log('=== Server Startup ===');
+console.log('PORT:', PORT);
+console.log('WEBSITES_PORT:', process.env.WEBSITES_PORT);
+console.log('BACKEND_URL:', BACKEND_URL);
+console.log('distPath:', distPath);
+console.log('distPath exists:', existsSync(distPath));
+console.log('server.js location:', __filename);
+console.log('Current directory:', __dirname);
+
 // Proxy API requests to backend (must be before static files)
-app.use('/api', createProxyMiddleware({
+app.use('/api', (req, res, next) => {
+  console.log(`[API Proxy] ${req.method} ${req.path} -> ${BACKEND_URL}${req.path}`);
+  next();
+}, createProxyMiddleware({
   target: BACKEND_URL,
   changeOrigin: true,
   pathRewrite: {
@@ -24,10 +37,16 @@ app.use('/api', createProxyMiddleware({
     // Preserve original host header for proper routing
     proxyReq.setHeader('X-Forwarded-Host', req.headers.host);
     proxyReq.setHeader('X-Forwarded-Proto', req.protocol);
+    console.log(`[Proxy Request] ${req.method} ${req.path} -> ${BACKEND_URL}${req.path}`);
   },
   onError: (err, req, res) => {
-    console.error('Proxy error:', err);
-    res.status(500).json({ error: 'Proxy error', message: err.message });
+    console.error('[Proxy Error]', err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Proxy error', message: err.message });
+    }
+  },
+  onProxyRes: (proxyRes, req, res) => {
+    console.log(`[Proxy Response] ${req.method} ${req.path} -> ${proxyRes.statusCode}`);
   },
 }));
 
@@ -56,9 +75,13 @@ app.get('*', (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Backend URL: ${BACKEND_URL}`);
-  console.log(`Serving static files from: ${distPath}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Backend URL: ${BACKEND_URL}`);
+  console.log(`✅ Serving static files from: ${distPath}`);
+  console.log(`✅ Server is ready to accept connections`);
+}).on('error', (err) => {
+  console.error('❌ Server failed to start:', err);
+  process.exit(1);
 });
 
