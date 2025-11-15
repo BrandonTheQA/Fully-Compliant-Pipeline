@@ -5,7 +5,6 @@ namespace: dev
 
 resources:
   - ../../base
-  - ui-nginx-configmap.yaml
 
 images:
   - name: rgpocacr9021.azurecr.io/ecompoc

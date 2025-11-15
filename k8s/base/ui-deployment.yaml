@@ -25,7 +25,7 @@ spec:
         - name: ui
           image: rgpocacr9021.azurecr.io/ui:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           env:
             - name: DEPLOYMENT_COLOR
               value: "blue"
@@ -36,13 +36,13 @@ spec:
           readinessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
-              port: 80
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 30
           resources:

@@ -6,27 +6,26 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-
 RUN npm run build
 
-FROM nginx:alpine
+# Production stage - use Node.js with Express
+FROM node:20-alpine
 
-# Install gettext for envsubst (environment variable substitution)
-RUN apk add --no-cache gettext
+WORKDIR /app
 
-# Copy built assets
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy package files and install production dependencies
+COPY package.json package-lock.json ./
+RUN npm ci --only=production
 
-# Copy nginx config template
-# BACKEND_URL will be substituted at runtime via envsubst
-COPY nginx.conf.template /etc/nginx/templates/default.conf.template
+# Copy built assets and server.js
+COPY --from=build /app/dist ./dist
+COPY server.js ./
 
-# Copy startup script
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+# Use PORT environment variable (Azure App Service uses WEBSITES_PORT)
+# Default to 8080 for consistency
+ENV PORT=8080
 
-EXPOSE 80
+EXPOSE 8080
 
-# Use custom entrypoint to configure nginx with backend URL and start nginx
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
+# Start Express server
+CMD ["node", "server.js"]

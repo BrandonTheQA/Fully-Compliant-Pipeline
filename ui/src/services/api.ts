@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-// Use relative path - nginx will proxy /api requests to the backend
+// Use relative path - Express server will proxy /api requests to the backend
 // The backend URL is configured via Azure App Service BACKEND_URL setting
 const apiBaseUrl = '/api';
 
-// Unified API instance - all requests go through nginx reverse proxy
+// Unified API instance - all requests go through Express reverse proxy
 const api = axios.create({
   baseURL: apiBaseUrl,
   headers: {

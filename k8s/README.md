@@ -16,8 +16,7 @@ k8s/
     └── minikube/                  # Minikube-specific configuration
         ├── kustomization.yaml
         ├── ecompoc-deployment-patch.yaml
-        ├── ui-deployment-patch.yaml
-        └── ui-nginx-configmap.yaml
+        └── ui-deployment-patch.yaml
 ```
 
 ## Local Development with Minikube
