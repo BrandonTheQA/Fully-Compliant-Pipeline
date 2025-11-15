@@ -147,6 +147,8 @@ jobs:
         run: |
           UI_APP="app-ecompoc-dev-ui"
           UI_PLAN="asp-ecompoc-dev-ui-westus3"
+          BACKEND_APP="app-ecompoc-dev-backend"
+          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net"
           if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             az webapp create \
               --name "${UI_APP}" \
@@ -155,6 +157,10 @@ jobs:
               --runtime "NODE:20-lts" \
               --https-only true
           fi
+          az webapp config appsettings set \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --settings BACKEND_URL="${BACKEND_URL}"
 
       - name: Deploy UI to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -363,6 +369,8 @@ jobs:
         run: |
           UI_APP="app-ecompoc-qa-ui"
           UI_PLAN="asp-ecompoc-qa-ui-westus3"
+          BACKEND_APP="app-ecompoc-qa-backend"
+          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net"
           if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             az webapp create \
               --name "${UI_APP}" \
@@ -371,6 +379,10 @@ jobs:
               --runtime "NODE:20-lts" \
               --https-only true
           fi
+          az webapp config appsettings set \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --settings BACKEND_URL="${BACKEND_URL}"
 
       - name: Deploy UI to Azure Web App
         uses: azure/webapps-deploy@v3
@@ -441,6 +453,8 @@ jobs:
         run: |
           UI_APP="app-ecompoc-prod-ui"
           UI_PLAN="asp-ecompoc-prod-ui-westus3"
+          BACKEND_APP="app-ecompoc-prod-backend"
+          BACKEND_URL="https://${BACKEND_APP}.azurewebsites.net"
           if ! az webapp show --name "${UI_APP}" --resource-group "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
             az webapp create \
               --name "${UI_APP}" \
@@ -449,6 +463,10 @@ jobs:
               --runtime "NODE:20-lts" \
               --https-only true
           fi
+          az webapp config appsettings set \
+            --name "${UI_APP}" \
+            --resource-group "${AZURE_RESOURCE_GROUP}" \
+            --settings BACKEND_URL="${BACKEND_URL}"
 
       - name: Deploy UI to Azure Web App
         uses: azure/webapps-deploy@v3
