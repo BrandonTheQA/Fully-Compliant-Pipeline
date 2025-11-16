@@ -1,120 +1,151 @@
-name: Install Dynatrace Operator on EKS
+name: Install Dynatrace OneAgent on Azure App Services
 
 on:
   workflow_dispatch:
     inputs:
-      eks_cluster_name:
-        description: "EKS cluster name"
+      environment:
+        description: "Target environment(s) to configure"
         required: true
-        type: string
-      aws_region:
-        description: "AWS region of the EKS cluster"
-        required: true
-        type: string
-      create_dynatrace_secret:
-        description: "Create Dynatrace secret (dynakube) with API/PAAS tokens"
-        required: false
-        default: false
-        type: boolean
+        default: "all"
+        type: choice
+        options:
+          - dev
+          - qa
+          - prod
+          - all
+
+env:
+  # Azure configuration (kept consistent with ci-cd-appservice.yml)
+  AZURE_RESOURCE_GROUP: rg-ecompoc-shared-westus3
+  # Dynatrace configuration (must be set as GitHub repository secrets)
+  DT_ENDPOINT: ${{ secrets.DYNATRACE_ENDPOINT }}
+  DT_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
+  DT_INCLUDE: ${{ secrets.DYNATRACE_INCLUDE }}
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  install:
-    name: Install Dynatrace Operator
+  configure-dynatrace:
+    name: Configure Dynatrace on Azure App Services
     runs-on: ubuntu-latest
-    env:
-      AWS_REGION: ${{ inputs.aws_region }}
-      DYNATRACE_API_URL: ${{ secrets.DYNATRACE_API_URL }}
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Azure login
+        uses: azure/login@v2
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v4
-
-      - name: Install Helm
-        uses: azure/setup-helm@v4
-
-      - name: Configure kubectl for EKS cluster
+      - name: Set Azure subscription
+        if: ${{ secrets.AZURE_SUBSCRIPTION_ID != '' }}
         run: |
-          aws eks update-kubeconfig \
-            --name "${{ inputs.eks_cluster_name }}" \
-            --region "${{ inputs.aws_region }}"
+          az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      - name: Create dynatrace namespace if missing
+      - name: Validate Dynatrace configuration
         run: |
-          kubectl create namespace dynatrace --dry-run=client -o yaml | kubectl apply -f -
-
-      - name: Install/upgrade Dynatrace Operator
-        run: |
-          # Install from Dynatrace's OCI registry (public.ecr.aws)
-          helm upgrade --install dynatrace-operator oci://public.ecr.aws/dynatrace/dynatrace-operator \
-            --namespace dynatrace \
-            --create-namespace
-
-      - name: Wait for Dynatrace Operator to be ready
-        run: |
-          echo "Waiting for Dynatrace Operator deployment to be ready..."
-          kubectl wait --for=condition=available deployment/dynatrace-operator -n dynatrace --timeout=300s || {
-            echo "Error: Dynatrace Operator deployment did not become ready" >&2
-            kubectl describe deployment dynatrace-operator -n dynatrace
+          set -euo pipefail
+          if [ -z "${DT_ENDPOINT:-}" ] || [ -z "${DT_API_TOKEN:-}" ] || [ -z "${DT_INCLUDE:-}" ]; then
+            echo "DT_ENDPOINT, DT_API_TOKEN, and DT_INCLUDE must be provided as secrets." >&2
             exit 1
-          }
-          echo "Dynatrace Operator is ready"
+          fi
+          echo "Dynatrace configuration detected. Endpoint: ${DT_ENDPOINT}"
 
-      - name: Wait for Dynatrace CRDs to be installed and established
+      - name: Configure Dynatrace for selected environment(s)
+        env:
+          TARGET_ENV_INPUT: ${{ github.event.inputs.environment }}
         run: |
-          echo "Waiting for CRD dynakubes.dynatrace.com to be available and established..."
-          for i in {1..60}; do
-            if kubectl get crd dynakubes.dynatrace.com &>/dev/null; then
-              # Check if CRD is established (not just exists)
-              ESTABLISHED=$(kubectl get crd dynakubes.dynatrace.com -o jsonpath='{.status.conditions[?(@.type=="Established")].status}' 2>/dev/null || echo "")
-              if [ "$ESTABLISHED" = "True" ]; then
-                echo "CRD dynakubes.dynatrace.com is established"
-                # Give it a moment to fully register
-                sleep 5
-                break
-              else
-                echo "CRD exists but not yet established (attempt $i/60)..."
-              fi
-            else
-              echo "CRD not found yet (attempt $i/60)..."
-            fi
-            sleep 5
-            if [ "$i" -eq 60 ]; then
-              echo "Timeout waiting for CRD dynakubes.dynatrace.com to be established" >&2
-              kubectl get crd dynakubes.dynatrace.com -o yaml || echo "CRD does not exist"
+          set -euo pipefail
+
+          RESOURCE_GROUP="${AZURE_RESOURCE_GROUP}"
+          if [ -z "${RESOURCE_GROUP}" ]; then
+            echo "AZURE_RESOURCE_GROUP is not set." >&2
+            exit 1
+          fi
+
+          # Derive list of environments to process
+          case "${TARGET_ENV_INPUT}" in
+            dev|qa|prod)
+              ENVS="${TARGET_ENV_INPUT}"
+              ;;
+            all)
+              ENVS="dev qa prod"
+              ;;
+            *)
+              echo "Unsupported environment input: ${TARGET_ENV_INPUT}" >&2
+              exit 1
+              ;;
+          esac
+
+          echo "Configuring Dynatrace for environments: ${ENVS}"
+
+          configure_app() {
+            local env_name="$1"
+            local app_role="$2" # backend or ui
+
+            local app_name="app-ecompoc-${env_name}-${app_role}"
+            echo "-----"
+            echo "Configuring app: ${app_name} (env=${env_name}, role=${app_role})"
+
+            if ! az webapp show --resource-group "${RESOURCE_GROUP}" --name "${app_name}" >/dev/null 2>&1; then
+              echo "Error: Web App '${app_name}' not found in resource group '${RESOURCE_GROUP}'" >&2
               exit 1
             fi
+
+            # Choose START_APP_CMD based on app role
+            local start_cmd=""
+            if [ "${app_role}" = "backend" ]; then
+              # Java backend JAR deployed to /home/site/wwwroot
+              start_cmd='java -jar /home/site/wwwroot/*.jar'
+            else
+              # Node.js UI using PM2 + ecosystem.config.js
+              start_cmd='pm2 start ecosystem.config.js --no-daemon'
+            fi
+
+            echo "Using START_APP_CMD: ${start_cmd}"
+
+            echo "Setting Dynatrace app settings on ${app_name}..."
+            az webapp config appsettings set \
+              --resource-group "${RESOURCE_GROUP}" \
+              --name "${app_name}" \
+              --settings \
+                DT_ENDPOINT="${DT_ENDPOINT}" \
+                DT_API_TOKEN="${DT_API_TOKEN}" \
+                DT_INCLUDE="${DT_INCLUDE}" \
+                START_APP_CMD="${start_cmd}" \
+              >/dev/null
+
+            # Startup command recommended by Dynatrace for Azure App Service Linux
+            # Reference:
+            # https://docs.dynatrace.com/docs/ingest-from/microsoft-azure-services/azure-integrations/azure-appservice/integrate-oneagent-on-web-app-for-containers
+            local dynatrace_startup_cmd
+            dynatrace_startup_cmd='wget -O /tmp/installer-wrapper.sh -q https://raw.githubusercontent.com/dynatrace-oss/cloud-snippets/main/azure/linux-app-service/oneagent-installer.sh && DT_ENDPOINT=$DT_ENDPOINT DT_API_TOKEN=$DT_API_TOKEN DT_INCLUDE=$DT_INCLUDE START_APP_CMD=$START_APP_CMD sh /tmp/installer-wrapper.sh'
+
+            echo "Setting startup command for ${app_name} to Dynatrace installer wrapper..."
+            az webapp config set \
+              --resource-group "${RESOURCE_GROUP}" \
+              --name "${app_name}" \
+              --startup-file "${dynatrace_startup_cmd}" \
+              >/dev/null
+
+            echo "Current configured startup command for ${app_name}:"
+            az webapp config show \
+              --resource-group "${RESOURCE_GROUP}" \
+              --name "${app_name}" \
+              --query "siteConfig.appCommandLine" -o tsv
+
+            echo "Restarting ${app_name} twice (per Dynatrace recommendation)..."
+            az webapp restart --resource-group "${RESOURCE_GROUP}" --name "${app_name}" >/dev/null
+            az webapp restart --resource-group "${RESOURCE_GROUP}" --name "${app_name}" >/dev/null
+
+            echo "Completed Dynatrace configuration for ${app_name}"
+          }
+
+          for env_name in ${ENVS}; do
+            configure_app "${env_name}" "backend"
+            configure_app "${env_name}" "ui"
           done
 
-      - name: Optionally create Dynatrace tokens secret (dynakube)
-        if: ${{ inputs.create_dynatrace_secret }}
-        env:
-          DYNATRACE_API_TOKEN: ${{ secrets.DYNATRACE_API_TOKEN }}
-          DYNATRACE_PAAS_TOKEN: ${{ secrets.DYNATRACE_PAAS_TOKEN }}
-          DYNATRACE_DATA_INGEST_TOKEN: ${{ secrets.DYNATRACE_DATA_INGEST_TOKEN }}
-        run: |
-          if [ -z "${DYNATRACE_API_TOKEN}" ] || [ -z "${DYNATRACE_PAAS_TOKEN}" ]; then
-            echo "Dynatrace tokens not provided in secrets. Skipping secret creation." >&2
-            exit 1
-          fi
-          # Build args for data ingest token if provided
-          EXTRA_ARGS=""
-          if [ -n "${DYNATRACE_DATA_INGEST_TOKEN}" ]; then
-            EXTRA_ARGS="${EXTRA_ARGS} --from-literal=dataIngestToken=\"${DYNATRACE_DATA_INGEST_TOKEN}\""
-          fi
-          # Create/Update the dynakube secret including optional dataIngestToken
-          eval kubectl -n dynatrace create secret generic dynakube \
-            --from-literal=apiToken=\"${DYNATRACE_API_TOKEN}\" \
-            --from-literal=paasToken=\"${DYNATRACE_PAAS_TOKEN}\" \
-            ${EXTRA_ARGS} \
-            --dry-run=client -o yaml | kubectl apply -f -
-
-
+          echo "Dynatrace configuration finished for all selected environments."
