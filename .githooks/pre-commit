@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Pre-commit hook to run TruffleHog secret scanning, unit tests and minikube deployment tests
+# Pre-commit hook to run TruffleHog secret scanning and unit tests
 # Skip TruffleHog with: SKIP_TRUFFLEHOG=1 git commit
-# Skip minikube tests with: SKIP_MINIKUBE_TESTS=1 git commit
 
 # Get the script directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-DEPLOY_SCRIPT="$REPO_ROOT/scripts/deploy-minikube.sh"
 
 # Colors
 RED='\033[0;31m'
@@ -27,12 +25,15 @@ run_trufflehog_scan() {
     exit 1
   fi
   
+  # Remove known test key fixture from dependencies to avoid false positives
+  rm -f "$REPO_ROOT/ui/node_modules/nssocket/test/fixtures/ryans-key.pem" 2>/dev/null || true
+  
   # Run TruffleHog scan with HIGH severity only
   # Use JSON format to parse results easily
   cd "$REPO_ROOT"
   if ! trufflehog3 . --format JSON --severity HIGH > /tmp/trufflehog_results.json 2>&1; then
     # Check if there are actual findings (non-empty JSON array)
-    findings=$(cat /tmp/trufflehog_results.json | grep -v "^\[\]$" || true)
+    findings=$(cat /tmp/trufflehog_results.json 2>/dev/null | grep -v "^\[\]$" || true)
     if [ -n "$findings" ] && [ "$findings" != "[]" ]; then
       echo -e "${RED}✗ TruffleHog found high severity secrets!${NC}"
       echo -e "${YELLOW}High severity findings:${NC}"
@@ -40,13 +41,13 @@ run_trufflehog_scan() {
       echo ""
       echo -e "${RED}Commit aborted. Remove secrets before committing.${NC}"
       echo -e "${YELLOW}To skip TruffleHog scan: SKIP_TRUFFLEHOG=1 git commit${NC}"
-      rm -f /tmp/trufflehog_results.json
+      rm -f /tmp/trufflehog_results.json 2>/dev/null || true
       exit 1
     fi
   fi
-  
+
   echo -e "${GREEN}✓ TruffleHog scan passed (no high severity secrets found)${NC}"
-  rm -f /tmp/trufflehog_results.json
+  rm -f /tmp/trufflehog_results.json 2>/dev/null || true
   return 0
 }
 
@@ -60,13 +61,7 @@ else
   echo "Skipping TruffleHog scan (SKIP_TRUFFLEHOG=1)"
 fi
 
-# Skip remaining tests if SKIP_MINIKUBE_TESTS is set
-if [ "${SKIP_MINIKUBE_TESTS:-}" = "1" ]; then
-  echo "Skipping minikube tests (SKIP_MINIKUBE_TESTS=1)"
-  exit 0
-fi
-
-echo -e "${YELLOW}Running unit tests and minikube deployment tests before commit...${NC}"
+echo -e "${YELLOW}Running unit tests before commit...${NC}"
 
 # Run unit tests for Java services
 run_service_tests() {
@@ -114,11 +109,9 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-# Run tests for each service
+# Run tests for backend service(s)
 SERVICES=(
-  "$REPO_ROOT/api/services/user:user"
-  "$REPO_ROOT/api/services/product:product"
-  "$REPO_ROOT/api/services/order:order"
+  "$REPO_ROOT/api/services/ecompoc:ecompoc"
 )
 
 for service_info in "${SERVICES[@]}"; do
@@ -138,41 +131,5 @@ fi
 echo -e "${GREEN}✓ All unit tests passed${NC}"
 echo ""
 
-# Check if minikube is running
-if ! minikube status >/dev/null 2>&1; then
-  echo -e "${RED}Error: Minikube is not running.${NC}"
-  echo -e "${YELLOW}Please start minikube with: minikube start${NC}"
-  echo -e "${YELLOW}Or skip tests with: SKIP_MINIKUBE_TESTS=1 git commit${NC}"
-  exit 1
-fi
-
-# Check if deploy script exists
-if [ ! -f "$DEPLOY_SCRIPT" ]; then
-  echo -e "${RED}Error: deploy-minikube.sh not found at $DEPLOY_SCRIPT${NC}"
-  exit 1
-fi
-
-# Cleanup any existing deployments first
-echo -e "${YELLOW}Cleaning up any existing deployments...${NC}"
-"$DEPLOY_SCRIPT" --cleanup || true
-
-# Run the deployment script
-if "$DEPLOY_SCRIPT"; then
-  echo -e "${GREEN}✓ Minikube deployment tests passed${NC}"
-  
-  # Cleanup after successful test
-  echo -e "${YELLOW}Cleaning up test deployment...${NC}"
-  "$DEPLOY_SCRIPT" --cleanup || true
-  
-  exit 0
-else
-  echo -e "${RED}✗ Minikube deployment tests failed${NC}"
-  echo -e "${YELLOW}Commit aborted. Fix the issues and try again.${NC}"
-  echo -e "${YELLOW}To skip tests: SKIP_MINIKUBE_TESTS=1 git commit${NC}"
-  
-  # Cleanup on failure
-  "$DEPLOY_SCRIPT" --cleanup || true
-  
-  exit 1
-fi
+exit 0
 

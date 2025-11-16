@@ -31,5 +31,3 @@ done
 
 echo "Git hooks installed successfully!"
 echo ""
-echo "To skip minikube tests during commit: SKIP_MINIKUBE_TESTS=1 git commit"
-

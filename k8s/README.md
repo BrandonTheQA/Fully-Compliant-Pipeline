@@ -1,6 +1,8 @@
 # Kubernetes Deployment Structure
 
-**Note:** This directory is for **local development only** using Minikube. Production deployments use Azure App Service, not Kubernetes.
+**Note:** This directory contains Kubernetes manifests from an earlier local Kubernetes workflow. Production deployments now use Azure App Service, and the recommended local workflow is to run services directly on `localhost` ports.
+
+These manifests are retained for reference only and are not part of the standard development or CI/CD flow.
 
 ## Directory Structure
 
@@ -13,37 +15,22 @@ k8s/
 │   ├── ui-deployment.yaml
 │   └── ui-service.yaml
 └── overlays/
-    └── minikube/                  # Minikube-specific configuration
+    └── minikube/                  # Legacy overlay for local Kubernetes development
         ├── kustomization.yaml
         ├── ecompoc-deployment-patch.yaml
         └── ui-deployment-patch.yaml
 ```
 
-## Local Development with Minikube
+## Current Recommendation
 
-This Kubernetes configuration is used for local development and testing with Minikube. It is not used for production deployments.
+For day‑to‑day development and testing:
 
-### Deployment Instructions
+- Run the backend service locally (e.g., `mvn spring-boot:run` for the ecompoc service)
+- Run the UI locally (e.g., `npm run dev -- --port 8084`)
+- Use:
+  - `scripts/run-local-e2e.sh` for Postman/Newman integration tests against `http://localhost:8080/api`
+  - `selenium/run-selenium-tests.sh` for Selenium UI tests against `http://localhost:8084`
 
-To deploy to Minikube for local testing:
+Kubernetes manifests in this directory are optional and intended only for advanced or legacy scenarios.
 
-```bash
-kubectl apply -k k8s/overlays/minikube/
-```
-
-See `scripts/deploy-minikube.sh` for a complete deployment script that handles building, pushing images, and deploying to Minikube.
-
-## Features
-
-- **Base Configuration**: Contains common deployment and service manifests for local development
-- **Minikube Overlay**: Adds Minikube-specific patches and configurations for local testing
-
-## Building Manifests
-
-To preview the generated manifests:
-
-```bash
-# Preview Minikube manifests
-kubectl kustomize k8s/overlays/minikube/
-```
 

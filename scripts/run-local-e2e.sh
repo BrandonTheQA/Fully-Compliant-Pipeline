@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Starts ecompoc service and UI locally, waits for readiness, runs Postman tests via Newman,
+# Starts the ecompoc API service and UI locally on localhost ports,
+# waits for readiness, runs Postman tests via Newman against http://localhost:<ports>,
 # and cleans up background processes on exit.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

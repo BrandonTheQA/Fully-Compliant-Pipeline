@@ -79,13 +79,13 @@ cd selenium
 BASE_URL=http://localhost:8084 mvn clean test
 ```
 
-### Option 3: Running Tests Against Dev Environment
+### Option 3: Running Tests Against Azure Environments
 
-To run tests against the deployed dev environment:
+To run tests against the deployed dev or QA environment, set `BASE_URL` to the corresponding App Service URL. For example:
 
 ```bash
 cd selenium
-BASE_URL=http://4.249.74.188 mvn clean test
+BASE_URL="https://app-ecompoc-dev-ui.azurewebsites.net" mvn clean test
 ```
 
 ## Running in CI/CD
