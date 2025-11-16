@@ -1,0 +1,20 @@
+## Feature Toggle Exemptions
+##
+## This file documents approved exemptions from requiring feature toggles.
+## Each entry key is a Jira story (e.g. SCRUM-123) with metadata about the exemption.
+##
+## Schema:
+## SCRUM-123:
+##   approver: "<name or email of approver>"
+##   reason: "<short justification for why this change is exempt from feature toggles>"
+##
+## Notes:
+## - Keep reasons concise but specific enough for audit/review.
+## - Approver should be a person with authority to grant exemptions (e.g. Product Owner, Architect).
+## - Do not remove historical entries; instead, add comments if status changes.
+
+exemptions:
+  SCRUM-123:
+    approver: "Jane Doe (Product Owner)"
+    reason: "Hotfix for production defect; feature flag not feasible due to legacy code path."
+
