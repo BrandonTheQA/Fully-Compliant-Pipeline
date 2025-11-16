@@ -316,7 +316,7 @@ jobs:
   deploy-qa:
     name: Deploy to QA Environment
     runs-on: ubuntu-latest
-    needs: [test-postman-dev]
+    needs: [test-dev]
     environment: qa
     steps:
       - name: Checkout repository
