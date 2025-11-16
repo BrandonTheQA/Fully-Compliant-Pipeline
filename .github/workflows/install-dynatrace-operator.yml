@@ -40,9 +40,14 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Set Azure subscription
-        if: ${{ secrets.AZURE_SUBSCRIPTION_ID != '' }}
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
-          az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+          if [ -n "${AZURE_SUBSCRIPTION_ID:-}" ]; then
+            az account set --subscription "${AZURE_SUBSCRIPTION_ID}"
+          else
+            echo "AZURE_SUBSCRIPTION_ID not set; using default subscription context."
+          fi
 
       - name: Validate Dynatrace configuration
         run: |
