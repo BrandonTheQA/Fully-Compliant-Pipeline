@@ -9,7 +9,7 @@ interface ShippingBannerProps {
 
 export const ShippingBanner: React.FC<ShippingBannerProps> = ({
   cartTotal,
-  region,
+  region: _region,
   threshold,
 }) => {
   const qualifiesForFreeShipping = cartTotal >= threshold;

@@ -81,6 +81,20 @@ run_service_tests() {
   return 0
 }
 
+# Run TypeScript type checking for UI
+run_ui_typecheck() {
+  echo -e "${YELLOW}Running TypeScript type check for UI...${NC}"
+  cd "$REPO_ROOT/ui"
+  
+  if ! npx tsc --noEmit --project tsconfig.app.json; then
+    echo -e "${RED}✗ TypeScript type check failed for UI${NC}"
+    return 1
+  fi
+  
+  echo -e "${GREEN}✓ TypeScript type check passed for UI${NC}"
+  return 0
+}
+
 # Run unit tests for UI
 run_ui_tests() {
   echo -e "${YELLOW}Running unit tests for UI...${NC}"
@@ -122,6 +136,12 @@ for service_info in "${SERVICES[@]}"; do
     exit 1
   fi
 done
+
+# Run UI type checking
+if ! run_ui_typecheck; then
+  echo -e "${RED}Commit aborted due to TypeScript type check failures.${NC}"
+  exit 1
+fi
 
 # Run UI tests
 if ! run_ui_tests; then
