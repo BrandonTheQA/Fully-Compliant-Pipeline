@@ -48,3 +48,15 @@ springdoc:
   packages-to-scan: com.example.ecompoc
   paths-to-match: /api/**
 
+shipping:
+  rules:
+    US:
+      free-shipping-threshold: 50.00
+      default-shipping-cost: 5.99
+    CA:
+      free-shipping-threshold: 75.00
+      default-shipping-cost: 9.99
+    default:
+      free-shipping-threshold: 50.00
+      default-shipping-cost: 5.99
+

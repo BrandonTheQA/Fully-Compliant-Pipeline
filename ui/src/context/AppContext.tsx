@@ -1,17 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { User, Product, CartItem } from '../types';
+import { shippingService } from '../services/shippingService';
 
 interface AppContextType {
   user: User | null;
   cart: CartItem[];
   products: Product[];
+  shippingRegion: string | null;
+  freeShippingThreshold: number | null;
   setUser: (user: User | null) => void;
   addToCart: (product: Product, quantity: number) => void;
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   setProducts: (products: Product[]) => void;
+  updateShippingInfo: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -40,6 +44,73 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   });
 
   const [products, setProducts] = useState<Product[]>([]);
+  
+  const [shippingRegion, setShippingRegion] = useState<string | null>(() => {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const savedRegion = sessionStorage.getItem('shippingRegion');
+      return savedRegion || null;
+    }
+    return null;
+  });
+  
+  const [freeShippingThreshold, setFreeShippingThreshold] = useState<number | null>(() => {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const savedThreshold = sessionStorage.getItem('freeShippingThreshold');
+      return savedThreshold ? parseFloat(savedThreshold) : null;
+    }
+    return null;
+  });
+
+  const updateShippingInfo = useCallback(async () => {
+    try {
+      // Calculate current cart total
+      const cartTotal = cart.reduce(
+        (sum, item) => sum + item.price * item.orderQuantity,
+        0
+      );
+      
+      // Fetch shipping threshold from API
+      const thresholdData = await shippingService.getShippingThreshold(
+        cartTotal,
+        shippingRegion || undefined
+      );
+      
+      setShippingRegion(thresholdData.region);
+      setFreeShippingThreshold(thresholdData.freeShippingThreshold);
+      
+      // Persist to sessionStorage
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('shippingRegion', thresholdData.region);
+        sessionStorage.setItem('freeShippingThreshold', thresholdData.freeShippingThreshold.toString());
+      }
+    } catch (error) {
+      // If API call fails, use fallback values
+      const fallbackRegion = shippingRegion || 'US';
+      const fallbackThreshold = 50.00;
+      
+      setShippingRegion(fallbackRegion);
+      setFreeShippingThreshold(fallbackThreshold);
+      
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('shippingRegion', fallbackRegion);
+        sessionStorage.setItem('freeShippingThreshold', fallbackThreshold.toString());
+      }
+    }
+  }, [cart, shippingRegion]);
+
+  // Initialize shipping info on app load
+  useEffect(() => {
+    updateShippingInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
+
+  // Update shipping info when cart changes
+  useEffect(() => {
+    if (cart.length > 0 || shippingRegion) {
+      updateShippingInfo();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart]); // Update when cart changes
 
   const setUser = (user: User | null) => {
     setUserState(user);
@@ -97,12 +168,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     user,
     cart,
     products,
+    shippingRegion,
+    freeShippingThreshold,
     setUser,
     addToCart,
     removeFromCart,
     updateCartQuantity,
     clearCart,
     setProducts,
+    updateShippingInfo,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

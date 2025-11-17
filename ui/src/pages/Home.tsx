@@ -1,10 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
+import { ShippingBanner } from '../components/ShippingBanner';
 import './Home.css';
 
 export const Home: React.FC = () => {
-  const { user, cart } = useAppContext();
+  const { user, cart, shippingRegion, freeShippingThreshold } = useAppContext();
+
+  const cartTotal = cart.reduce(
+    (sum, item) => sum + item.price * item.orderQuantity,
+    0
+  );
 
   return (
     <div className="home-container">
@@ -39,6 +45,14 @@ export const Home: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {cart.length > 0 && shippingRegion && freeShippingThreshold && (
+        <ShippingBanner
+          cartTotal={cartTotal}
+          region={shippingRegion}
+          threshold={freeShippingThreshold}
+        />
+      )}
 
       {user && (
         <div className="user-status">

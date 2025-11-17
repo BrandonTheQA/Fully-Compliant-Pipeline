@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { orderService } from '../services/orderService';
+import { ShippingBanner } from './ShippingBanner';
 import type { Order } from '../types';
 import './OrderForm.css';
 
@@ -9,7 +10,7 @@ interface OrderFormProps {
 }
 
 export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
-  const { user, cart, clearCart, updateCartQuantity, removeFromCart } = useAppContext();
+  const { user, cart, clearCart, updateCartQuantity, removeFromCart, shippingRegion, freeShippingThreshold } = useAppContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
@@ -140,6 +141,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
           </div>
         ))}
       </div>
+      {shippingRegion && freeShippingThreshold && (
+        <ShippingBanner
+          cartTotal={totalAmount}
+          region={shippingRegion}
+          threshold={freeShippingThreshold}
+        />
+      )}
       <div className="order-summary">
         <div className="summary-row">
           <span>Total:</span>
