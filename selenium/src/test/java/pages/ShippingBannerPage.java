@@ -43,6 +43,32 @@ public class ShippingBannerPage extends BasePage {
     public void waitForShippingBanner() {
         wait.until(ExpectedConditions.presenceOfElementLocated(SHIPPING_BANNER));
     }
+    
+    /**
+     * Waits for the banner to be in a stable state (either info or success).
+     * This helps ensure the shipping threshold API call has completed.
+     */
+    public void waitForBannerState() {
+        wait.until(ExpectedConditions.presenceOfElementLocated(SHIPPING_BANNER));
+        // Wait a bit for API call to complete and banner state to stabilize
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        // Verify banner is in either info or success state (not in transition)
+        boolean isStable = isFreeShippingInfo() || isFreeShippingQualified();
+        int attempts = 0;
+        while (!isStable && attempts < 10) {
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            isStable = isFreeShippingInfo() || isFreeShippingQualified();
+            attempts++;
+        }
+    }
 
     /**
      * Gets the shipping banner message text.
@@ -110,16 +136,31 @@ public class ShippingBannerPage extends BasePage {
 
     /**
      * Gets the progress bar width percentage.
+     * Only works if the progress bar is displayed (banner is in info state).
      * 
-     * @return Progress percentage (0-100)
+     * @return Progress percentage (0-100), or -1 if progress bar is not displayed
      */
     public double getProgressBarPercentage() {
+        // Only get progress if banner is in info state (not qualified)
+        if (!isFreeShippingInfo() || !isProgressBarDisplayed()) {
+            return -1.0; // Progress bar is not visible when qualified
+        }
+        
         try {
-            WebElement progressBar = driver.findElement(SHIPPING_BANNER_PROGRESS_BAR);
+            WebElement progressBar = wait.until(ExpectedConditions.presenceOfElementLocated(SHIPPING_BANNER_PROGRESS_BAR));
+            
+            // Try to get from style attribute first (more reliable)
+            String style = progressBar.getAttribute("style");
+            if (style != null && style.contains("width:")) {
+                String widthStr = style.split("width:")[1].split("%")[0].trim();
+                return Double.parseDouble(widthStr);
+            }
+            
+            // Fallback: Get from CSS width
             String width = progressBar.getCssValue("width");
             String containerWidth = driver.findElement(SHIPPING_BANNER_PROGRESS).getCssValue("width");
             
-            if (width != null && containerWidth != null) {
+            if (width != null && containerWidth != null && !width.isEmpty() && !containerWidth.isEmpty()) {
                 // Extract numeric values (remove "px" suffix)
                 double widthValue = Double.parseDouble(width.replace("px", "").trim());
                 double containerValue = Double.parseDouble(containerWidth.replace("px", "").trim());
@@ -128,17 +169,10 @@ public class ShippingBannerPage extends BasePage {
                     return (widthValue / containerValue) * 100;
                 }
             }
-            
-            // Alternative: Get from style attribute
-            String style = progressBar.getAttribute("style");
-            if (style != null && style.contains("width:")) {
-                String widthStr = style.split("width:")[1].split("%")[0].trim();
-                return Double.parseDouble(widthStr);
-            }
         } catch (Exception e) {
-            // If unable to parse, return 0
+            // If unable to parse, return -1
         }
-        return 0.0;
+        return -1.0;
     }
 
     /**
