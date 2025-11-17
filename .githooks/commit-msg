@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Commit-msg hook to validate commit message format
+# Commit message format: SCRUM-{number} | {Name of committer} | Description...
+
+# Get the script directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+# The commit message file is passed as the first argument
+commit_msg_file="${1:-}"
+
+# Validate that we have a commit message file
+if [ -z "$commit_msg_file" ] || [ ! -f "$commit_msg_file" ]; then
+  echo -e "${RED}Error: Commit message file not found${NC}"
+  exit 1
+fi
+
+# Read the first line of the commit message (title)
+commit_msg="$(head -n 1 "$commit_msg_file" | sed 's/[[:space:]]*$//')"
+
+# Expected format: SCRUM-{number} | {Name of committer} | Description...
+if [[ ! "$commit_msg" =~ ^SCRUM-[0-9]+[[:space:]]\|[[:space:]][^|]+[[:space:]]\|[[:space:]].+ ]]; then
+  echo -e "${RED}✗ Invalid commit message format.${NC}"
+  echo -e "${YELLOW}Expected format:${NC} SCRUM-{number} | {Name of committer} | Description..."
+  echo -e "${YELLOW}Example:${NC} SCRUM-123 | Jane Doe | Fix login error handling"
+  echo ""
+  echo -e "${YELLOW}Your commit message title was:${NC} '$commit_msg'"
+  echo ""
+  echo -e "${RED}Commit aborted. Please update your commit message to match the required format.${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}✓ Commit message format is valid${NC}"
+exit 0
+
