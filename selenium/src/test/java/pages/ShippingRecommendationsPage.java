@@ -4,6 +4,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.List;
 
@@ -45,10 +46,31 @@ public class ShippingRecommendationsPage extends BasePage {
 
     /**
      * Waits for the shipping recommendations to be displayed.
+     * Handles both loading state and final recommendations display.
      */
     public void waitForShippingRecommendations() {
+        // First, wait for loading to complete if it's showing
+        try {
+            // Wait for loading element to disappear (if it exists)
+            // Use a shorter timeout for this check
+            WebDriverWait shortWait = new WebDriverWait(driver, java.time.Duration.ofSeconds(5));
+            try {
+                shortWait.until(ExpectedConditions.invisibilityOfElementLocated(RECOMMENDATIONS_LOADING));
+            } catch (Exception e) {
+                // Loading element might not exist, which is fine
+            }
+        } catch (Exception e) {
+            // Ignore - loading might not be present
+        }
+        
+        // Now wait for the recommendations element to appear
+        // This will wait up to 20 seconds (from BasePage wait configuration)
         wait.until(ExpectedConditions.presenceOfElementLocated(SHIPPING_RECOMMENDATIONS));
-        // Wait a bit for API call to complete and recommendations to load
+        
+        // Additional wait to ensure content is fully loaded
+        wait.until(ExpectedConditions.visibilityOfElementLocated(SHIPPING_RECOMMENDATIONS));
+        
+        // Wait a bit more for API call to complete and recommendations to fully load
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {

@@ -169,6 +169,9 @@ public class SCRUM8ShippingRecommendationsTest {
             // Navigate to orders page
             ordersPage.navigateToOrdersPage();
             
+            // Wait for shipping cost calculator first to ensure shipping info is loaded
+            shippingCostCalculatorPage.waitForShippingCostCalculator();
+            
             // Wait for recommendations to appear
             shippingRecommendationsPage.waitForShippingRecommendations();
             
@@ -441,6 +444,12 @@ public class SCRUM8ShippingRecommendationsTest {
             
             // Navigate to orders page
             ordersPage.navigateToOrdersPage();
+            
+            // Wait for shipping cost calculator first to ensure shipping info is loaded
+            // This ensures the ShippingRecommendations component will be rendered
+            shippingCostCalculatorPage.waitForShippingCostCalculator();
+            
+            // Now wait for recommendations to appear
             shippingRecommendationsPage.waitForShippingRecommendations();
             
             // Wait for recommendations to load
