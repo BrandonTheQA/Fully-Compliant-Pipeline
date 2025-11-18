@@ -152,5 +152,41 @@ fi
 echo -e "${GREEN}✓ All unit tests passed${NC}"
 echo ""
 
+# Optionally run Selenium E2E tests (requires services to be running)
+# Skip with: SKIP_SELENIUM=1 git commit
+if [ "${SKIP_SELENIUM:-}" != "1" ]; then
+  echo -e "${YELLOW}Checking if Selenium tests should run...${NC}"
+  
+  # Check if selenium test files were modified
+  SELENIUM_FILES_CHANGED=$(git diff --cached --name-only | grep -E "(selenium/|ui/src/.*\.(tsx?|css))" || true)
+  
+  if [ -n "$SELENIUM_FILES_CHANGED" ]; then
+    echo -e "${YELLOW}Selenium-related files changed. Consider running Selenium tests.${NC}"
+    echo -e "${YELLOW}  Run manually: ./scripts/run-selenium-tests-quick.sh${NC}"
+    echo -e "${YELLOW}  Or skip this check: SKIP_SELENIUM=1 git commit${NC}"
+    echo ""
+    
+    # Check if services are running (quick check)
+    if command -v nc >/dev/null 2>&1 && nc -z localhost 8084 >/dev/null 2>&1; then
+      echo -e "${YELLOW}Services appear to be running. Running quick Selenium test check...${NC}"
+      if "$REPO_ROOT/scripts/run-selenium-tests-quick.sh" "http://localhost:8084" >/dev/null 2>&1; then
+        echo -e "${GREEN}✓ Quick Selenium test check passed${NC}"
+      else
+        echo -e "${RED}✗ Quick Selenium test check failed${NC}"
+        echo -e "${YELLOW}  Run full tests: ./scripts/run-selenium-tests-quick.sh${NC}"
+        echo -e "${YELLOW}  Or skip: SKIP_SELENIUM=1 git commit${NC}"
+        # Don't fail the commit, just warn
+      fi
+    else
+      echo -e "${YELLOW}⚠ Services not running. Skipping Selenium tests.${NC}"
+      echo -e "${YELLOW}  Start services: ./scripts/run-local-e2e.sh${NC}"
+      echo -e "${YELLOW}  Then run: ./scripts/run-selenium-tests-quick.sh${NC}"
+    fi
+    echo ""
+  fi
+else
+  echo "Skipping Selenium test check (SKIP_SELENIUM=1)"
+fi
+
 exit 0
 

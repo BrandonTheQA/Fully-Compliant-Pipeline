@@ -47,6 +47,16 @@ public class ProductsPage extends BasePage {
      * Clicks the "Create New Product" button or ensures form is visible.
      */
     public void clickCreateNewProductButton() {
+        // First, ensure the page is loaded by waiting for the products heading or container
+        try {
+            wait.until(ExpectedConditions.or(
+                ExpectedConditions.presenceOfElementLocated(PRODUCTS_HEADING),
+                ExpectedConditions.presenceOfElementLocated(PRODUCT_LIST_CONTAINER)
+            ));
+        } catch (Exception e) {
+            // Page might still be loading, continue anyway
+        }
+        
         // Check if form is already visible
         List<WebElement> existingForms = driver.findElements(PRODUCT_FORM_CONTAINER);
         if (!existingForms.isEmpty() && existingForms.get(0).isDisplayed()) {
@@ -55,6 +65,8 @@ public class ProductsPage extends BasePage {
         }
         
         // Form not visible, click the button to show it
+        // Wait for button to be present first, then clickable
+        wait.until(ExpectedConditions.presenceOfElementLocated(CREATE_NEW_PRODUCT_BUTTON));
         WebElement createButton = wait.until(ExpectedConditions.elementToBeClickable(CREATE_NEW_PRODUCT_BUTTON));
         createButton.click();
         // Wait for form to appear

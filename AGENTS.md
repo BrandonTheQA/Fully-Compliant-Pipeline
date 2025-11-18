@@ -33,3 +33,39 @@ git config user.name
 ```
 
 **Note:** The pre-commit hook will reject commits that don't follow this exact format. The commit message title (first line) must match this pattern.
+
+## Running Selenium Tests Before Committing
+
+Selenium E2E tests can catch issues before they reach CI. To run them locally:
+
+### Quick Test Check (Recommended Before Committing)
+
+For quick validation of specific tests (e.g., after fixing Selenium test issues):
+
+```bash
+# Ensure services are running first
+./scripts/run-local-e2e.sh
+
+# In another terminal, run quick Selenium test check
+./scripts/run-selenium-tests-quick.sh
+```
+
+This runs `SCRUM7ShippingCostCalculatorTest` which has been known to fail in CI.
+
+### Full Selenium Test Suite
+
+To run all Selenium tests:
+
+```bash
+cd selenium
+./run-selenium-tests.sh
+```
+
+### Pre-Commit Hook Integration
+
+The pre-commit hook will automatically:
+- Detect if Selenium-related files were changed (selenium/ or ui/src/ files)
+- If services are running, attempt a quick Selenium test check
+- Warn (but not fail) if tests fail - you can skip with `SKIP_SELENIUM=1 git commit`
+
+**Best Practice:** Run `./scripts/run-selenium-tests-quick.sh` manually before committing changes to Selenium tests or UI components to catch issues early.
