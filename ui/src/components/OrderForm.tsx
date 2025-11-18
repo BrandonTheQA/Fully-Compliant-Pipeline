@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { orderService } from '../services/orderService';
 import { ShippingCostCalculator } from './ShippingCostCalculator';
-import type { Order } from '../types';
+import { ShippingRecommendations } from './ShippingRecommendations';
+import type { Order, Product } from '../types';
 import './OrderForm.css';
 
 interface OrderFormProps {
@@ -15,12 +16,18 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
     cart, 
     clearCart, 
     updateCartQuantity, 
-    removeFromCart, 
+    removeFromCart,
+    addToCart,
+    products,
     shippingRegion, 
     freeShippingThreshold,
     shippingCost,
-    defaultShippingCost
+    defaultShippingCost,
+    recommendations,
+    loadingRecommendations
   } = useAppContext();
+  
+  const qualifiesForFreeShipping = shippingCost !== null && shippingCost === 0;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
@@ -155,14 +162,30 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
         ))}
       </div>
       {shippingRegion && freeShippingThreshold !== null && shippingCost !== null && defaultShippingCost !== null && (
-        <ShippingCostCalculator
-          cartTotal={subtotal}
-          region={shippingRegion}
-          shippingCost={shippingCost}
-          freeShippingThreshold={freeShippingThreshold}
-          remainingAmount={Math.max(0, freeShippingThreshold - subtotal)}
-          qualifiesForFreeShipping={subtotal >= freeShippingThreshold}
-        />
+        <>
+          {/* Show recommendations only when cart doesn't qualify for free shipping */}
+          {!qualifiesForFreeShipping && (
+            <ShippingRecommendations
+              recommendations={recommendations}
+              loading={loadingRecommendations}
+              onAddToCart={(productId: string) => {
+                // Find product and add to cart
+                const product = products.find((p) => p.id === productId);
+                if (product) {
+                  addToCart(product, 1);
+                }
+              }}
+            />
+          )}
+          <ShippingCostCalculator
+            cartTotal={subtotal}
+            region={shippingRegion}
+            shippingCost={shippingCost}
+            freeShippingThreshold={freeShippingThreshold}
+            remainingAmount={Math.max(0, freeShippingThreshold - subtotal)}
+            qualifiesForFreeShipping={subtotal >= freeShippingThreshold}
+          />
+        </>
       )}
       <div className="order-summary">
         <div className="summary-row">

@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import type { ReactNode } from 'react';
-import type { User, Product, CartItem } from '../types';
+import type { User, Product, CartItem, RecommendationResponse } from '../types';
 import { shippingService } from '../services/shippingService';
 
 interface AppContextType {
@@ -11,6 +11,8 @@ interface AppContextType {
   freeShippingThreshold: number | null;
   shippingCost: number | null;
   defaultShippingCost: number | null;
+  recommendations: RecommendationResponse | null;
+  loadingRecommendations: boolean;
   setUser: (user: User | null) => void;
   addToCart: (product: Product, quantity: number) => void;
   removeFromCart: (productId: string) => void;
@@ -18,6 +20,7 @@ interface AppContextType {
   clearCart: () => void;
   setProducts: (products: Product[]) => void;
   updateShippingInfo: () => Promise<void>;
+  updateRecommendations: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -78,6 +81,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
     return null;
   });
+
+  const [recommendations, setRecommendations] = useState<RecommendationResponse | null>(null);
+  const [loadingRecommendations, setLoadingRecommendations] = useState<boolean>(false);
+  const recommendationsDebounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   const updateShippingInfo = useCallback(async () => {
     try {
@@ -144,6 +151,59 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart]); // Update when cart changes
 
+  // Update recommendations when cart or shipping info changes (debounced)
+  const updateRecommendations = useCallback(async () => {
+    // Clear existing timer
+    if (recommendationsDebounceTimer.current) {
+      clearTimeout(recommendationsDebounceTimer.current);
+    }
+
+    // Set loading state immediately
+    setLoadingRecommendations(true);
+
+    // Debounce the API call by 200ms
+    recommendationsDebounceTimer.current = setTimeout(async () => {
+      try {
+        // Calculate current cart total
+        const cartTotal = cart.reduce(
+          (sum, item) => sum + item.price * item.orderQuantity,
+          0
+        );
+
+        // Get cart item IDs
+        const cartItemIds = cart.map((item) => item.id);
+
+        // Fetch recommendations
+        const recommendationsData = await shippingService.getShippingRecommendations(
+          cartTotal,
+          cartItemIds.length > 0 ? cartItemIds : undefined,
+          shippingRegion || undefined,
+          user?.userId
+        );
+
+        setRecommendations(recommendationsData);
+      } catch (error) {
+        console.warn('Failed to fetch recommendations:', error);
+        setRecommendations(null);
+      } finally {
+        setLoadingRecommendations(false);
+      }
+    }, 200);
+  }, [cart, shippingRegion, user]);
+
+  // Update recommendations when cart or shipping info changes
+  useEffect(() => {
+    updateRecommendations();
+
+    // Cleanup timer on unmount
+    return () => {
+      if (recommendationsDebounceTimer.current) {
+        clearTimeout(recommendationsDebounceTimer.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cart, shippingRegion, freeShippingThreshold]); // Update when cart or shipping info changes
+
   const setUser = (user: User | null) => {
     setUserState(user);
     if (user) {
@@ -204,6 +264,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     freeShippingThreshold,
     shippingCost,
     defaultShippingCost,
+    recommendations,
+    loadingRecommendations,
     setUser,
     addToCart,
     removeFromCart,
@@ -211,6 +273,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     clearCart,
     setProducts,
     updateShippingInfo,
+    updateRecommendations,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

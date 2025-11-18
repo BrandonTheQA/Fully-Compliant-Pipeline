@@ -1,4 +1,5 @@
 import { productApi } from './api';
+import type { RecommendationResponse } from '../types';
 
 export interface ShippingThresholdResponse {
   region: string;
@@ -20,7 +21,9 @@ export interface ShippingCostResponse {
 
 const CACHE_KEY_PREFIX = 'shipping_threshold_';
 const CACHE_COST_KEY_PREFIX = 'shipping_cost_';
+const CACHE_RECOMMENDATIONS_KEY_PREFIX = 'shipping_recommendations_';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const RECOMMENDATIONS_CACHE_DURATION = 30 * 1000; // 30 seconds for recommendations
 
 interface CachedThreshold {
   data: ShippingThresholdResponse;
@@ -29,6 +32,11 @@ interface CachedThreshold {
 
 interface CachedCost {
   data: ShippingCostResponse;
+  timestamp: number;
+}
+
+interface CachedRecommendations {
+  data: RecommendationResponse;
   timestamp: number;
 }
 
@@ -210,16 +218,101 @@ export const shippingService = {
   },
   
   /**
+   * Get shipping optimization recommendations
+   * Caches the result in sessionStorage with shorter TTL (30 seconds)
+   * 
+   * @param cartTotal Current cart total amount
+   * @param cartItems Optional array of product IDs already in cart
+   * @param region Optional region code (e.g., "US", "CA"). If not provided, auto-detected by backend
+   * @param userId Optional user ID for personalized recommendations
+   * @returns Shipping optimization recommendations
+   */
+  getShippingRecommendations: async (
+    cartTotal: number = 0,
+    cartItems?: string[],
+    region?: string,
+    userId?: string
+  ): Promise<RecommendationResponse | null> => {
+    // Create cache key based on cart state
+    const cartItemsKey = cartItems && cartItems.length > 0 
+      ? cartItems.sort().join(',') 
+      : 'empty';
+    const cacheKey = `${CACHE_RECOMMENDATIONS_KEY_PREFIX}${cartTotal}_${cartItemsKey}_${region || 'default'}`;
+    
+    // Try to get from cache first
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const cachedData: CachedRecommendations = JSON.parse(cached);
+        const now = Date.now();
+        
+        // Check if cache is still valid (within 30 seconds)
+        if (now - cachedData.timestamp < RECOMMENDATIONS_CACHE_DURATION) {
+          return cachedData.data;
+        }
+      } catch (e) {
+        // If cache is corrupted, continue to fetch from API
+      }
+    }
+    
+    // Fetch from API
+    try {
+      const params: Record<string, string> = {};
+      if (cartTotal >= 0) {
+        params.cartTotal = cartTotal.toString();
+      }
+      if (cartItems && cartItems.length > 0) {
+        params.cartItems = cartItems.join(',');
+      }
+      if (region) {
+        params.region = region;
+      }
+      if (userId) {
+        params.userId = userId;
+      }
+      
+      const queryString = new URLSearchParams(params).toString();
+      const url = `/shipping/recommendations${queryString ? `?${queryString}` : ''}`;
+    
+      const response = await productApi.get<RecommendationResponse>(url);
+      const data = response.data;
+      
+      // Cache the recommendations
+      sessionStorage.setItem(
+        cacheKey,
+        JSON.stringify({
+          data: data,
+          timestamp: Date.now(),
+        })
+      );
+      
+      return data;
+    } catch (error) {
+      // Graceful degradation - return null if API fails
+      console.warn('Failed to fetch shipping recommendations:', error);
+      return null;
+    }
+  },
+  
+  /**
    * Clear cached shipping threshold data
    */
   clearCache: (region?: string) => {
     if (region) {
       sessionStorage.removeItem(`${CACHE_KEY_PREFIX}${region}`);
       sessionStorage.removeItem(`${CACHE_COST_KEY_PREFIX}${region}`);
+      // Clear all recommendation cache entries for this region
+      Object.keys(sessionStorage).forEach((key) => {
+        if (key.startsWith(CACHE_RECOMMENDATIONS_KEY_PREFIX) && key.includes(region)) {
+          sessionStorage.removeItem(key);
+        }
+      });
     } else {
       // Clear all shipping cache entries
       Object.keys(sessionStorage).forEach((key) => {
-        if (key.startsWith(CACHE_KEY_PREFIX) || key.startsWith(CACHE_COST_KEY_PREFIX)) {
+        if (key.startsWith(CACHE_KEY_PREFIX) || 
+            key.startsWith(CACHE_COST_KEY_PREFIX) || 
+            key.startsWith(CACHE_RECOMMENDATIONS_KEY_PREFIX)) {
           sessionStorage.removeItem(key);
         }
       });

@@ -61,3 +61,38 @@ export interface CartItem extends Product {
   orderQuantity: number;
 }
 
+export interface RecommendedProduct {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  category?: string;
+  savingsMessage?: string;
+  imageUrl?: string;
+}
+
+export interface OptimizationPath {
+  products: RecommendedProduct[];
+  totalCost: number;
+  savingsAmount: number;
+  message: string;
+  pathType: 'single' | 'bundle' | 'category';
+}
+
+export interface RecommendationResponse {
+  optimizationPaths: OptimizationPath[];
+  qualifiesForFreeShipping: boolean;
+  remainingAmount: number;
+  region: string;
+  cartTotal: number;
+  freeShippingThreshold: number;
+}
+
+export interface CartModificationSuggestion {
+  type: 'replace' | 'remove' | 'increase_quantity';
+  explanation: string;
+  currentCost: number;
+  optimizedCost: number;
+  savings: number;
+}
+
