@@ -244,6 +244,11 @@ public class ShippingRecommendationService {
                 // Calculate savings (shipping cost that would be saved)
                 BigDecimal savingsAmount = defaultShippingCost;
                 
+                // Generate placeholder image URL (using placeholder service)
+                // In production, this would come from product.imageUrl field
+                String imageUrl = String.format("https://via.placeholder.com/300x300?text=%s", 
+                    product.getName().replaceAll("\\s+", "+"));
+                
                 // Create recommended product DTO
                 RecommendedProduct recommendedProduct = new RecommendedProduct(
                     product.getId(),
@@ -252,7 +257,7 @@ public class ShippingRecommendationService {
                     productPrice,
                     product.getCategory(),
                     String.format("Add this to get FREE shipping and save $%.2f", savingsAmount),
-                    null // imageUrl - can be added later
+                    imageUrl
                 );
                 
                 // Create optimization path
