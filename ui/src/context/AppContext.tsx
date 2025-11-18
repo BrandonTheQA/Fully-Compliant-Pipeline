@@ -9,6 +9,8 @@ interface AppContextType {
   products: Product[];
   shippingRegion: string | null;
   freeShippingThreshold: number | null;
+  shippingCost: number | null;
+  defaultShippingCost: number | null;
   setUser: (user: User | null) => void;
   addToCart: (product: Product, quantity: number) => void;
   removeFromCart: (productId: string) => void;
@@ -61,6 +63,22 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     return null;
   });
 
+  const [shippingCost, setShippingCost] = useState<number | null>(() => {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const savedCost = sessionStorage.getItem('shippingCost');
+      return savedCost ? parseFloat(savedCost) : null;
+    }
+    return null;
+  });
+
+  const [defaultShippingCost, setDefaultShippingCost] = useState<number | null>(() => {
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const savedDefaultCost = sessionStorage.getItem('defaultShippingCost');
+      return savedDefaultCost ? parseFloat(savedDefaultCost) : null;
+    }
+    return null;
+  });
+
   const updateShippingInfo = useCallback(async () => {
     try {
       // Calculate current cart total
@@ -69,31 +87,45 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         0
       );
       
-      // Fetch shipping threshold from API
-      const thresholdData = await shippingService.getShippingThreshold(
+      // Fetch shipping cost from API (includes threshold info)
+      const costData = await shippingService.getShippingCost(
         cartTotal,
         shippingRegion || undefined
       );
       
-      setShippingRegion(thresholdData.region);
-      setFreeShippingThreshold(thresholdData.freeShippingThreshold);
+      setShippingRegion(costData.region);
+      setFreeShippingThreshold(costData.freeShippingThreshold);
+      setShippingCost(costData.shippingCost);
+      setDefaultShippingCost(costData.defaultShippingCost);
       
       // Persist to sessionStorage
       if (typeof window !== 'undefined' && window.sessionStorage) {
-        sessionStorage.setItem('shippingRegion', thresholdData.region);
-        sessionStorage.setItem('freeShippingThreshold', thresholdData.freeShippingThreshold.toString());
+        sessionStorage.setItem('shippingRegion', costData.region);
+        sessionStorage.setItem('freeShippingThreshold', costData.freeShippingThreshold.toString());
+        sessionStorage.setItem('shippingCost', costData.shippingCost.toString());
+        sessionStorage.setItem('defaultShippingCost', costData.defaultShippingCost.toString());
       }
     } catch (error) {
       // If API call fails, use fallback values
       const fallbackRegion = shippingRegion || 'US';
       const fallbackThreshold = 50.00;
+      const fallbackShippingCost = 5.99;
+      const cartTotal = cart.reduce(
+        (sum, item) => sum + item.price * item.orderQuantity,
+        0
+      );
+      const fallbackCost = cartTotal >= fallbackThreshold ? 0 : fallbackShippingCost;
       
       setShippingRegion(fallbackRegion);
       setFreeShippingThreshold(fallbackThreshold);
+      setShippingCost(fallbackCost);
+      setDefaultShippingCost(fallbackShippingCost);
       
       if (typeof window !== 'undefined' && window.sessionStorage) {
         sessionStorage.setItem('shippingRegion', fallbackRegion);
         sessionStorage.setItem('freeShippingThreshold', fallbackThreshold.toString());
+        sessionStorage.setItem('shippingCost', fallbackCost.toString());
+        sessionStorage.setItem('defaultShippingCost', fallbackShippingCost.toString());
       }
     }
   }, [cart, shippingRegion]);
@@ -170,6 +202,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     products,
     shippingRegion,
     freeShippingThreshold,
+    shippingCost,
+    defaultShippingCost,
     setUser,
     addToCart,
     removeFromCart,

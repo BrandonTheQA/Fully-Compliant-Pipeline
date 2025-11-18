@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { orderService } from '../services/orderService';
-import { ShippingBanner } from './ShippingBanner';
+import { ShippingCostCalculator } from './ShippingCostCalculator';
 import type { Order } from '../types';
 import './OrderForm.css';
 
@@ -10,15 +10,28 @@ interface OrderFormProps {
 }
 
 export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
-  const { user, cart, clearCart, updateCartQuantity, removeFromCart, shippingRegion, freeShippingThreshold } = useAppContext();
+  const { 
+    user, 
+    cart, 
+    clearCart, 
+    updateCartQuantity, 
+    removeFromCart, 
+    shippingRegion, 
+    freeShippingThreshold,
+    shippingCost,
+    defaultShippingCost
+  } = useAppContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
 
-  const totalAmount = cart.reduce(
+  const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.orderQuantity,
     0
   );
+  
+  const currentShippingCost = shippingCost !== null ? shippingCost : (defaultShippingCost || 0);
+  const totalAmount = subtotal + currentShippingCost;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -141,14 +154,31 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
           </div>
         ))}
       </div>
-      {shippingRegion && freeShippingThreshold && (
-        <ShippingBanner
-          cartTotal={totalAmount}
+      {shippingRegion && freeShippingThreshold !== null && shippingCost !== null && defaultShippingCost !== null && (
+        <ShippingCostCalculator
+          cartTotal={subtotal}
           region={shippingRegion}
-          threshold={freeShippingThreshold}
+          shippingCost={shippingCost}
+          freeShippingThreshold={freeShippingThreshold}
+          remainingAmount={Math.max(0, freeShippingThreshold - subtotal)}
+          qualifiesForFreeShipping={subtotal >= freeShippingThreshold}
         />
       )}
       <div className="order-summary">
+        <div className="summary-row">
+          <span>Subtotal:</span>
+          <span>${subtotal.toFixed(2)}</span>
+        </div>
+        <div className="summary-row">
+          <span>Shipping:</span>
+          <span>
+            {shippingCost !== null && shippingCost === 0 ? (
+              <span className="shipping-free-text">FREE</span>
+            ) : (
+              `$${currentShippingCost.toFixed(2)}`
+            )}
+          </span>
+        </div>
         <div className="summary-row">
           <span>Total:</span>
           <span className="total-amount">${totalAmount.toFixed(2)}</span>

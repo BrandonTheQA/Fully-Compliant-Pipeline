@@ -1,6 +1,8 @@
 package com.example.ecompoc.shipping.controller;
 
+import com.example.ecompoc.shipping.dto.ShippingCostResponse;
 import com.example.ecompoc.shipping.dto.ShippingThresholdResponse;
+import com.example.ecompoc.shipping.model.ShippingRule;
 import com.example.ecompoc.shipping.service.GeolocationService;
 import com.example.ecompoc.shipping.service.ShippingRuleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -74,6 +76,65 @@ public class ShippingController {
                 currentCartTotal,
                 remainingAmount,
                 qualifiesForFreeShipping
+        );
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * GET /api/shipping/cost - Get shipping cost calculation
+     * Auto-detects region from request or accepts region parameter
+     */
+    @Operation(
+            summary = "Get shipping cost calculation",
+            description = "Calculates estimated shipping cost and free shipping progress based on cart total and region"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Shipping cost calculated successfully",
+                    content = @Content(schema = @Schema(implementation = ShippingCostResponse.class))),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/cost")
+    public ResponseEntity<ShippingCostResponse> getShippingCost(
+            @Parameter(description = "Cart total amount", example = "35.00")
+            @RequestParam(required = false) BigDecimal cartTotal,
+            @Parameter(description = "Region code (e.g., US, CA). If not provided, auto-detected from request", example = "US")
+            @RequestParam(required = false) String region) {
+        
+        // Auto-detect region if not provided
+        String detectedRegion = region != null && !region.isEmpty() 
+            ? geolocationService.detectRegion(region) 
+            : geolocationService.detectRegion();
+        
+        // Default cart total to 0 if not provided
+        BigDecimal currentCartTotal = cartTotal != null ? cartTotal : BigDecimal.ZERO;
+        
+        // Get shipping rule for the region
+        ShippingRule rule = shippingRuleService.getShippingRule(detectedRegion);
+        
+        // Get threshold for the region
+        BigDecimal freeShippingThreshold = rule.getFreeShippingThreshold();
+        
+        // Get default shipping cost for the region
+        BigDecimal defaultShippingCost = rule.getDefaultShippingCost();
+        
+        // Calculate shipping cost
+        BigDecimal shippingCost = shippingRuleService.calculateShippingCost(currentCartTotal, detectedRegion);
+        
+        // Calculate remaining amount
+        BigDecimal remainingAmount = shippingRuleService.calculateRemainingAmount(currentCartTotal, detectedRegion);
+        
+        // Check if qualifies for free shipping
+        boolean qualifiesForFreeShipping = shippingRuleService.qualifiesForFreeShipping(currentCartTotal, detectedRegion);
+        
+        ShippingCostResponse response = new ShippingCostResponse(
+                detectedRegion,
+                currentCartTotal,
+                shippingCost,
+                freeShippingThreshold,
+                remainingAmount,
+                qualifiesForFreeShipping,
+                defaultShippingCost
         );
         
         return ResponseEntity.ok(response);
