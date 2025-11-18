@@ -3,7 +3,7 @@ import { useAppContext } from '../context/AppContext';
 import { orderService } from '../services/orderService';
 import { ShippingCostCalculator } from './ShippingCostCalculator';
 import { ShippingRecommendations } from './ShippingRecommendations';
-import type { Order, Product } from '../types';
+import type { Order } from '../types';
 import './OrderForm.css';
 
 interface OrderFormProps {
