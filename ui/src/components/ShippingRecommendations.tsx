@@ -15,17 +15,18 @@ export const ShippingRecommendations: React.FC<ShippingRecommendationsProps> = (
 }) => {
   const [selectedPathIndex, setSelectedPathIndex] = useState<number>(0);
 
-  // Don't render if already qualifies for free shipping or no recommendations
-  if (!recommendations || recommendations.qualifiesForFreeShipping || recommendations.optimizationPaths.length === 0) {
-    return null;
-  }
-
+  // Show loading state if loading, even if recommendations are null
   if (loading) {
     return (
       <div className="shipping-recommendations">
         <div className="shipping-recommendations-loading">Loading recommendations...</div>
       </div>
     );
+  }
+
+  // Don't render if already qualifies for free shipping or no recommendations
+  if (!recommendations || recommendations.qualifiesForFreeShipping || recommendations.optimizationPaths.length === 0) {
+    return null;
   }
 
   const handleAddProduct = (productId: string) => {

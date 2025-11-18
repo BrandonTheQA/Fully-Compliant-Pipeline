@@ -100,6 +100,20 @@ describe('ShippingRecommendations', () => {
     expect(screen.getByText(/Loading recommendations.../i)).toBeInTheDocument();
   });
 
+  it('should display loading state even when recommendations are null', () => {
+    // This is important for Selenium tests - the element should appear during loading
+    const { container } = render(
+      <ShippingRecommendations
+        recommendations={null}
+        loading={true}
+        onAddToCart={mockOnAddToCart}
+      />
+    );
+
+    expect(screen.getByText(/Loading recommendations.../i)).toBeInTheDocument();
+    expect(container.querySelector('.shipping-recommendations')).toBeInTheDocument();
+  });
+
   it('should display recommendations header with remaining amount', () => {
     const product = createMockProduct('prod1', 'Product 1', 20.00);
     const path = createMockPath([product]);
