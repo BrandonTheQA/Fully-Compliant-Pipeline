@@ -206,3 +206,7 @@ public class ShippingCostCalculatorPage extends BasePage {
     }
 }
 
+
+
+
+

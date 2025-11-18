@@ -524,3 +524,7 @@ public class SCRUM7ShippingCostCalculatorTest {
     }
 }
 
+
+
+
+

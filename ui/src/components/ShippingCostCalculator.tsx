@@ -16,7 +16,7 @@ export const ShippingCostCalculator: React.FC<ShippingCostCalculatorProps> = ({
   region: _region,
   shippingCost,
   freeShippingThreshold,
-  remainingAmount,
+  remainingAmount: _remainingAmount,
   qualifiesForFreeShipping,
 }) => {
   const totalWithShipping = cartTotal + shippingCost;
@@ -72,4 +72,8 @@ export const ShippingCostCalculator: React.FC<ShippingCostCalculatorProps> = ({
     </div>
   );
 };
+
+
+
+
 
