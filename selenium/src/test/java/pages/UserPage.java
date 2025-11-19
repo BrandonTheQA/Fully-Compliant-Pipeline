@@ -61,6 +61,12 @@ public class UserPage extends BasePage {
     public void submitUserForm() {
         WebElement submitButton = wait.until(ExpectedConditions.elementToBeClickable(SUBMIT_BUTTON));
         submitButton.click();
+        // Wait a moment for the form submission to start
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**
@@ -82,9 +88,13 @@ public class UserPage extends BasePage {
 
     /**
      * Verifies user info is displayed after successful creation.
+     * Waits for the form to disappear and user-info to become visible.
      */
     public void verifyUserInfoDisplayed() {
-        wait.until(ExpectedConditions.presenceOfElementLocated(USER_INFO_SECTION));
+        // First wait for the form to disappear (indicating submission started)
+        // Then wait for user-info to be visible (indicating user was created)
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(SUBMIT_BUTTON));
+        wait.until(ExpectedConditions.visibilityOfElementLocated(USER_INFO_SECTION));
     }
 
     /**
