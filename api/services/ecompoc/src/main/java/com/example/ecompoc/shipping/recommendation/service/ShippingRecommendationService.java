@@ -7,6 +7,8 @@ import com.example.ecompoc.shipping.recommendation.dto.RecommendationResponse;
 import com.example.ecompoc.shipping.recommendation.dto.RecommendedProduct;
 import com.example.ecompoc.shipping.service.GeolocationService;
 import com.example.ecompoc.shipping.service.ShippingRuleService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +21,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class ShippingRecommendationService {
+    
+    private static final Logger logger = LoggerFactory.getLogger(ShippingRecommendationService.class);
     
     private final ShippingRuleService shippingRuleService;
     private final ProductService productService;
@@ -45,7 +49,7 @@ public class ShippingRecommendationService {
      * @param userId Optional user ID for personalization (future use)
      * @return RecommendationResponse with optimization paths
      */
-    @Cacheable(value = "recommendations", key = "#cartTotal.toString() + '-' + (#cartItemIds != null ? String.join(',', #cartItemIds) : '') + '-' + (#region != null ? #region : 'default')")
+    @Cacheable(value = "recommendations", key = "#cartTotal.toString() + '-' + (#cartItemIds != null ? #cartItemIds.toString() : 'empty') + '-' + (#region != null ? #region : 'default')")
     public RecommendationResponse generateRecommendations(BigDecimal cartTotal, 
                                                           List<String> cartItemIds,
                                                           String region, 
@@ -61,7 +65,14 @@ public class ShippingRecommendationService {
         boolean qualifiesForFreeShipping = shippingRuleService.qualifiesForFreeShipping(currentCartTotal, detectedRegion);
         BigDecimal remainingAmount = shippingRuleService.calculateRemainingAmount(currentCartTotal, detectedRegion);
         BigDecimal freeShippingThreshold = shippingRuleService.getFreeShippingThreshold(detectedRegion);
-        BigDecimal defaultShippingCost = shippingRuleService.getShippingRule(detectedRegion).getDefaultShippingCost();
+        
+        // Get shipping rule with null safety check
+        com.example.ecompoc.shipping.model.ShippingRule shippingRule = shippingRuleService.getShippingRule(detectedRegion);
+        if (shippingRule == null) {
+            // Fallback to default shipping cost if rule is null
+            shippingRule = shippingRuleService.getShippingRule("default");
+        }
+        BigDecimal defaultShippingCost = shippingRule != null ? shippingRule.getDefaultShippingCost() : new BigDecimal("5.99");
         
         // If already qualifies, return empty recommendations
         if (qualifiesForFreeShipping) {
@@ -75,8 +86,27 @@ public class ShippingRecommendationService {
             );
         }
         
-        // Get all products
-        List<ProductResponse> allProducts = productService.getAllProducts();
+        // Get all products with error handling
+        List<ProductResponse> allProducts;
+        try {
+            allProducts = productService.getAllProducts();
+        } catch (Exception e) {
+            // Log error and return empty recommendations if product service fails
+            logger.error("Failed to retrieve products for recommendations: {}", e.getMessage(), e);
+            return new RecommendationResponse(
+                new ArrayList<>(),
+                false,
+                remainingAmount,
+                detectedRegion,
+                currentCartTotal,
+                freeShippingThreshold
+            );
+        }
+        
+        // Handle null or empty product list
+        if (allProducts == null) {
+            allProducts = new ArrayList<>();
+        }
         
         // Get cart items for category matching
         Set<String> cartCategories = getCartCategories(allProducts, cartItemSet);
@@ -115,10 +145,28 @@ public class ShippingRecommendationService {
                                                       BigDecimal remainingAmount,
                                                       Set<String> cartItemIds,
                                                       Set<String> cartCategories) {
+        if (allProducts == null || allProducts.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        if (remainingAmount == null || remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return new ArrayList<>();
+        }
+        
         return allProducts.stream()
             .filter(product -> {
+                // Filter out null products
+                if (product == null) {
+                    return false;
+                }
+                
+                // Filter out products with null or empty ID
+                if (product.getId() == null || product.getId().isEmpty()) {
+                    return false;
+                }
+                
                 // Filter out products already in cart
-                if (cartItemIds.contains(product.getId())) {
+                if (cartItemIds != null && cartItemIds.contains(product.getId())) {
                     return false;
                 }
                 
@@ -137,7 +185,7 @@ public class ShippingRecommendationService {
                 return productPrice.compareTo(maxPrice) <= 0;
             })
             .sorted((p1, p2) -> {
-                // Score and sort products
+                // Score and sort products with null safety
                 int score1 = scoreProduct(p1, cartCategories, remainingAmount);
                 int score2 = scoreProduct(p2, cartCategories, remainingAmount);
                 return Integer.compare(score2, score1); // Descending order
@@ -152,9 +200,18 @@ public class ShippingRecommendationService {
     private int scoreProduct(ProductResponse product, Set<String> cartCategories, BigDecimal remainingAmount) {
         int score = 0;
         
+        // Null safety check
+        if (product == null) {
+            return 0;
+        }
+        
+        if (remainingAmount == null || remainingAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return 0;
+        }
+        
         // Category match scoring
         if (product.getCategory() != null && !product.getCategory().isEmpty()) {
-            if (cartCategories.contains(product.getCategory())) {
+            if (cartCategories != null && cartCategories.contains(product.getCategory())) {
                 score += 10; // Same category
             } else {
                 score += 5; // Different category but still relevant
@@ -162,7 +219,7 @@ public class ShippingRecommendationService {
         }
         
         // Price proximity scoring (closer to remaining amount = higher score)
-        if (product.getPrice() != null) {
+        if (product.getPrice() != null && product.getPrice() > 0) {
             BigDecimal productPrice = BigDecimal.valueOf(product.getPrice());
             BigDecimal difference = remainingAmount.subtract(productPrice).abs();
             // Score inversely proportional to difference (max 20 points)
@@ -235,25 +292,51 @@ public class ShippingRecommendationService {
                                                               BigDecimal defaultShippingCost) {
         List<OptimizationPath> paths = new ArrayList<>();
         
+        if (candidateProducts == null || candidateProducts.isEmpty()) {
+            return paths;
+        }
+        
         for (ProductResponse product : candidateProducts) {
+            // Skip products with null or invalid data
+            if (product == null || product.getId() == null || product.getId().isEmpty()) {
+                continue;
+            }
+            
+            // Skip products with null or invalid price
+            if (product.getPrice() == null || product.getPrice() <= 0) {
+                continue;
+            }
+            
             BigDecimal productPrice = BigDecimal.valueOf(product.getPrice());
             
             // Check if this product alone reaches the threshold
             BigDecimal newCartTotal = cartTotal.add(productPrice);
             if (newCartTotal.compareTo(freeShippingThreshold) >= 0) {
                 // Calculate savings (shipping cost that would be saved)
-                BigDecimal savingsAmount = defaultShippingCost;
+                BigDecimal savingsAmount = defaultShippingCost != null ? defaultShippingCost : BigDecimal.ZERO;
+                
+                // Get product name with null safety
+                String productName = product.getName();
+                if (productName == null || productName.isEmpty()) {
+                    productName = "Product";
+                }
                 
                 // Generate placeholder image URL (using placeholder service)
                 // In production, this would come from product.imageUrl field
                 String imageUrl = String.format("https://via.placeholder.com/300x300?text=%s", 
-                    product.getName().replaceAll("\\s+", "+"));
+                    productName.replaceAll("\\s+", "+"));
+                
+                // Get product description with null safety
+                String productDescription = product.getDescription();
+                if (productDescription == null) {
+                    productDescription = "";
+                }
                 
                 // Create recommended product DTO
                 RecommendedProduct recommendedProduct = new RecommendedProduct(
                     product.getId(),
-                    product.getName(),
-                    product.getDescription(),
+                    productName,
+                    productDescription,
                     productPrice,
                     product.getCategory(),
                     String.format("Add this to get FREE shipping and save $%.2f", savingsAmount),
@@ -261,7 +344,7 @@ public class ShippingRecommendationService {
                 );
                 
                 // Create optimization path
-                String message = String.format("Add %s → FREE shipping", product.getName());
+                String message = String.format("Add %s → FREE shipping", productName);
                 OptimizationPath path = new OptimizationPath(
                     Collections.singletonList(recommendedProduct),
                     productPrice,
