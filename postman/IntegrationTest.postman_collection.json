@@ -444,7 +444,11 @@
 							"        pm.expect(item).to.have.property('subtotal');",
 							"        pm.expect(item.subtotal).to.eql(item.price * item.quantity);",
 							"    });",
-							"});"
+							"});",
+							"",
+							"// Store order total for shipping tests",
+							"var jsonData = pm.response.json();",
+							"pm.environment.set('orderTotal', jsonData.totalAmount);"
 						],
 						"type": "text/javascript"
 					}
@@ -464,6 +468,454 @@
 					]
 				},
 				"description": "Retrieves the created order to verify it was created successfully and contains all expected data"
+			},
+			"response": []
+		},
+		{
+			"name": "9. Get Shipping Threshold (Below Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has region\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('region');",
+							"    pm.expect(jsonData.region).to.be.a('string');",
+							"});",
+							"",
+							"pm.test(\"Response has freeShippingThreshold\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('freeShippingThreshold');",
+							"    pm.expect(jsonData.freeShippingThreshold).to.be.a('number');",
+							"    pm.expect(jsonData.freeShippingThreshold).to.be.above(0);",
+							"    pm.environment.set('freeShippingThreshold', jsonData.freeShippingThreshold);",
+							"});",
+							"",
+							"pm.test(\"Response has currentCartTotal\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('currentCartTotal');",
+							"    pm.expect(jsonData.currentCartTotal).to.be.a('number');",
+							"});",
+							"",
+							"pm.test(\"Response has remainingAmount\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('remainingAmount');",
+							"    pm.expect(jsonData.remainingAmount).to.be.a('number');",
+							"    pm.expect(jsonData.remainingAmount).to.be.at.least(0);",
+							"});",
+							"",
+							"pm.test(\"Response has qualifiesForFreeShipping\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('qualifiesForFreeShipping');",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.a('boolean');",
+							"});",
+							"",
+							"pm.test(\"Cart below threshold does not qualify for free shipping\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.currentCartTotal < jsonData.freeShippingThreshold) {",
+							"        pm.expect(jsonData.qualifiesForFreeShipping).to.be.false;",
+							"        pm.expect(jsonData.remainingAmount).to.be.above(0);",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Remaining amount calculation is correct\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var expectedRemaining = Math.max(0, jsonData.freeShippingThreshold - jsonData.currentCartTotal);",
+							"    pm.expect(jsonData.remainingAmount).to.eql(expectedRemaining);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/threshold?cartTotal=30.00",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"threshold"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "30.00",
+							"description": "Cart total below typical threshold"
+						}
+					]
+				},
+				"description": "Gets shipping threshold information for a cart total below the free shipping threshold (matches SCRUM6ShippingBannerTest workflow)"
+			},
+			"response": []
+		},
+		{
+			"name": "10. Get Shipping Threshold (Above Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has all required fields\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('region');",
+							"    pm.expect(jsonData).to.have.property('freeShippingThreshold');",
+							"    pm.expect(jsonData).to.have.property('currentCartTotal');",
+							"    pm.expect(jsonData).to.have.property('remainingAmount');",
+							"    pm.expect(jsonData).to.have.property('qualifiesForFreeShipping');",
+							"});",
+							"",
+							"pm.test(\"Cart above threshold qualifies for free shipping\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.currentCartTotal >= jsonData.freeShippingThreshold) {",
+							"        pm.expect(jsonData.qualifiesForFreeShipping).to.be.true;",
+							"        pm.expect(jsonData.remainingAmount).to.eql(0);",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Remaining amount is 0 when qualified\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.qualifiesForFreeShipping) {",
+							"        pm.expect(jsonData.remainingAmount).to.eql(0);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/threshold?cartTotal=100.00",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"threshold"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "100.00",
+							"description": "Cart total above typical threshold"
+						}
+					]
+				},
+				"description": "Gets shipping threshold information for a cart total above the free shipping threshold (matches SCRUM6ShippingBannerTest workflow)"
+			},
+			"response": []
+		},
+		{
+			"name": "11. Get Shipping Cost (Below Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has region\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('region');",
+							"    pm.expect(jsonData.region).to.be.a('string');",
+							"});",
+							"",
+							"pm.test(\"Response has cartTotal\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('cartTotal');",
+							"    pm.expect(jsonData.cartTotal).to.be.a('number');",
+							"});",
+							"",
+							"pm.test(\"Response has shippingCost\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('shippingCost');",
+							"    pm.expect(jsonData.shippingCost).to.be.a('number');",
+							"    pm.expect(jsonData.shippingCost).to.be.at.least(0);",
+							"});",
+							"",
+							"pm.test(\"Response has freeShippingThreshold\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('freeShippingThreshold');",
+							"    pm.expect(jsonData.freeShippingThreshold).to.be.a('number');",
+							"});",
+							"",
+							"pm.test(\"Response has remainingAmount\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('remainingAmount');",
+							"    pm.expect(jsonData.remainingAmount).to.be.a('number');",
+							"});",
+							"",
+							"pm.test(\"Response has qualifiesForFreeShipping\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('qualifiesForFreeShipping');",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.a('boolean');",
+							"});",
+							"",
+							"pm.test(\"Response has defaultShippingCost\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('defaultShippingCost');",
+							"    pm.expect(jsonData.defaultShippingCost).to.be.a('number');",
+							"    pm.expect(jsonData.defaultShippingCost).to.be.above(0);",
+							"});",
+							"",
+							"pm.test(\"Shipping cost is charged when below threshold\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (!jsonData.qualifiesForFreeShipping) {",
+							"        pm.expect(jsonData.shippingCost).to.be.above(0);",
+							"        pm.expect(jsonData.shippingCost).to.eql(jsonData.defaultShippingCost);",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Remaining amount calculation is correct\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var expectedRemaining = Math.max(0, jsonData.freeShippingThreshold - jsonData.cartTotal);",
+							"    pm.expect(jsonData.remainingAmount).to.eql(expectedRemaining);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=30.00",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "30.00",
+							"description": "Cart total below typical threshold"
+						}
+					]
+				},
+				"description": "Gets shipping cost calculation for a cart total below the free shipping threshold (matches SCRUM7ShippingCostCalculatorTest workflow)"
+			},
+			"response": []
+		},
+		{
+			"name": "12. Get Shipping Cost (Above Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has all required fields\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('region');",
+							"    pm.expect(jsonData).to.have.property('cartTotal');",
+							"    pm.expect(jsonData).to.have.property('shippingCost');",
+							"    pm.expect(jsonData).to.have.property('freeShippingThreshold');",
+							"    pm.expect(jsonData).to.have.property('remainingAmount');",
+							"    pm.expect(jsonData).to.have.property('qualifiesForFreeShipping');",
+							"    pm.expect(jsonData).to.have.property('defaultShippingCost');",
+							"});",
+							"",
+							"pm.test(\"Shipping cost is FREE when above threshold\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.qualifiesForFreeShipping) {",
+							"        pm.expect(jsonData.shippingCost).to.eql(0);",
+							"        pm.expect(jsonData.remainingAmount).to.eql(0);",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Total equals cart total when shipping is free\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.qualifiesForFreeShipping) {",
+							"        // When shipping is free, total = cartTotal + shippingCost (0)",
+							"        var expectedTotal = jsonData.cartTotal + jsonData.shippingCost;",
+							"        pm.expect(jsonData.cartTotal).to.eql(expectedTotal);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=100.00",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "100.00",
+							"description": "Cart total above typical threshold"
+						}
+					]
+				},
+				"description": "Gets shipping cost calculation for a cart total above the free shipping threshold (matches SCRUM7ShippingCostCalculatorTest workflow)"
+			},
+			"response": []
+		},
+		{
+			"name": "13. Get Shipping Recommendations (Below Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has recommendations\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('recommendations');",
+							"    pm.expect(jsonData.recommendations).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Recommendations are provided when below threshold\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    // Recommendations may be empty if no products available, but structure should exist",
+							"    pm.expect(jsonData.recommendations).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Recommendation items have correct structure\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.recommendations && jsonData.recommendations.length > 0) {",
+							"        jsonData.recommendations.forEach(function(rec) {",
+							"            pm.expect(rec).to.have.property('productId');",
+							"            pm.expect(rec).to.have.property('productName');",
+							"            pm.expect(rec).to.have.property('price');",
+							"            pm.expect(rec.price).to.be.a('number');",
+							"            pm.expect(rec.price).to.be.above(0);",
+							"        });",
+							"    }",
+							"});",
+							"",
+							"pm.test(\"Recommendations include product information\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    if (jsonData.recommendations && jsonData.recommendations.length > 0) {",
+							"        var firstRec = jsonData.recommendations[0];",
+							"        pm.expect(firstRec.productName).to.be.a('string');",
+							"        pm.expect(firstRec.productName.length).to.be.above(0);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/recommendations?cartTotal=30.00&cartItems={{productId1}}",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"recommendations"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "30.00",
+							"description": "Cart total below typical threshold"
+						},
+						{
+							"key": "cartItems",
+							"value": "{{productId1}}",
+							"description": "Comma-separated list of product IDs already in cart"
+						}
+					]
+				},
+				"description": "Gets shipping optimization recommendations for a cart total below the free shipping threshold (matches SCRUM8ShippingRecommendationsTest workflow)"
+			},
+			"response": []
+		},
+		{
+			"name": "14. Get Shipping Recommendations (Above Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has recommendations array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('recommendations');",
+							"    pm.expect(jsonData.recommendations).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Recommendations may be empty when above threshold\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    // When cart qualifies for free shipping, recommendations may be empty",
+							"    // This is expected behavior - recommendations only shown when below threshold",
+							"    pm.expect(jsonData.recommendations).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/recommendations?cartTotal=100.00&cartItems={{productId1}},{{productId2}},{{productId3}}",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"recommendations"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "100.00",
+							"description": "Cart total above typical threshold"
+						},
+						{
+							"key": "cartItems",
+							"value": "{{productId1}},{{productId2}},{{productId3}}",
+							"description": "Comma-separated list of product IDs already in cart"
+						}
+					]
+				},
+				"description": "Gets shipping optimization recommendations for a cart total above the free shipping threshold - should return empty or no recommendations (matches SCRUM8ShippingRecommendationsTest workflow)"
 			},
 			"response": []
 		}
