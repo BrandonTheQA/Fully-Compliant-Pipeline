@@ -150,17 +150,25 @@ export const shippingService = {
         // Check if cache is still valid (within 5 minutes)
         if (now - cachedData.timestamp < CACHE_DURATION) {
           // Return cached data but update cart total and shipping cost
+          // IMPORTANT: Always recalculate based on current cart total and cached threshold
+          // Don't trust cached shippingCost as it may be stale
           const qualifiesForFreeShipping = cartTotal >= cachedData.data.freeShippingThreshold;
           const shippingCost = qualifiesForFreeShipping ? 0 : cachedData.data.defaultShippingCost;
           const remainingAmount = Math.max(0, cachedData.data.freeShippingThreshold - cartTotal);
           
-          return {
-            ...cachedData.data,
-            cartTotal: cartTotal,
-            shippingCost: shippingCost,
-            remainingAmount: remainingAmount,
-            qualifiesForFreeShipping: qualifiesForFreeShipping,
-          };
+          // If cached threshold is 0 or invalid, don't use cache - fetch fresh data
+          if (cachedData.data.freeShippingThreshold <= 0) {
+            // Cache is invalid (threshold should never be 0), continue to fetch from API
+            sessionStorage.removeItem(cacheKey);
+          } else {
+            return {
+              ...cachedData.data,
+              cartTotal: cartTotal,
+              shippingCost: shippingCost,
+              remainingAmount: remainingAmount,
+              qualifiesForFreeShipping: qualifiesForFreeShipping,
+            };
+          }
         }
       } catch (e) {
         // If cache is corrupted, continue to fetch from API

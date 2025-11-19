@@ -63,18 +63,61 @@ public class ShippingRecommendationsPage extends BasePage {
             // Ignore - loading might not be present
         }
         
-        // Now wait for the recommendations element to appear
-        // This will wait up to 20 seconds (from BasePage wait configuration)
-        wait.until(ExpectedConditions.presenceOfElementLocated(SHIPPING_RECOMMENDATIONS));
-        
-        // Additional wait to ensure content is fully loaded
-        wait.until(ExpectedConditions.visibilityOfElementLocated(SHIPPING_RECOMMENDATIONS));
-        
-        // Wait a bit more for API call to complete and recommendations to fully load
+        // Wait for shipping cost calculator to be present first (recommendations depend on it)
         try {
-            Thread.sleep(2000);
+            // Check if shipping cost calculator exists - recommendations are shown below it
+            By shippingCalculator = By.className("shipping-cost-calculator");
+            WebDriverWait calculatorWait = new WebDriverWait(driver, java.time.Duration.ofSeconds(10));
+            try {
+                calculatorWait.until(ExpectedConditions.presenceOfElementLocated(shippingCalculator));
+            } catch (Exception e) {
+                // Calculator might not be present, continue anyway
+            }
+        } catch (Exception e) {
+            // Ignore
+        }
+        
+        // Wait a bit for recommendations API call to complete
+        try {
+            Thread.sleep(3000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+        
+        // Now wait for the recommendations element to appear
+        // This will wait up to 20 seconds (from BasePage wait configuration)
+        try {
+            wait.until(ExpectedConditions.presenceOfElementLocated(SHIPPING_RECOMMENDATIONS));
+            
+            // Additional wait to ensure content is fully loaded
+            wait.until(ExpectedConditions.visibilityOfElementLocated(SHIPPING_RECOMMENDATIONS));
+            
+            // Wait a bit more for API call to complete and recommendations to fully load
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        } catch (Exception e) {
+            // Debug: Check if recommendations should be displayed
+            // Check if cart qualifies for free shipping (which would hide recommendations)
+            try {
+                String pageSource = driver.getPageSource();
+                if (pageSource.contains("FREE") && pageSource.contains("shipping")) {
+                    System.out.println("DEBUG: Page contains FREE shipping text - recommendations may be hidden");
+                }
+                // Check for shipping cost calculator to see current state
+                java.util.List<org.openqa.selenium.WebElement> calculatorElements = 
+                    driver.findElements(By.className("shipping-cost-calculator"));
+                if (!calculatorElements.isEmpty()) {
+                    System.out.println("DEBUG: Shipping cost calculator is present");
+                    String calculatorText = calculatorElements.get(0).getText();
+                    System.out.println("DEBUG: Calculator text: " + calculatorText);
+                }
+            } catch (Exception debugException) {
+                // Ignore debug errors
+            }
+            throw e;
         }
     }
 
