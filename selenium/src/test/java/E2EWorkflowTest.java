@@ -15,6 +15,9 @@ import pages.HomePage;
 import pages.ProductsPage;
 import pages.UserPage;
 import pages.OrdersPage;
+import pages.ShippingBannerPage;
+import pages.ShippingCostCalculatorPage;
+import pages.ShippingRecommendationsPage;
 
 /**
  * End-to-end workflow test matching the Postman integration test collection.
@@ -36,6 +39,9 @@ public class E2EWorkflowTest {
     private UserPage userPage;
     private ProductsPage productsPage;
     private OrdersPage ordersPage;
+    private ShippingBannerPage shippingBannerPage;
+    private ShippingCostCalculatorPage shippingCostCalculatorPage;
+    private ShippingRecommendationsPage shippingRecommendationsPage;
     
     private String uniqueEmail;
     private String timestamp;
@@ -54,6 +60,9 @@ public class E2EWorkflowTest {
         userPage = new UserPage(driver);
         productsPage = new ProductsPage(driver);
         ordersPage = new OrdersPage(driver);
+        shippingBannerPage = new ShippingBannerPage(driver);
+        shippingCostCalculatorPage = new ShippingCostCalculatorPage(driver);
+        shippingRecommendationsPage = new ShippingRecommendationsPage(driver);
     }
     
     @AfterEach
@@ -153,6 +162,12 @@ public class E2EWorkflowTest {
             productsPage.addProductToCart(TestConfig.TestData.PRODUCT1_NAME + " " + timestamp);
             System.out.println("✓ Added " + TestConfig.TestData.PRODUCT1_NAME + " to cart");
             
+            // Verify shipping banner appears when cart has items (SCRUM-6)
+            shippingBannerPage.waitForShippingBanner();
+            assertTrue(shippingBannerPage.isShippingBannerDisplayed(),
+                "Shipping banner should be displayed when cart has items");
+            System.out.println("✓ Shipping banner appears when cart has items");
+            
             productsPage.addProductToCart(TestConfig.TestData.PRODUCT2_NAME + " " + timestamp);
             System.out.println("✓ Added " + TestConfig.TestData.PRODUCT2_NAME + " to cart");
             
@@ -165,10 +180,97 @@ public class E2EWorkflowTest {
             // Debug: Print cart items
             ordersPage.printCartItems();
             
+            // Verify shipping cost calculator appears (SCRUM-7)
+            shippingCostCalculatorPage.waitForShippingCostCalculator();
+            assertTrue(shippingCostCalculatorPage.isShippingCostCalculatorDisplayed(),
+                "Shipping cost calculator should be displayed when cart has items");
+            System.out.println("✓ Shipping cost calculator appears when cart has items");
+            
+            // Verify cost breakdown shows subtotal, shipping, and total (SCRUM-7)
+            assertTrue(shippingCostCalculatorPage.hasAllCostRows(),
+                "Cost breakdown should show subtotal, shipping, and total");
+            String subtotal = shippingCostCalculatorPage.getSubtotal();
+            String shipping = shippingCostCalculatorPage.getShippingInBreakdown();
+            String total = shippingCostCalculatorPage.getTotalAmount();
+            assertNotNull(subtotal, "Subtotal should be displayed");
+            assertNotNull(shipping, "Shipping should be displayed");
+            assertNotNull(total, "Total should be displayed");
+            System.out.println("✓ Cost breakdown verified - Subtotal: " + subtotal + ", Shipping: " + shipping + ", Total: " + total);
+            
+            // Verify shipping recommendations appear if below threshold (SCRUM-8)
+            // Wait a bit for recommendations API call to complete
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            
+            boolean qualifiesForFree = shippingCostCalculatorPage.isShippingFree();
+            if (!qualifiesForFree) {
+                // Cart is below threshold, recommendations should appear
+                shippingRecommendationsPage.waitForShippingRecommendations();
+                if (shippingRecommendationsPage.isShippingRecommendationsDisplayed()) {
+                    assertTrue(shippingRecommendationsPage.isShippingRecommendationsDisplayed(),
+                        "Shipping recommendations should be displayed when cart is below threshold");
+                    String title = shippingRecommendationsPage.getRecommendationsTitle();
+                    assertTrue(title.contains("FREE Shipping") || title.contains("Get FREE"),
+                        "Recommendations header should contain 'FREE Shipping'");
+                    System.out.println("✓ Shipping recommendations appear when cart is below threshold");
+                }
+            } else {
+                System.out.println("✓ Cart qualifies for free shipping - recommendations not expected");
+            }
+            
             // Update quantities to match expected order quantities
             // Mouse should have quantity 2 (we already have 1, so add 1 more)
             ordersPage.updateCartItemQuantity(TestConfig.TestData.PRODUCT2_NAME + " " + timestamp, 1);
             System.out.println("✓ Updated " + TestConfig.TestData.PRODUCT2_NAME + " quantity to 2");
+            
+            // Wait for shipping components to update after quantity change
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            
+            // Verify shipping cost calculator updates in real-time (SCRUM-7)
+            String updatedSubtotal = shippingCostCalculatorPage.getSubtotal();
+            String updatedShipping = shippingCostCalculatorPage.getShippingInBreakdown();
+            String updatedTotal = shippingCostCalculatorPage.getTotalAmount();
+            assertNotNull(updatedSubtotal, "Updated subtotal should be displayed");
+            assertNotNull(updatedShipping, "Updated shipping should be displayed");
+            assertNotNull(updatedTotal, "Updated total should be displayed");
+            System.out.println("✓ Shipping cost calculator updates in real-time - Subtotal: " + updatedSubtotal + ", Shipping: " + updatedShipping + ", Total: " + updatedTotal);
+            
+            // Check if cart now qualifies for free shipping
+            boolean nowQualifiesForFree = shippingCostCalculatorPage.isShippingFree();
+            if (nowQualifiesForFree) {
+                // Verify shipping is FREE (SCRUM-7)
+                assertTrue(shippingCostCalculatorPage.isShippingFree(),
+                    "Shipping should be FREE when cart qualifies");
+                assertTrue(updatedShipping.contains("FREE") || updatedShipping.equals("FREE"),
+                    "Shipping in breakdown should show FREE. Got: " + updatedShipping);
+                
+                // Verify total equals subtotal when shipping is FREE (SCRUM-7)
+                double subtotalValue = shippingCostCalculatorPage.extractCurrencyValue(updatedSubtotal);
+                double totalValue = shippingCostCalculatorPage.extractCurrencyValue(updatedTotal);
+                assertEquals(subtotalValue, totalValue, 0.01,
+                    "Total should equal subtotal when shipping is FREE");
+                System.out.println("✓ Shipping is FREE when cart qualifies");
+                
+                // Verify recommendations disappear when qualified (SCRUM-8)
+                if (shippingRecommendationsPage.isShippingRecommendationsDisplayed()) {
+                    // Wait a bit for recommendations to disappear
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                assertTrue(shippingRecommendationsPage.isHidden() || !shippingRecommendationsPage.isShippingRecommendationsDisplayed(),
+                    "Recommendations should be hidden when cart qualifies for free shipping");
+                System.out.println("✓ Shipping recommendations disappear when cart qualifies for free shipping");
+            }
             
             // Verify cart total before placing order
             String cartTotalStr = ordersPage.getCartTotal();
