@@ -16,7 +16,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <selenium.version>4.15.0</selenium.version>
+        <selenium.version>4.38.0</selenium.version>
         <webdrivermanager.version>5.6.2</webdrivermanager.version>
         <junit.version>5.10.1</junit.version>
         <maven.surefire.version>3.2.2</maven.surefire.version>
@@ -27,6 +27,13 @@
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
+            <version>${selenium.version}</version>
+        </dependency>
+
+        <!-- Selenium DevTools for Chrome CDP support -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-devtools-v142</artifactId>
             <version>${selenium.version}</version>
         </dependency>
 
