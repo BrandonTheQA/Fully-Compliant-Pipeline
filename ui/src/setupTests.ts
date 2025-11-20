@@ -2,6 +2,11 @@
 import '@testing-library/jest-dom';
 /// <reference path="./test-setup.d.ts" />
 
+// Polyfill for TextEncoder/TextDecoder for react-router compatibility
+import { TextEncoder, TextDecoder } from 'util';
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder as typeof global.TextDecoder;
+
 // Expose a mock of the Vite environment for Jest tests so modules relying on
 // configuration (like the shared Axios instance) can resolve values without
 // touching `import.meta`.
