@@ -1222,6 +1222,506 @@
 				"description": "Gets shipping recommendations when cart is just below threshold - tests edge case"
 			},
 			"response": []
+		},
+		{
+			"name": "19. SCRUM-9: Get Shipping Cost for Product ($0.01 - Very Low Price)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has all required fields\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('region');",
+							"    pm.expect(jsonData).to.have.property('cartTotal');",
+							"    pm.expect(jsonData).to.have.property('shippingCost');",
+							"    pm.expect(jsonData).to.have.property('freeShippingThreshold');",
+							"    pm.expect(jsonData).to.have.property('remainingAmount');",
+							"    pm.expect(jsonData).to.have.property('qualifiesForFreeShipping');",
+							"    pm.expect(jsonData).to.have.property('defaultShippingCost');",
+							"});",
+							"",
+							"pm.test(\"Product price matches cartTotal\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.cartTotal).to.eql(0.01);",
+							"});",
+							"",
+							"pm.test(\"Shipping cost is charged for very low price product\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.false;",
+							"    pm.expect(jsonData.shippingCost).to.be.above(0);",
+							"    pm.expect(jsonData.shippingCost).to.eql(jsonData.defaultShippingCost);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=0.01",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "0.01",
+							"description": "Product price $0.01 - very low price edge case"
+						}
+					]
+				},
+				"description": "Gets shipping cost for product priced at $0.01 - tests very low price edge case (SCRUM-9)"
+			},
+			"response": []
+		},
+		{
+			"name": "20. SCRUM-9: Get Shipping Cost for Product ($25.00 - Below Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Product price matches cartTotal\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.cartTotal).to.eql(25.00);",
+							"});",
+							"",
+							"pm.test(\"Shipping cost is charged when below threshold\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.false;",
+							"    pm.expect(jsonData.shippingCost).to.be.above(0);",
+							"});",
+							"",
+							"pm.test(\"Remaining amount calculated correctly\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var expectedRemaining = Math.max(0, jsonData.freeShippingThreshold - jsonData.cartTotal);",
+							"    pm.expect(jsonData.remainingAmount).to.eql(expectedRemaining);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=25.00",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "25.00",
+							"description": "Product price $25.00 - below US threshold"
+						}
+					]
+				},
+				"description": "Gets shipping cost for product priced at $25.00 - below threshold (SCRUM-9)"
+			},
+			"response": []
+		},
+		{
+			"name": "21. SCRUM-9: Get Shipping Cost for Product ($49.99 - Just Below Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Product price matches cartTotal\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.cartTotal).to.eql(49.99);",
+							"});",
+							"",
+							"pm.test(\"Shipping cost is charged when just below threshold\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.false;",
+							"    pm.expect(jsonData.shippingCost).to.be.above(0);",
+							"});",
+							"",
+							"pm.test(\"Remaining amount is $0.01\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.remainingAmount).to.be.closeTo(0.01, 0.01);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=49.99",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "49.99",
+							"description": "Product price $49.99 - $0.01 below US threshold"
+						}
+					]
+				},
+				"description": "Gets shipping cost for product priced at $49.99 - just below threshold edge case (SCRUM-9)"
+			},
+			"response": []
+		},
+		{
+			"name": "22. SCRUM-9: Get Shipping Cost for Product ($50.00 - At Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Product price matches cartTotal\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.cartTotal).to.eql(50.00);",
+							"});",
+							"",
+							"pm.test(\"Product at threshold qualifies for free shipping\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.true;",
+							"    pm.expect(jsonData.shippingCost).to.eql(0);",
+							"    pm.expect(jsonData.remainingAmount).to.eql(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=50.00",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "50.00",
+							"description": "Product price $50.00 - exactly at US threshold"
+						}
+					]
+				},
+				"description": "Gets shipping cost for product priced at $50.00 - at threshold boundary case (SCRUM-9)"
+			},
+			"response": []
+		},
+		{
+			"name": "23. SCRUM-9: Get Shipping Cost for Product ($55.00 - Above Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Product price matches cartTotal\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.cartTotal).to.eql(55.00);",
+							"});",
+							"",
+							"pm.test(\"Product above threshold qualifies for free shipping\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.true;",
+							"    pm.expect(jsonData.shippingCost).to.eql(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=55.00",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "55.00",
+							"description": "Product price $55.00 - above US threshold"
+						}
+					]
+				},
+				"description": "Gets shipping cost for product priced at $55.00 - above threshold (SCRUM-9)"
+			},
+			"response": []
+		},
+		{
+			"name": "24. SCRUM-9: Get Shipping Cost for Product ($100.00 - Well Above Threshold)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Product price matches cartTotal\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.cartTotal).to.eql(100.00);",
+							"});",
+							"",
+							"pm.test(\"Product well above threshold qualifies for free shipping\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.true;",
+							"    pm.expect(jsonData.shippingCost).to.eql(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=100.00",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "100.00",
+							"description": "Product price $100.00 - well above US threshold"
+						}
+					]
+				},
+				"description": "Gets shipping cost for product priced at $100.00 - well above threshold (SCRUM-9)"
+			},
+			"response": []
+		},
+		{
+			"name": "25. SCRUM-9: Get Shipping Cost for Product ($35.00 - US Region)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Region is US\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.region).to.eql('US');",
+							"});",
+							"",
+							"pm.test(\"US threshold is $50.00\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.freeShippingThreshold).to.eql(50.00);",
+							"});",
+							"",
+							"pm.test(\"Product below US threshold has shipping cost\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.false;",
+							"    pm.expect(jsonData.shippingCost).to.be.above(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=35.00&region=US",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "35.00",
+							"description": "Product price $35.00"
+						},
+						{
+							"key": "region",
+							"value": "US",
+							"description": "US region"
+						}
+					]
+				},
+				"description": "Gets shipping cost for product in US region - tests region-specific calculation (SCRUM-9)"
+			},
+			"response": []
+		},
+		{
+			"name": "26. SCRUM-9: Get Shipping Cost for Product ($35.00 - CA Region)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Region is CA\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.region).to.eql('CA');",
+							"});",
+							"",
+							"pm.test(\"CA threshold is $75.00\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.freeShippingThreshold).to.eql(75.00);",
+							"});",
+							"",
+							"pm.test(\"Product below CA threshold has shipping cost\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.false;",
+							"    pm.expect(jsonData.shippingCost).to.be.above(0);",
+							"});",
+							"",
+							"pm.test(\"CA shipping cost may differ from US\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    // CA may have different default shipping cost",
+							"    pm.expect(jsonData.defaultShippingCost).to.be.above(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=35.00&region=CA",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "35.00",
+							"description": "Product price $35.00"
+						},
+						{
+							"key": "region",
+							"value": "CA",
+							"description": "CA region"
+						}
+					]
+				},
+				"description": "Gets shipping cost for product in CA region - tests region-specific calculation with different threshold (SCRUM-9)"
+			},
+			"response": []
+		},
+		{
+			"name": "27. SCRUM-9: Get Shipping Cost for Product ($1000.00 - Very High Price)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Product price matches cartTotal\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.cartTotal).to.eql(1000.00);",
+							"});",
+							"",
+							"pm.test(\"Very high price product qualifies for free shipping\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.qualifiesForFreeShipping).to.be.true;",
+							"    pm.expect(jsonData.shippingCost).to.eql(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/shipping/cost?cartTotal=1000.00",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"shipping",
+						"cost"
+					],
+					"query": [
+						{
+							"key": "cartTotal",
+							"value": "1000.00",
+							"description": "Product price $1000.00 - very high price edge case"
+						}
+					]
+				},
+				"description": "Gets shipping cost for product priced at $1000.00 - very high price edge case (SCRUM-9)"
+			},
+			"response": []
 		}
 	],
 	"variable": [

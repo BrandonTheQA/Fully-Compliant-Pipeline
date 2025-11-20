@@ -175,5 +175,84 @@ describe('shippingService', () => {
     expect(result).toEqual(mockResponse);
     expect(mockProductApi.get).toHaveBeenCalled();
   });
+
+  describe('Product-level shipping cost calls', () => {
+    it('should calculate shipping cost for product price', async () => {
+      const mockResponse = {
+        region: 'US',
+        cartTotal: 35.00,
+        shippingCost: 9.99,
+        freeShippingThreshold: 50.00,
+        remainingAmount: 15.00,
+        qualifiesForFreeShipping: false,
+        defaultShippingCost: 9.99,
+      };
+
+      mockProductApi.get.mockResolvedValue({ data: mockResponse } as any);
+
+      const result = await shippingService.getShippingCost(35.00, 'US');
+
+      expect(result).toEqual(mockResponse);
+      expect(mockProductApi.get).toHaveBeenCalledWith('/shipping/cost?cartTotal=35&region=US');
+    });
+
+    it('should return free shipping for product above threshold', async () => {
+      const mockResponse = {
+        region: 'US',
+        cartTotal: 55.00,
+        shippingCost: 0,
+        freeShippingThreshold: 50.00,
+        remainingAmount: 0,
+        qualifiesForFreeShipping: true,
+        defaultShippingCost: 9.99,
+      };
+
+      mockProductApi.get.mockResolvedValue({ data: mockResponse } as any);
+
+      const result = await shippingService.getShippingCost(55.00, 'US');
+
+      expect(result.qualifiesForFreeShipping).toBe(true);
+      expect(result.shippingCost).toBe(0);
+    });
+
+    it('should handle product at exact threshold', async () => {
+      const mockResponse = {
+        region: 'US',
+        cartTotal: 50.00,
+        shippingCost: 0,
+        freeShippingThreshold: 50.00,
+        remainingAmount: 0,
+        qualifiesForFreeShipping: true,
+        defaultShippingCost: 9.99,
+      };
+
+      mockProductApi.get.mockResolvedValue({ data: mockResponse } as any);
+
+      const result = await shippingService.getShippingCost(50.00, 'US');
+
+      expect(result.qualifiesForFreeShipping).toBe(true);
+      expect(result.shippingCost).toBe(0);
+    });
+
+    it('should handle different regions for product shipping', async () => {
+      const mockResponseCA = {
+        region: 'CA',
+        cartTotal: 35.00,
+        shippingCost: 12.99,
+        freeShippingThreshold: 75.00,
+        remainingAmount: 40.00,
+        qualifiesForFreeShipping: false,
+        defaultShippingCost: 12.99,
+      };
+
+      mockProductApi.get.mockResolvedValue({ data: mockResponseCA } as any);
+
+      const result = await shippingService.getShippingCost(35.00, 'CA');
+
+      expect(result.region).toBe('CA');
+      expect(result.freeShippingThreshold).toBe(75.00);
+      expect(mockProductApi.get).toHaveBeenCalledWith('/shipping/cost?cartTotal=35&region=CA');
+    });
+  });
 });
 

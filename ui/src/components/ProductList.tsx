@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { productService } from '../services/productService';
 import type { Product } from '../types';
+import { ProductShippingPreview } from './ProductShippingPreview';
 import './ProductList.css';
 
 interface ProductListProps {
@@ -13,7 +14,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   onAddToCart, 
   showActions = true 
 }) => {
-  const { products, setProducts, addToCart } = useAppContext();
+  const { products, setProducts, addToCart, shippingRegion } = useAppContext();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -74,6 +75,11 @@ export const ProductList: React.FC<ProductListProps> = ({
               <span className="product-category">{product.category}</span>
               <span className="product-quantity">Stock: {product.quantity}</span>
             </div>
+            <ProductShippingPreview 
+              key={`${product.id}-${shippingRegion || 'default'}`}
+              product={product} 
+              region={shippingRegion} 
+            />
             {showActions && (
               <button
                 onClick={() => handleAddToCart(product)}
