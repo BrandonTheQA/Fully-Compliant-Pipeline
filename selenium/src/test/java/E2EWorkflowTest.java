@@ -212,10 +212,55 @@ public class E2EWorkflowTest {
                 if (shippingRecommendationsPage.isShippingRecommendationsDisplayed()) {
                     assertTrue(shippingRecommendationsPage.isShippingRecommendationsDisplayed(),
                         "Shipping recommendations should be displayed when cart is below threshold");
+                    
+                    // Verify recommendations title
                     String title = shippingRecommendationsPage.getRecommendationsTitle();
                     assertTrue(title.contains("FREE Shipping") || title.contains("Get FREE"),
-                        "Recommendations header should contain 'FREE Shipping'");
+                        "Recommendations header should contain 'FREE Shipping'. Got: " + title);
+                    
+                    // Verify recommendations subtitle shows remaining amount
+                    String subtitle = shippingRecommendationsPage.getRecommendationsSubtitle();
+                    assertNotNull(subtitle, "Recommendations subtitle should be displayed");
+                    assertTrue(subtitle.contains("Add $") && subtitle.contains("more"),
+                        "Subtitle should show remaining amount. Got: " + subtitle);
+                    
+                    // Verify recommendation count
+                    int recommendationCount = shippingRecommendationsPage.getRecommendationCount();
+                    assertTrue(recommendationCount > 0, 
+                        "At least one recommendation should be displayed. Got: " + recommendationCount);
                     System.out.println("✓ Shipping recommendations appear when cart is below threshold");
+                    System.out.println("✓ Recommendations displayed: " + recommendationCount + " products");
+                    
+                    // Verify recommendation product details (name and price)
+                    String firstProductName = shippingRecommendationsPage.getProductName(0);
+                    assertNotNull(firstProductName, "First product name should be displayed");
+                    assertFalse(firstProductName.isEmpty(), "First product name should not be empty");
+                    
+                    String firstProductPrice = shippingRecommendationsPage.getProductPrice(0);
+                    assertNotNull(firstProductPrice, "First product price should be displayed");
+                    assertTrue(firstProductPrice.contains("$"), "Price should contain $ symbol");
+                    System.out.println("✓ First recommendation: " + firstProductName + " - " + firstProductPrice);
+                    
+                    // Add recommended product to cart to test the full flow
+                    double cartTotalBefore = shippingCostCalculatorPage.extractCurrencyValue(
+                        shippingCostCalculatorPage.getSubtotal()
+                    );
+                    shippingRecommendationsPage.clickAddToCart(0);
+                    
+                    // Wait for cart to update
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                    
+                    // Verify cart total updated after adding recommended product
+                    String updatedSubtotalAfterRecommendation = shippingCostCalculatorPage.getSubtotal();
+                    double cartTotalAfter = shippingCostCalculatorPage.extractCurrencyValue(updatedSubtotalAfterRecommendation);
+                    assertTrue(cartTotalAfter > cartTotalBefore, 
+                        "Cart total should increase after adding recommended product. Before: " + 
+                        cartTotalBefore + ", After: " + cartTotalAfter);
+                    System.out.println("✓ Added recommended product to cart - Cart total: $" + cartTotalAfter);
                 }
             } else {
                 System.out.println("✓ Cart qualifies for free shipping - recommendations not expected");
