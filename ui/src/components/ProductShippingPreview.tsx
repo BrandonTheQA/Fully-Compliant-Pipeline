@@ -97,7 +97,6 @@ export const ProductShippingPreview: React.FC<ProductShippingPreviewProps> = Rea
     shippingCost,
     qualifiesForFreeShipping,
     freeShippingThreshold,
-    remainingAmount,
     region: detectedRegion,
   } = shippingData;
 
