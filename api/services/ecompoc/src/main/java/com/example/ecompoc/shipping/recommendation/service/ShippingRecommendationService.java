@@ -321,10 +321,13 @@ public class ShippingRecommendationService {
                     productName = "Product";
                 }
                 
-                // Generate placeholder image URL (using placeholder service)
-                // In production, this would come from product.imageUrl field
-                String imageUrl = String.format("https://via.placeholder.com/300x300?text=%s", 
-                    productName.replaceAll("\\s+", "+"));
+                // Generate image URL
+                // TODO: When ProductResponse.imageUrl field is added, use it here:
+                // String imageUrl = product.getImageUrl() != null && !product.getImageUrl().isEmpty()
+                //     ? product.getImageUrl()
+                //     : generatePlaceholderImageUrl(productName);
+                // For now, generate placeholder image URL
+                String imageUrl = generatePlaceholderImageUrl(productName);
                 
                 // Get product description with null safety
                 String productDescription = product.getDescription();
@@ -363,6 +366,21 @@ public class ShippingRecommendationService {
         }
         
         return paths;
+    }
+    
+    /**
+     * Generate a placeholder image URL for a product.
+     * This method is used when product.imageUrl is not available.
+     * 
+     * @param productName Product name to use in placeholder
+     * @return Placeholder image URL
+     */
+    private String generatePlaceholderImageUrl(String productName) {
+        // Sanitize product name for URL
+        String sanitizedName = productName != null 
+            ? productName.replaceAll("\\s+", "+").replaceAll("[^a-zA-Z0-9+\\-]", "")
+            : "Product";
+        return String.format("https://via.placeholder.com/300x300?text=%s", sanitizedName);
     }
 }
 
