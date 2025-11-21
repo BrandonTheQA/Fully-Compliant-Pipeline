@@ -482,6 +482,7 @@ jobs:
           RELEASE_REPORT_DIR: release-report
           RELEASE_REPORT_ENVIRONMENT: prod
           RELEASE_REPORT_PATH: release-report/release-report-${{ github.run_id }}.md
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           scripts/generate-release-report.sh
