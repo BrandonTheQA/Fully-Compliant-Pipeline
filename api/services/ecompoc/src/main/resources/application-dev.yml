@@ -46,3 +46,6 @@ springdoc:
   packages-to-scan: com.example.ecompoc
   paths-to-match: /api/**
 
+abandoned-cart:
+  enabled: false
+

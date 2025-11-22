@@ -60,3 +60,6 @@ shipping:
       free-shipping-threshold: 50.00
       default-shipping-cost: 5.99
 
+abandoned-cart:
+  enabled: false
+

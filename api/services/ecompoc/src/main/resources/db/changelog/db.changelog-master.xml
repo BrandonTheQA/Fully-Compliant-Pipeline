@@ -8,6 +8,7 @@
     <include file="db/changelog/user/create-users-table.xml"/>
     <include file="db/changelog/product/create-products-table.xml"/>
     <include file="db/changelog/order/create-orders-tables.xml"/>
+    <include file="db/changelog/abandonedcart/create-abandoned-carts-tables.xml"/>
 
 </databaseChangeLog>
 

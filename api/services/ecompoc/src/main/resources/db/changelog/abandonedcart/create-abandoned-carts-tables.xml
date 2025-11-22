@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="create-abandoned-carts-table" author="system">
+        <createTable tableName="abandoned_carts">
+            <column name="id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="email" type="NVARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="cart_items" type="NVARCHAR(MAX)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cart_total" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="shipping_region" type="NVARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="discount_code" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="discount_type" type="NVARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="discount_value" type="DECIMAL(10,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="status" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="abandoned_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <createIndex indexName="idx_abandoned_carts_user_id" tableName="abandoned_carts">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="idx_abandoned_carts_email" tableName="abandoned_carts">
+            <column name="email"/>
+        </createIndex>
+        <createIndex indexName="idx_abandoned_carts_status" tableName="abandoned_carts">
+            <column name="status"/>
+        </createIndex>
+        <createIndex indexName="idx_abandoned_carts_abandoned_at" tableName="abandoned_carts">
+            <column name="abandoned_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create-abandoned-cart-emails-table" author="system">
+        <createTable tableName="abandoned_cart_emails">
+            <column name="id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="abandoned_cart_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email_type" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sent_at" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="opened_at" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="clicked_at" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="abandoned_cart_emails" 
+            baseColumnNames="abandoned_cart_id"
+            constraintName="fk_abandoned_cart_emails_cart"
+            referencedTableName="abandoned_carts"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+            
+        <createIndex indexName="idx_abandoned_cart_emails_cart_id" tableName="abandoned_cart_emails">
+            <column name="abandoned_cart_id"/>
+        </createIndex>
+        <createIndex indexName="idx_abandoned_cart_emails_email_type" tableName="abandoned_cart_emails">
+            <column name="email_type"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+

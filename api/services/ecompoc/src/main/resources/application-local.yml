@@ -33,3 +33,6 @@ logging:
 server:
   port: 8080
 
+abandoned-cart:
+  enabled: false
+
