@@ -67,9 +67,9 @@ fetch_latest_status() {
 
 determine_previous_prod_sha() {
   local deployments_json="$1"
-  local current_found=""
   local previous_sha=""
   local previous_created=""
+  local found_current=""
 
   if [ "$(echo "${deployments_json}" | jq 'length')" -eq 0 ]; then
     echo ""
@@ -86,10 +86,13 @@ determine_previous_prod_sha() {
     if [ "${state}" != "success" ]; then
       continue
     fi
-    if [ -z "${current_found}" ]; then
-      current_found="${sha}"
+
+    if [ -z "${found_current}" ] && [ "${sha}" = "${CURRENT_SHA}" ]; then
+      log "Latest prod deployment already points to current SHA ${CURRENT_SHA}; searching for prior deployment."
+      found_current="true"
       continue
     fi
+
     previous_sha="${sha}"
     previous_created="${created}"
     break
@@ -101,7 +104,7 @@ determine_previous_prod_sha() {
     return 0
   fi
 
-  log "No earlier successful prod deployment found beyond the latest entry."
+  log "No successful prod deployments found before current commit."
   echo ""
 }
 
