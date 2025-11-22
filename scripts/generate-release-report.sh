@@ -76,7 +76,7 @@ determine_previous_prod_sha() {
     return 0
   fi
 
-  echo "${deployments_json}" | jq -c '.[] | {id: .id, sha: .sha, created_at: .created_at}' | while read -r deployment; do
+  while IFS= read -r deployment; do
     local id sha created state statuses
     id="$(echo "${deployment}" | jq -r '.id')"
     sha="$(echo "${deployment}" | jq -r '.sha')"
@@ -96,7 +96,7 @@ determine_previous_prod_sha() {
     previous_sha="${sha}"
     previous_created="${created}"
     break
-  done
+  done < <(echo "${deployments_json}" | jq -c '.[] | {id: .id, sha: .sha, created_at: .created_at}')
 
   if [ -n "${previous_sha}" ]; then
     log "Previous successful prod deployment: ${previous_sha} (${previous_created})"
