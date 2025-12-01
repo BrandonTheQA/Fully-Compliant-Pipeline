@@ -30,9 +30,35 @@ A modern React + TypeScript frontend for the E-Commerce platform that allows use
 
 ### Installation
 
+For production builds and CI/CD, use `npm ci` to install exact versions from the lock file:
+
+```bash
+npm ci
+```
+
+For local development, you can use:
+
 ```bash
 npm install --legacy-peer-deps
 ```
+
+**Note**: The `--legacy-peer-deps` flag is only needed for local development. CI/CD and production builds use `npm ci` which respects the lock file.
+
+### Dependency Security
+
+All npm dependencies in this project are **pinned to exact versions** (no `^` or `~` version ranges) for security purposes. This prevents automatic installation of potentially vulnerable dependency versions.
+
+**Requirements:**
+- All dependencies in `package.json` must use exact versions (e.g., `"1.2.3"` not `"^1.2.3"` or `"~1.2.3"`)
+- The pre-commit hook automatically validates this requirement
+- CI/CD pipeline also validates dependencies are pinned
+- When adding new dependencies, use: `npm install --save-exact <package>@<version>`
+- When updating dependencies, explicitly specify the version: `npm install <package>@<exact-version> --save-exact`
+
+**Validation:**
+- Pre-commit hook runs `scripts/validate-dependencies.sh` automatically
+- Skip validation (not recommended): `SKIP_DEP_VALIDATION=1 git commit`
+- CI/CD will fail if unpinned dependencies are detected
 
 ### Development
 

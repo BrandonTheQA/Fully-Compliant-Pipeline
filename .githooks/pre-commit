@@ -4,6 +4,7 @@ set -euo pipefail
 # Pre-commit hook to run TruffleHog secret scanning and unit tests
 # Commit message format validation is handled by the commit-msg hook
 # Skip TruffleHog with: SKIP_TRUFFLEHOG=1 git commit
+# Skip dependency validation with: SKIP_DEP_VALIDATION=1 git commit
 
 # Get the script directory
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -60,6 +61,19 @@ if [ "${SKIP_TRUFFLEHOG:-}" != "1" ]; then
   echo ""
 else
   echo "Skipping TruffleHog scan (SKIP_TRUFFLEHOG=1)"
+fi
+
+# Run dependency validation (unless skipped)
+if [ "${SKIP_DEP_VALIDATION:-}" != "1" ]; then
+  echo -e "${YELLOW}Validating npm dependencies are pinned to exact versions...${NC}"
+  if ! "$REPO_ROOT/scripts/validate-dependencies.sh"; then
+    echo -e "${RED}Commit aborted due to unpinned dependencies.${NC}"
+    echo -e "${YELLOW}To skip dependency validation: SKIP_DEP_VALIDATION=1 git commit${NC}"
+    exit 1
+  fi
+  echo ""
+else
+  echo "Skipping dependency validation (SKIP_DEP_VALIDATION=1)"
 fi
 
 echo -e "${YELLOW}Running unit tests before commit...${NC}"
