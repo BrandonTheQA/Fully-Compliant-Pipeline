@@ -9,9 +9,7 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SELENIUM_DIR="$SCRIPT_DIR"
 
 # Service ports
-USER_PORT=8081
-PRODUCT_PORT=8082
-ORDER_PORT=8083
+API_PORT=8080
 UI_PORT=8084
 
 # Colors for output
@@ -28,18 +26,8 @@ check_port() {
 check_services_running() {
     local all_running=true
     
-    if ! check_port "$USER_PORT"; then
-        echo -e "${YELLOW}User service (:$USER_PORT) is not running${NC}"
-        all_running=false
-    fi
-    
-    if ! check_port "$PRODUCT_PORT"; then
-        echo -e "${YELLOW}Product service (:$PRODUCT_PORT) is not running${NC}"
-        all_running=false
-    fi
-    
-    if ! check_port "$ORDER_PORT"; then
-        echo -e "${YELLOW}Order service (:$ORDER_PORT) is not running${NC}"
+    if ! check_port "$API_PORT"; then
+        echo -e "${YELLOW}API service (:$API_PORT) is not running${NC}"
         all_running=false
     fi
     
@@ -132,4 +120,3 @@ fi
 echo "========================================="
 
 exit $TEST_EXIT_CODE
-
