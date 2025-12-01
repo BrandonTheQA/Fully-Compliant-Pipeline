@@ -1,9 +1,12 @@
 import config.TestConfig;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import pages.*;
 
 import java.time.Duration;
@@ -12,15 +15,27 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class SCRUM14WishlistTest extends TestConfig {
 
+    private WebDriver driver;
+    private WebDriverWait wait;
+    private String baseUrl = TestConfig.BASE_URL;
+
     private HomePage homePage;
     private UserPage userPage;
     private ProductsPage productsPage;
 
     @BeforeEach
     public void setUp() {
+        driver = TestConfig.createWebDriver();
+        wait = TestConfig.createWebDriverWait(driver);
+        
         homePage = new HomePage(driver);
         userPage = new UserPage(driver);
         productsPage = new ProductsPage(driver);
+    }
+    
+    @AfterEach
+    public void tearDown() {
+        TestConfig.quitWebDriver(driver);
     }
 
     @Test
@@ -30,19 +45,22 @@ public class SCRUM14WishlistTest extends TestConfig {
         String username = "wishlist_user_" + uniqueId;
         String email = "wishlist_" + uniqueId + "@example.com";
 
-        driver.get(baseUrl + "/user");
-        userPage.createUser(username, email, "password123");
-        userPage.login(email, "password123");
+        userPage.navigateToUserPage();
+        userPage.fillUserForm(username, email, "password123");
+        userPage.submitUserForm();
+        
+        // Verify user is created/logged in
+        userPage.verifyUserInfoDisplayed();
 
         // 2. Create a product
         String productName = "Wishlist Product " + uniqueId;
-        driver.get(baseUrl + "/products");
+        productsPage.navigateToProductsPage();
         productsPage.createProduct(productName, "Description", 100.0, 10, "Electronics");
 
         // 3. Add product to wishlist from Product List
         // Wait for product to appear and find the wishlist button
         // Note: The wishlist button is inside the product card
-        WebElement productCard = driver.findElement(By.xpath("//div[@class='product-card' and .//h3[text()='" + productName + "']]"));
+        WebElement productCard = driver.findElement(By.xpath("//div[contains(@class, 'product-card') and .//h3[text()='" + productName + "']]"));
         WebElement wishlistButton = productCard.findElement(By.className("wishlist-button"));
         wishlistButton.click();
         
