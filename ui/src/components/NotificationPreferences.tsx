@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { orderService } from '../services/orderService';
-import type { NotificationPreferences } from '../types';
+import type { NotificationPreferences as NotificationPreferencesType } from '../types';
 import './NotificationPreferences.css';
 
 interface NotificationPreferencesProps {
@@ -8,7 +8,7 @@ interface NotificationPreferencesProps {
 }
 
 export const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ userId }) => {
-  const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
+  const [preferences, setPreferences] = useState<NotificationPreferencesType | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);

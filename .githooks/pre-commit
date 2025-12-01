@@ -100,7 +100,8 @@ run_ui_typecheck() {
   echo -e "${YELLOW}Running TypeScript type check for UI...${NC}"
   cd "$REPO_ROOT/ui"
   
-  if ! npx tsc --noEmit --project tsconfig.app.json; then
+  # Use tsc -b to match the build script behavior (build mode is stricter)
+  if ! npx tsc -b; then
     echo -e "${RED}✗ TypeScript type check failed for UI${NC}"
     return 1
   fi

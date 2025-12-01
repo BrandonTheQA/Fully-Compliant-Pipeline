@@ -37,7 +37,7 @@ export const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
         <p className="no-history">No status history available</p>
       ) : (
         <div className="timeline-container">
-          {sortedHistory.map((entry, index) => (
+          {sortedHistory.map((entry) => (
             <div 
               key={entry.id} 
               className={`timeline-item ${isCurrentStatus(entry.status) ? 'current' : ''}`}

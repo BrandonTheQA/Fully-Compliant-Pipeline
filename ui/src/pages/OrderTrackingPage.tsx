@@ -53,7 +53,7 @@ export const OrderTrackingPage: React.FC = () => {
   const subscribeToUpdates = () => {
     if (!orderId) return;
 
-    const eventSource = orderService.subscribeToOrderUpdates(orderId, (data) => {
+    const eventSource = orderService.subscribeToOrderUpdates(orderId, () => {
       setConnected(true);
       // Reload tracking data when status update is received
       loadTrackingData();

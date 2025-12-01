@@ -349,15 +349,14 @@ public class E2EWorkflowTest {
             // Step 10: Test Order Tracking Page (SCRUM-13)
             System.out.println("\nStep 10: Testing order tracking page...");
             
-            // Extract order ID from the displayed order ID (remove "Order #" prefix if present)
-            String fullOrderId = orderId;
+            // The orderId from getOrderIdDisplayed() should be the full UUID from OrderDetails
+            // Clean it up in case there's any formatting
+            String fullOrderId = orderId.trim();
             if (fullOrderId.contains("#")) {
                 fullOrderId = fullOrderId.split("#")[1].trim();
             }
-            // If order ID is truncated, we need to get the full ID from the order details
-            // For now, we'll use the orderId we got, but in a real scenario we'd extract the full UUID
             
-            // Navigate to tracking page
+            // Navigate to tracking page using the full order ID
             orderTrackingPage.navigateToTrackingPage(fullOrderId);
             orderTrackingPage.verifyTrackingPageLoaded();
             System.out.println("✓ Order tracking page loaded");
