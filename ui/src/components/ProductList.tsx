@@ -3,6 +3,7 @@ import { useAppContext } from '../context/AppContext';
 import { productService } from '../services/productService';
 import type { Product } from '../types';
 import { ProductShippingPreview } from './ProductShippingPreview';
+import { WishlistButton } from './WishlistButton';
 import './ProductList.css';
 
 interface ProductListProps {
@@ -68,7 +69,10 @@ export const ProductList: React.FC<ProductListProps> = ({
       <div className="products-grid">
         {products.map((product) => (
           <div key={product.id} className="product-card">
-            <h3>{product.name}</h3>
+            <div className="product-header" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
+              <h3>{product.name}</h3>
+              {showActions && <WishlistButton product={product} />}
+            </div>
             <p className="product-description">{product.description}</p>
             <div className="product-details">
               <span className="product-price">${product.price.toFixed(2)}</span>

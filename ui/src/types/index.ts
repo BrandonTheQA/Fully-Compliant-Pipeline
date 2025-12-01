@@ -116,6 +116,13 @@ export interface OrderTracking {
   statusHistory: OrderStatusHistory[];
 }
 
+export interface WishlistItem {
+  id: string;
+  userId: string;
+  productId: string;
+  createdAt: string;
+}
+
 export interface NotificationPreferences {
   id?: string;
   userId: string;

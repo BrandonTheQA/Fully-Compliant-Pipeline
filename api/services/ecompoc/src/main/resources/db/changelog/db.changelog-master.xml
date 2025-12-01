@@ -13,6 +13,7 @@
     <include file="db/changelog/order/create-order-status-history-table.xml"/>
     <include file="db/changelog/order/create-notification-preferences-table.xml"/>
     <include file="db/changelog/order/create-order-notifications-table.xml"/>
+    <include file="db/changelog/wishlist/create-wishlist-table.xml"/>
 
 </databaseChangeLog>
 

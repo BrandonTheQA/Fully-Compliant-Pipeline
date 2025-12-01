@@ -6,6 +6,7 @@ import { UserPage } from './pages/UserPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { OrderTrackingPage } from './pages/OrderTrackingPage';
+import { WishlistPage } from './pages/WishlistPage';
 import { useAppContext } from './context/AppContext';
 import './App.css';
 
@@ -22,6 +23,7 @@ const Navigation: React.FC = () => {
           <Link to="/">Home</Link>
           <Link to="/user">User</Link>
           <Link to="/products">Products</Link>
+          <Link to="/wishlist">Wishlist</Link>
           <Link to="/orders">
             Orders {cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
           </Link>
@@ -40,6 +42,7 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/user" element={<UserPage />} />
           <Route path="/products" element={<ProductsPage />} />
+          <Route path="/wishlist" element={<WishlistPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:orderId/tracking" element={<OrderTrackingPage />} />
         </Routes>

@@ -220,5 +220,27 @@ public class ProductsPage extends BasePage {
             }
         }
     }
+
+    /**
+     * Convenience method to create a product in one go.
+     * 
+     * @param name Product name
+     * @param description Product description
+     * @param price Product price
+     * @param quantity Product quantity
+     * @param category Product category
+     */
+    public void createProduct(String name, String description, double price, int quantity, String category) {
+        clickCreateNewProductButton();
+        fillProductForm(name, description, price, quantity, category);
+        submitProductForm();
+        verifySuccessMessage();
+        // Hide form to clear space or just wait
+        try {
+            wait.until(ExpectedConditions.elementToBeClickable(HIDE_CREATE_FORM_BUTTON)).click();
+        } catch (Exception e) {
+            // Ignore if button not clickable
+        }
+    }
 }
 

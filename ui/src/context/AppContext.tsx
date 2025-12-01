@@ -2,11 +2,13 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import type { ReactNode } from 'react';
 import type { User, Product, CartItem, RecommendationResponse } from '../types';
 import { shippingService } from '../services/shippingService';
+import { wishlistService } from '../services/wishlistService';
 
 interface AppContextType {
   user: User | null;
   cart: CartItem[];
   products: Product[];
+  wishlist: Product[];
   shippingRegion: string | null;
   freeShippingThreshold: number | null;
   shippingCost: number | null;
@@ -19,6 +21,8 @@ interface AppContextType {
   updateCartQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   setProducts: (products: Product[]) => void;
+  addToWishlist: (product: Product) => Promise<void>;
+  removeFromWishlist: (productId: string) => Promise<void>;
   updateShippingInfo: () => Promise<void>;
   updateRecommendations: () => Promise<void>;
 }
@@ -49,6 +53,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   });
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [wishlist, setWishlist] = useState<Product[]>([]);
   
   const [shippingRegion, setShippingRegion] = useState<string | null>(() => {
     if (typeof window !== 'undefined' && window.sessionStorage) {
@@ -204,12 +209,51 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cart, shippingRegion, freeShippingThreshold]); // Update when cart or shipping info changes
 
+  // Wishlist Logic
+  const loadWishlist = useCallback(async () => {
+    if (user) {
+      try {
+        const wishlistProducts = await wishlistService.getWishlist(user.userId);
+        setWishlist(wishlistProducts);
+      } catch (error) {
+        console.error('Failed to load wishlist:', error);
+      }
+    } else {
+      setWishlist([]);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadWishlist();
+  }, [loadWishlist]);
+
+  const addToWishlist = async (product: Product) => {
+    if (!user) return;
+    try {
+      await wishlistService.addItem(user.userId, product.id);
+      await loadWishlist();
+    } catch (error) {
+      console.error('Failed to add to wishlist:', error);
+    }
+  };
+
+  const removeFromWishlist = async (productId: string) => {
+    if (!user) return;
+    try {
+      await wishlistService.removeItem(user.userId, productId);
+      await loadWishlist();
+    } catch (error) {
+      console.error('Failed to remove from wishlist:', error);
+    }
+  };
+
   const setUser = (user: User | null) => {
     setUserState(user);
     if (user) {
       sessionStorage.setItem('user', JSON.stringify(user));
     } else {
       sessionStorage.removeItem('user');
+      setWishlist([]); // Clear wishlist on logout
     }
   };
 
@@ -260,6 +304,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     user,
     cart,
     products,
+    wishlist,
     shippingRegion,
     freeShippingThreshold,
     shippingCost,
@@ -272,10 +317,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     updateCartQuantity,
     clearCart,
     setProducts,
+    addToWishlist,
+    removeFromWishlist,
     updateShippingInfo,
     updateRecommendations,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
-
