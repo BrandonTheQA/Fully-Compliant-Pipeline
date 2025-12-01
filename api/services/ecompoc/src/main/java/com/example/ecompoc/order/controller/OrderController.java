@@ -2,6 +2,10 @@ package com.example.ecompoc.order.controller;
 
 import com.example.ecompoc.order.dto.CreateOrderRequest;
 import com.example.ecompoc.order.dto.OrderResponse;
+import com.example.ecompoc.order.dto.OrderStatusHistoryResponse;
+import com.example.ecompoc.order.dto.OrderTrackingResponse;
+import com.example.ecompoc.order.dto.UpdateOrderStatusRequest;
+import com.example.ecompoc.order.enums.OrderStatus;
 import com.example.ecompoc.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -92,6 +96,73 @@ public class OrderController {
             @PathVariable String userId) {
         List<OrderResponse> orders = orderService.getUserOrders(userId);
         return ResponseEntity.ok(orders);
+    }
+    
+    /**
+     * GET /api/orders/{id}/tracking - Get order tracking information
+     */
+    @Operation(
+            summary = "Get order tracking information",
+            description = "Retrieves comprehensive tracking information for the specified order ID"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tracking information found",
+                    content = @Content(schema = @Schema(implementation = OrderTrackingResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Order not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/orders/{id}/tracking")
+    public ResponseEntity<OrderTrackingResponse> getOrderTracking(
+            @Parameter(description = "Order ID", required = true, example = "123")
+            @PathVariable String id) {
+        OrderTrackingResponse tracking = orderService.getOrderTracking(id);
+        return ResponseEntity.ok(tracking);
+    }
+    
+    /**
+     * PUT /api/orders/{id}/status - Update order status
+     */
+    @Operation(
+            summary = "Update order status",
+            description = "Updates the status of an order (admin/internal use). Triggers notifications and status history."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Order status updated successfully",
+                    content = @Content(schema = @Schema(implementation = OrderResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid request data"),
+            @ApiResponse(responseCode = "404", description = "Order not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PutMapping("/orders/{id}/status")
+    public ResponseEntity<OrderResponse> updateOrderStatus(
+            @Parameter(description = "Order ID", required = true, example = "123")
+            @PathVariable String id,
+            @Parameter(description = "Status update request", required = true)
+            @Valid @RequestBody UpdateOrderStatusRequest request) {
+        OrderStatus newStatus = OrderStatus.valueOf(request.getStatus().toUpperCase());
+        OrderResponse order = orderService.updateOrderStatus(id, newStatus, request.getLocation(), request.getNotes());
+        return ResponseEntity.ok(order);
+    }
+    
+    /**
+     * GET /api/orders/{id}/status-history - Get order status history
+     */
+    @Operation(
+            summary = "Get order status history",
+            description = "Retrieves the complete status history timeline for the specified order ID"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Status history retrieved successfully",
+                    content = @Content(schema = @Schema(implementation = OrderStatusHistoryResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Order not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/orders/{id}/status-history")
+    public ResponseEntity<List<OrderStatusHistoryResponse>> getOrderStatusHistory(
+            @Parameter(description = "Order ID", required = true, example = "123")
+            @PathVariable String id) {
+        List<OrderStatusHistoryResponse> history = orderService.getOrderStatusHistoryResponse(id);
+        return ResponseEntity.ok(history);
     }
 }
 

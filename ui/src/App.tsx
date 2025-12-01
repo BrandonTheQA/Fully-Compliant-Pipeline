@@ -5,6 +5,7 @@ import { Home } from './pages/Home';
 import { UserPage } from './pages/UserPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { OrdersPage } from './pages/OrdersPage';
+import { OrderTrackingPage } from './pages/OrderTrackingPage';
 import { useAppContext } from './context/AppContext';
 import './App.css';
 
@@ -40,6 +41,7 @@ function AppContent() {
           <Route path="/user" element={<UserPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/orders" element={<OrdersPage />} />
+          <Route path="/orders/:orderId/tracking" element={<OrderTrackingPage />} />
         </Routes>
       </main>
     </Router>

@@ -34,6 +34,27 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
+    @Column(name = "tracking_number", columnDefinition = "VARCHAR(100)")
+    private String trackingNumber;
+    
+    @Column(name = "carrier_name", columnDefinition = "NVARCHAR(50)")
+    private String carrierName;
+    
+    @Column(name = "shipping_address", columnDefinition = "NVARCHAR(500)")
+    private String shippingAddress;
+    
+    @Column(name = "estimated_delivery_date")
+    private LocalDateTime estimatedDeliveryDate;
+    
+    @Column(name = "shipping_method", columnDefinition = "NVARCHAR(50)")
+    private String shippingMethod;
+    
+    @Column(name = "current_location", columnDefinition = "NVARCHAR(200)")
+    private String currentLocation;
+    
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<OrderStatusHistory> statusHistory = new ArrayList<>();
+    
     // Default constructor
     public Order() {}
     
@@ -127,6 +148,62 @@ public class Order {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public String getTrackingNumber() {
+        return trackingNumber;
+    }
+    
+    public void setTrackingNumber(String trackingNumber) {
+        this.trackingNumber = trackingNumber;
+    }
+    
+    public String getCarrierName() {
+        return carrierName;
+    }
+    
+    public void setCarrierName(String carrierName) {
+        this.carrierName = carrierName;
+    }
+    
+    public String getShippingAddress() {
+        return shippingAddress;
+    }
+    
+    public void setShippingAddress(String shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
+    
+    public LocalDateTime getEstimatedDeliveryDate() {
+        return estimatedDeliveryDate;
+    }
+    
+    public void setEstimatedDeliveryDate(LocalDateTime estimatedDeliveryDate) {
+        this.estimatedDeliveryDate = estimatedDeliveryDate;
+    }
+    
+    public String getShippingMethod() {
+        return shippingMethod;
+    }
+    
+    public void setShippingMethod(String shippingMethod) {
+        this.shippingMethod = shippingMethod;
+    }
+    
+    public String getCurrentLocation() {
+        return currentLocation;
+    }
+    
+    public void setCurrentLocation(String currentLocation) {
+        this.currentLocation = currentLocation;
+    }
+    
+    public List<OrderStatusHistory> getStatusHistory() {
+        return statusHistory;
+    }
+    
+    public void setStatusHistory(List<OrderStatusHistory> statusHistory) {
+        this.statusHistory = statusHistory;
     }
 }
 

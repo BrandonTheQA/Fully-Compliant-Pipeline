@@ -1,0 +1,144 @@
+.status-timeline {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-timeline h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 20px;
+}
+
+.no-history {
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+.timeline-container {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 24px;
+  padding-left: 30px;
+}
+
+.timeline-item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 24px;
+  bottom: -24px;
+  width: 2px;
+  background: #e0e0e0;
+}
+
+.timeline-item.current::before {
+  background: #4caf50;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px #e0e0e0;
+}
+
+.timeline-item.current .timeline-marker {
+  background: #4caf50;
+  box-shadow: 0 0 0 2px #4caf50;
+}
+
+.current-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.timeline-content {
+  background: #f9f9f9;
+  border-radius: 6px;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.timeline-item.current .timeline-content {
+  background: #e8f5e9;
+  border-left: 4px solid #4caf50;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.status-name {
+  font-weight: 600;
+  color: #333;
+  text-transform: capitalize;
+  font-size: 16px;
+}
+
+.timeline-date {
+  color: #666;
+  font-size: 14px;
+}
+
+.timeline-location {
+  margin-top: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.timeline-location strong {
+  color: #333;
+}
+
+.timeline-notes {
+  margin-top: 8px;
+  color: #555;
+  font-size: 14px;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .timeline-content {
+    padding: 12px;
+  }
+}

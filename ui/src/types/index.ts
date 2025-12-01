@@ -96,3 +96,34 @@ export interface CartModificationSuggestion {
   savings: number;
 }
 
+export interface OrderStatusHistory {
+  id: string;
+  status: string;
+  location?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface OrderTracking {
+  orderId: string;
+  status: string;
+  trackingNumber?: string;
+  carrierName?: string;
+  estimatedDeliveryDate?: string;
+  shippingAddress?: string;
+  shippingMethod?: string;
+  currentLocation?: string;
+  statusHistory: OrderStatusHistory[];
+}
+
+export interface NotificationPreferences {
+  id?: string;
+  userId: string;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  phoneNumber?: string;
+  notificationFrequency: 'ALL' | 'CRITICAL_ONLY' | 'NONE';
+  createdAt?: string;
+  updatedAt?: string;
+}
+

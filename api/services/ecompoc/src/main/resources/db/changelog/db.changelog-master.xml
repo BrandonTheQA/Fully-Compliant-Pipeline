@@ -9,6 +9,10 @@
     <include file="db/changelog/product/create-products-table.xml"/>
     <include file="db/changelog/order/create-orders-tables.xml"/>
     <include file="db/changelog/abandonedcart/create-abandoned-carts-tables.xml"/>
+    <include file="db/changelog/order/add-order-tracking-fields.xml"/>
+    <include file="db/changelog/order/create-order-status-history-table.xml"/>
+    <include file="db/changelog/order/create-notification-preferences-table.xml"/>
+    <include file="db/changelog/order/create-order-notifications-table.xml"/>
 
 </databaseChangeLog>
 

@@ -63,3 +63,15 @@ shipping:
 abandoned-cart:
   enabled: false
 
+order-tracking:
+  enabled: true
+  real-time-updates:
+    enabled: true
+  email:
+    enabled: true
+  sms:
+    enabled: false
+  processing-days: 2
+  carrier-api:
+    enabled: false
+

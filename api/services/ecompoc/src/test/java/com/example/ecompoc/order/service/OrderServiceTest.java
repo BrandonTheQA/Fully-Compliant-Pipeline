@@ -6,7 +6,9 @@ import com.example.ecompoc.order.exception.OrderNotFoundException;
 import com.example.ecompoc.order.exception.OrderValidationException;
 import com.example.ecompoc.order.model.Order;
 import com.example.ecompoc.order.model.OrderItem;
+import com.example.ecompoc.order.notification.service.OrderNotificationService;
 import com.example.ecompoc.order.repository.OrderRepository;
+import com.example.ecompoc.order.repository.OrderStatusHistoryRepository;
 import com.example.ecompoc.product.model.Product;
 import com.example.ecompoc.product.repository.ProductRepository;
 import com.example.ecompoc.user.repository.UserRepository;
@@ -38,12 +40,36 @@ class OrderServiceTest {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private OrderStatusHistoryRepository statusHistoryRepository;
+
+    @Mock
+    private DeliveryDateCalculatorService deliveryDateCalculatorService;
+
+    @Mock
+    private TrackingNumberService trackingNumberService;
+
+    @Mock
+    private OrderNotificationService notificationService;
+
+    @Mock
+    private OrderTrackingStreamService streamService;
+
     private OrderService orderService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        orderService = new OrderService(orderRepository, userRepository, productRepository);
+        orderService = new OrderService(
+            orderRepository,
+            userRepository,
+            productRepository,
+            statusHistoryRepository,
+            deliveryDateCalculatorService,
+            trackingNumberService,
+            notificationService,
+            streamService
+        );
     }
 
     @Test
@@ -61,6 +87,9 @@ class OrderServiceTest {
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(deliveryDateCalculatorService.calculateEstimatedDelivery(any(Order.class)))
+            .thenReturn(java.time.LocalDateTime.now().plusDays(5));
+        when(statusHistoryRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         // When
         OrderResponse response = orderService.createOrder(request);

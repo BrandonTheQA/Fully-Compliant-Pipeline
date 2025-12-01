@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="create-order-notifications-table" author="system">
+        <createTable tableName="order_notifications">
+            <column name="id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notification_type" type="NVARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="NVARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sent_at" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="error_message" type="NVARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="order_notifications" 
+            baseColumnNames="order_id"
+            constraintName="fk_order_notifications_order"
+            referencedTableName="orders"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+            
+        <createIndex indexName="idx_order_notifications_order_id" tableName="order_notifications">
+            <column name="order_id"/>
+        </createIndex>
+        <createIndex indexName="idx_order_notifications_status" tableName="order_notifications">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

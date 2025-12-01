@@ -1,0 +1,628 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1763658528073" clover="3.2.0">
+  <project timestamp="1763658528073" name="All files">
+    <metrics statements="553" coveredstatements="490" conditionals="315" coveredconditionals="253" methods="114" coveredmethods="98" elements="982" coveredelements="841" complexity="0" loc="553" ncloc="553" packages="4" files="19" classes="19"/>
+    <package name="components">
+      <metrics statements="235" coveredstatements="220" conditionals="155" coveredconditionals="132" methods="50" coveredmethods="45"/>
+      <file name="OrderDetails.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/components/OrderDetails.tsx">
+        <metrics statements="4" coveredstatements="4" conditionals="8" coveredconditionals="5" methods="2" coveredmethods="2"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="9" count="2" type="stmt"/>
+        <line num="10" count="3" type="stmt"/>
+        <line num="51" count="6" type="stmt"/>
+      </file>
+      <file name="OrderForm.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/components/OrderForm.tsx">
+        <metrics statements="53" coveredstatements="46" conditionals="31" coveredconditionals="27" methods="11" coveredmethods="9"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="4" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="13" count="2" type="stmt"/>
+        <line num="28" count="77" type="stmt"/>
+        <line num="30" count="77" type="cond" truecount="2" falsecount="0"/>
+        <line num="31" count="77" type="stmt"/>
+        <line num="32" count="77" type="stmt"/>
+        <line num="33" count="77" type="stmt"/>
+        <line num="35" count="77" type="stmt"/>
+        <line num="36" count="41" type="stmt"/>
+        <line num="40" count="77" type="cond" truecount="4" falsecount="0"/>
+        <line num="41" count="77" type="stmt"/>
+        <line num="43" count="77" type="stmt"/>
+        <line num="44" count="5" type="stmt"/>
+        <line num="46" count="5" type="cond" truecount="0" falsecount="1"/>
+        <line num="47" count="0" type="stmt"/>
+        <line num="48" count="0" type="stmt"/>
+        <line num="51" count="5" type="cond" truecount="0" falsecount="1"/>
+        <line num="52" count="0" type="stmt"/>
+        <line num="53" count="0" type="stmt"/>
+        <line num="56" count="5" type="stmt"/>
+        <line num="57" count="5" type="stmt"/>
+        <line num="59" count="5" type="stmt"/>
+        <line num="60" count="5" type="stmt"/>
+        <line num="62" count="5" type="stmt"/>
+        <line num="68" count="5" type="stmt"/>
+        <line num="69" count="4" type="stmt"/>
+        <line num="70" count="4" type="stmt"/>
+        <line num="72" count="4" type="cond" truecount="1" falsecount="0"/>
+        <line num="73" count="2" type="stmt"/>
+        <line num="76" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="78" count="5" type="stmt"/>
+        <line num="82" count="77" type="cond" truecount="1" falsecount="0"/>
+        <line num="83" count="4" type="stmt"/>
+        <line num="91" count="1" type="stmt"/>
+        <line num="92" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="93" count="1" type="stmt"/>
+        <line num="104" count="73" type="cond" truecount="1" falsecount="0"/>
+        <line num="105" count="10" type="stmt"/>
+        <line num="114" count="63" type="cond" truecount="1" falsecount="0"/>
+        <line num="115" count="24" type="stmt"/>
+        <line num="124" count="39" type="stmt"/>
+        <line num="129" count="39" type="stmt"/>
+        <line num="137" count="1" type="stmt"/>
+        <line num="144" count="1" type="stmt"/>
+        <line num="155" count="1" type="stmt"/>
+        <line num="173" count="0" type="stmt"/>
+        <line num="174" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="175" count="0" type="stmt"/>
+      </file>
+      <file name="ProductForm.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/components/ProductForm.tsx">
+        <metrics statements="36" coveredstatements="36" conditionals="19" coveredconditionals="18" methods="4" coveredmethods="4"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="8" count="110" type="stmt"/>
+        <line num="9" count="110" type="stmt"/>
+        <line num="16" count="110" type="stmt"/>
+        <line num="17" count="110" type="stmt"/>
+        <line num="18" count="110" type="stmt"/>
+        <line num="20" count="110" type="stmt"/>
+        <line num="21" count="11" type="stmt"/>
+        <line num="22" count="11" type="stmt"/>
+        <line num="23" count="11" type="stmt"/>
+        <line num="24" count="11" type="stmt"/>
+        <line num="26" count="11" type="stmt"/>
+        <line num="28" count="11" type="cond" truecount="1" falsecount="0"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="31" count="10" type="cond" truecount="1" falsecount="0"/>
+        <line num="32" count="1" type="stmt"/>
+        <line num="34" count="9" type="cond" truecount="1" falsecount="0"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="37" count="8" type="cond" truecount="1" falsecount="0"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="40" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="41" count="1" type="stmt"/>
+        <line num="44" count="6" type="stmt"/>
+        <line num="45" count="4" type="stmt"/>
+        <line num="46" count="4" type="stmt"/>
+        <line num="47" count="4" type="stmt"/>
+        <line num="55" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="57" count="10" type="stmt"/>
+        <line num="61" count="110" type="stmt"/>
+        <line num="62" count="59" type="stmt"/>
+        <line num="63" count="59" type="stmt"/>
+        <line num="69" count="110" type="stmt"/>
+      </file>
+      <file name="ProductList.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/components/ProductList.tsx">
+        <metrics statements="32" coveredstatements="28" conditionals="12" coveredconditionals="9" methods="6" coveredmethods="4"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="6" count="2" type="stmt"/>
+        <line num="13" count="2" type="stmt"/>
+        <line num="17" count="52" type="stmt"/>
+        <line num="18" count="52" type="stmt"/>
+        <line num="19" count="52" type="stmt"/>
+        <line num="21" count="52" type="stmt"/>
+        <line num="22" count="18" type="stmt"/>
+        <line num="25" count="52" type="stmt"/>
+        <line num="26" count="18" type="stmt"/>
+        <line num="27" count="18" type="stmt"/>
+        <line num="28" count="18" type="stmt"/>
+        <line num="29" count="18" type="stmt"/>
+        <line num="30" count="16" type="stmt"/>
+        <line num="32" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="34" count="17" type="stmt"/>
+        <line num="38" count="52" type="stmt"/>
+        <line num="39" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="42" count="0" type="stmt"/>
+        <line num="46" count="52" type="cond" truecount="1" falsecount="0"/>
+        <line num="47" count="27" type="stmt"/>
+        <line num="50" count="25" type="cond" truecount="1" falsecount="0"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="61" count="24" type="cond" truecount="1" falsecount="0"/>
+        <line num="62" count="19" type="stmt"/>
+        <line num="65" count="5" type="stmt"/>
+        <line num="70" count="8" type="stmt"/>
+        <line num="85" count="0" type="stmt"/>
+      </file>
+      <file name="ProductShippingPreview.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/components/ProductShippingPreview.tsx">
+        <metrics statements="40" coveredstatements="39" conditionals="29" coveredconditionals="25" methods="8" coveredmethods="8"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="2" count="3" type="stmt"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="5" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="16" count="34" type="stmt"/>
+        <line num="17" count="34" type="stmt"/>
+        <line num="18" count="34" type="stmt"/>
+        <line num="21" count="34" type="stmt"/>
+        <line num="22" count="34" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="34" type="stmt"/>
+        <line num="25" count="20" type="stmt"/>
+        <line num="26" count="20" type="stmt"/>
+        <line num="28" count="20" type="stmt"/>
+        <line num="29" count="14" type="stmt"/>
+        <line num="30" count="14" type="stmt"/>
+        <line num="32" count="14" type="stmt"/>
+        <line num="34" count="14" type="stmt"/>
+        <line num="39" count="13" type="cond" truecount="1" falsecount="0"/>
+        <line num="40" count="13" type="stmt"/>
+        <line num="41" count="13" type="stmt"/>
+        <line num="44" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="45" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="46" count="1" type="stmt"/>
+        <line num="48" count="1" type="stmt"/>
+        <line num="62" count="20" type="stmt"/>
+        <line num="63" count="14" type="stmt"/>
+        <line num="66" count="20" type="stmt"/>
+        <line num="67" count="20" type="stmt"/>
+        <line num="68" count="20" type="cond" truecount="1" falsecount="0"/>
+        <line num="69" count="20" type="stmt"/>
+        <line num="75" count="34" type="cond" truecount="3" falsecount="0"/>
+        <line num="76" count="18" type="stmt"/>
+        <line num="84" count="16" type="cond" truecount="2" falsecount="1"/>
+        <line num="85" count="0" type="stmt"/>
+        <line num="92" count="16" type="cond" truecount="1" falsecount="0"/>
+        <line num="93" count="2" type="stmt"/>
+        <line num="101" count="14" type="stmt"/>
+        <line num="103" count="14" type="stmt"/>
+        <line num="143" count="4" type="stmt"/>
+      </file>
+      <file name="ShippingBanner.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/components/ShippingBanner.tsx">
+        <metrics statements="6" coveredstatements="6" conditionals="6" coveredconditionals="6" methods="1" coveredmethods="1"/>
+        <line num="2" count="8" type="stmt"/>
+        <line num="10" count="8" type="stmt"/>
+        <line num="15" count="31" type="stmt"/>
+        <line num="16" count="31" type="stmt"/>
+        <line num="17" count="31" type="stmt"/>
+        <line num="19" count="31" type="stmt"/>
+      </file>
+      <file name="ShippingCostCalculator.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/components/ShippingCostCalculator.tsx">
+        <metrics statements="5" coveredstatements="5" conditionals="10" coveredconditionals="10" methods="1" coveredmethods="1"/>
+        <line num="2" count="3" type="stmt"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="22" count="51" type="stmt"/>
+        <line num="24" count="51" type="stmt"/>
+      </file>
+      <file name="ShippingRecommendations.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/components/ShippingRecommendations.tsx">
+        <metrics statements="24" coveredstatements="24" conditionals="26" coveredconditionals="22" methods="12" coveredmethods="12"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="16" count="56" type="stmt"/>
+        <line num="19" count="56" type="cond" truecount="1" falsecount="0"/>
+        <line num="20" count="24" type="stmt"/>
+        <line num="28" count="32" type="cond" truecount="4" falsecount="0"/>
+        <line num="29" count="17" type="stmt"/>
+        <line num="32" count="15" type="stmt"/>
+        <line num="33" count="3" type="stmt"/>
+        <line num="36" count="15" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="38" count="2" type="stmt"/>
+        <line num="42" count="15" type="stmt"/>
+        <line num="65" count="6" type="stmt"/>
+        <line num="68" count="1" type="stmt"/>
+        <line num="79" count="6" type="stmt"/>
+        <line num="105" count="3" type="stmt"/>
+        <line num="110" count="18" type="stmt"/>
+        <line num="121" count="19" type="stmt"/>
+        <line num="124" count="1" type="stmt"/>
+        <line num="133" count="1" type="stmt"/>
+        <line num="148" count="3" type="stmt"/>
+        <line num="152" count="19" type="stmt"/>
+      </file>
+      <file name="UserForm.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/components/UserForm.tsx">
+        <metrics statements="35" coveredstatements="32" conditionals="14" coveredconditionals="10" methods="5" coveredmethods="4"/>
+        <line num="1" count="2" type="stmt"/>
+        <line num="2" count="2" type="stmt"/>
+        <line num="3" count="2" type="stmt"/>
+        <line num="5" count="2" type="stmt"/>
+        <line num="7" count="2" type="stmt"/>
+        <line num="8" count="30" type="stmt"/>
+        <line num="9" count="30" type="stmt"/>
+        <line num="14" count="30" type="stmt"/>
+        <line num="15" count="30" type="stmt"/>
+        <line num="16" count="30" type="stmt"/>
+        <line num="18" count="30" type="stmt"/>
+        <line num="19" count="3" type="stmt"/>
+        <line num="20" count="3" type="stmt"/>
+        <line num="21" count="3" type="stmt"/>
+        <line num="22" count="3" type="stmt"/>
+        <line num="24" count="3" type="stmt"/>
+        <line num="26" count="3" type="cond" truecount="0" falsecount="1"/>
+        <line num="27" count="0" type="stmt"/>
+        <line num="29" count="3" type="cond" truecount="0" falsecount="1"/>
+        <line num="30" count="0" type="stmt"/>
+        <line num="32" count="3" type="cond" truecount="3" falsecount="0"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="36" count="2" type="stmt"/>
+        <line num="37" count="1" type="stmt"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="39" count="1" type="stmt"/>
+        <line num="41" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="43" count="3" type="stmt"/>
+        <line num="47" count="30" type="stmt"/>
+        <line num="48" count="9" type="stmt"/>
+        <line num="49" count="9" type="stmt"/>
+        <line num="52" count="30" type="cond" truecount="1" falsecount="0"/>
+        <line num="53" count="3" type="stmt"/>
+        <line num="60" count="0" type="stmt"/>
+        <line num="68" count="27" type="stmt"/>
+      </file>
+    </package>
+    <package name="context">
+      <metrics statements="122" coveredstatements="108" conditionals="56" coveredconditionals="46" methods="32" coveredmethods="27"/>
+      <file name="AppContext.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/context/AppContext.tsx">
+        <metrics statements="122" coveredstatements="108" conditionals="56" coveredconditionals="46" methods="32" coveredmethods="27"/>
+        <line num="1" count="9" type="stmt"/>
+        <line num="4" count="9" type="stmt"/>
+        <line num="26" count="9" type="stmt"/>
+        <line num="28" count="9" type="stmt"/>
+        <line num="29" count="415" type="stmt"/>
+        <line num="30" count="415" type="cond" truecount="0" falsecount="1"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="33" count="415" type="stmt"/>
+        <line num="40" count="9" type="stmt"/>
+        <line num="41" count="235" type="stmt"/>
+        <line num="42" count="87" type="stmt"/>
+        <line num="43" count="87" type="cond" truecount="2" falsecount="0"/>
+        <line num="46" count="235" type="stmt"/>
+        <line num="47" count="87" type="stmt"/>
+        <line num="48" count="87" type="cond" truecount="2" falsecount="0"/>
+        <line num="51" count="235" type="stmt"/>
+        <line num="53" count="235" type="stmt"/>
+        <line num="54" count="87" type="cond" truecount="3" falsecount="0"/>
+        <line num="55" count="87" type="stmt"/>
+        <line num="56" count="87" type="cond" truecount="2" falsecount="0"/>
+        <line num="58" count="0" type="stmt"/>
+        <line num="61" count="235" type="stmt"/>
+        <line num="62" count="87" type="cond" truecount="3" falsecount="0"/>
+        <line num="63" count="87" type="stmt"/>
+        <line num="64" count="87" type="cond" truecount="2" falsecount="0"/>
+        <line num="66" count="0" type="stmt"/>
+        <line num="69" count="235" type="stmt"/>
+        <line num="70" count="87" type="cond" truecount="3" falsecount="0"/>
+        <line num="71" count="87" type="stmt"/>
+        <line num="72" count="87" type="cond" truecount="2" falsecount="0"/>
+        <line num="74" count="0" type="stmt"/>
+        <line num="77" count="235" type="stmt"/>
+        <line num="78" count="87" type="cond" truecount="3" falsecount="0"/>
+        <line num="79" count="87" type="stmt"/>
+        <line num="80" count="87" type="cond" truecount="2" falsecount="0"/>
+        <line num="82" count="0" type="stmt"/>
+        <line num="85" count="235" type="stmt"/>
+        <line num="86" count="235" type="stmt"/>
+        <line num="87" count="235" type="stmt"/>
+        <line num="89" count="235" type="stmt"/>
+        <line num="90" count="126" type="stmt"/>
+        <line num="92" count="126" type="stmt"/>
+        <line num="93" count="51" type="stmt"/>
+        <line num="98" count="126" type="stmt"/>
+        <line num="103" count="72" type="stmt"/>
+        <line num="104" count="65" type="stmt"/>
+        <line num="105" count="65" type="stmt"/>
+        <line num="106" count="65" type="stmt"/>
+        <line num="109" count="65" type="cond" truecount="3" falsecount="0"/>
+        <line num="110" count="65" type="stmt"/>
+        <line num="111" count="65" type="stmt"/>
+        <line num="112" count="65" type="stmt"/>
+        <line num="113" count="65" type="stmt"/>
+        <line num="117" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="118" count="7" type="stmt"/>
+        <line num="119" count="7" type="stmt"/>
+        <line num="120" count="7" type="stmt"/>
+        <line num="121" count="0" type="stmt"/>
+        <line num="124" count="7" type="cond" truecount="1" falsecount="1"/>
+        <line num="126" count="7" type="stmt"/>
+        <line num="127" count="7" type="stmt"/>
+        <line num="128" count="7" type="stmt"/>
+        <line num="129" count="7" type="stmt"/>
+        <line num="131" count="7" type="cond" truecount="3" falsecount="0"/>
+        <line num="132" count="7" type="stmt"/>
+        <line num="133" count="7" type="stmt"/>
+        <line num="134" count="7" type="stmt"/>
+        <line num="135" count="7" type="stmt"/>
+        <line num="141" count="235" type="stmt"/>
+        <line num="142" count="87" type="stmt"/>
+        <line num="147" count="235" type="stmt"/>
+        <line num="148" count="99" type="cond" truecount="3" falsecount="0"/>
+        <line num="149" count="39" type="stmt"/>
+        <line num="155" count="235" type="stmt"/>
+        <line num="157" count="110" type="cond" truecount="1" falsecount="0"/>
+        <line num="158" count="23" type="stmt"/>
+        <line num="162" count="110" type="stmt"/>
+        <line num="165" count="110" type="stmt"/>
+        <line num="166" count="8" type="stmt"/>
+        <line num="168" count="8" type="stmt"/>
+        <line num="169" count="0" type="stmt"/>
+        <line num="174" count="8" type="stmt"/>
+        <line num="177" count="8" type="stmt"/>
+        <line num="184" count="8" type="stmt"/>
+        <line num="186" count="0" type="stmt"/>
+        <line num="187" count="0" type="stmt"/>
+        <line num="189" count="8" type="stmt"/>
+        <line num="195" count="235" type="stmt"/>
+        <line num="196" count="110" type="stmt"/>
+        <line num="199" count="110" type="stmt"/>
+        <line num="200" count="110" type="cond" truecount="1" falsecount="0"/>
+        <line num="201" count="110" type="stmt"/>
+        <line num="207" count="235" type="stmt"/>
+        <line num="208" count="2" type="stmt"/>
+        <line num="209" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="210" count="2" type="stmt"/>
+        <line num="212" count="0" type="stmt"/>
+        <line num="216" count="235" type="stmt"/>
+        <line num="217" count="99" type="cond" truecount="2" falsecount="0"/>
+        <line num="218" count="27" type="stmt"/>
+        <line num="220" count="72" type="stmt"/>
+        <line num="224" count="235" type="stmt"/>
+        <line num="225" count="3" type="stmt"/>
+        <line num="226" count="3" type="stmt"/>
+        <line num="227" count="3" type="cond" truecount="0" falsecount="1"/>
+        <line num="228" count="0" type="stmt"/>
+        <line num="229" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="234" count="3" type="stmt"/>
+        <line num="238" count="235" type="stmt"/>
+        <line num="239" count="2" type="stmt"/>
+        <line num="242" count="235" type="stmt"/>
+        <line num="243" count="2" type="cond" truecount="0" falsecount="1"/>
+        <line num="244" count="0" type="stmt"/>
+        <line num="245" count="0" type="stmt"/>
+        <line num="247" count="2" type="stmt"/>
+        <line num="248" count="2" type="stmt"/>
+        <line num="249" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="254" count="235" type="stmt"/>
+        <line num="255" count="5" type="stmt"/>
+        <line num="256" count="5" type="stmt"/>
+        <line num="259" count="235" type="stmt"/>
+        <line num="279" count="235" type="stmt"/>
+      </file>
+    </package>
+    <package name="pages">
+      <metrics statements="70" coveredstatements="57" conditionals="47" coveredconditionals="41" methods="16" coveredmethods="11"/>
+      <file name="Home.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/pages/Home.tsx">
+        <metrics statements="9" coveredstatements="9" conditionals="10" coveredconditionals="10" methods="2" coveredmethods="2"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="22" type="stmt"/>
+        <line num="10" count="22" type="stmt"/>
+        <line num="11" count="10" type="stmt"/>
+        <line num="15" count="22" type="stmt"/>
+      </file>
+      <file name="OrdersPage.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/pages/OrdersPage.tsx">
+        <metrics statements="44" coveredstatements="31" conditionals="29" coveredconditionals="23" methods="10" coveredmethods="5"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="10" count="74" type="stmt"/>
+        <line num="11" count="74" type="stmt"/>
+        <line num="12" count="74" type="stmt"/>
+        <line num="13" count="74" type="stmt"/>
+        <line num="14" count="74" type="stmt"/>
+        <line num="15" count="74" type="stmt"/>
+        <line num="17" count="74" type="stmt"/>
+        <line num="18" count="25" type="cond" truecount="3" falsecount="0"/>
+        <line num="19" count="10" type="stmt"/>
+        <line num="23" count="74" type="stmt"/>
+        <line num="24" count="20" type="cond" truecount="0" falsecount="1"/>
+        <line num="26" count="20" type="stmt"/>
+        <line num="27" count="20" type="stmt"/>
+        <line num="28" count="20" type="stmt"/>
+        <line num="29" count="20" type="stmt"/>
+        <line num="30" count="18" type="stmt"/>
+        <line num="32" count="2" type="cond" truecount="1" falsecount="1"/>
+        <line num="34" count="20" type="stmt"/>
+        <line num="38" count="74" type="stmt"/>
+        <line num="39" count="0" type="stmt"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="41" count="0" type="stmt"/>
+        <line num="44" count="74" type="stmt"/>
+        <line num="45" count="0" type="stmt"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="47" count="0" type="stmt"/>
+        <line num="48" count="0" type="stmt"/>
+        <line num="49" count="0" type="stmt"/>
+        <line num="50" count="0" type="stmt"/>
+        <line num="52" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="54" count="0" type="stmt"/>
+        <line num="58" count="74" type="stmt"/>
+        <line num="64" count="0" type="stmt"/>
+        <line num="71" count="10" type="stmt"/>
+        <line num="72" count="10" type="stmt"/>
+        <line num="97" count="40" type="stmt"/>
+        <line num="115" count="0" type="stmt"/>
+      </file>
+      <file name="ProductsPage.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/pages/ProductsPage.tsx">
+        <metrics statements="13" coveredstatements="13" conditionals="8" coveredconditionals="8" methods="3" coveredmethods="3"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="34" type="stmt"/>
+        <line num="10" count="34" type="stmt"/>
+        <line num="12" count="34" type="stmt"/>
+        <line num="13" count="4" type="stmt"/>
+        <line num="17" count="34" type="stmt"/>
+        <line num="22" count="9" type="stmt"/>
+      </file>
+      <file name="UserPage.tsx" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/pages/UserPage.tsx">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="3" count="1" type="stmt"/>
+        <line num="5" count="1" type="stmt"/>
+        <line num="6" count="3" type="stmt"/>
+      </file>
+    </package>
+    <package name="services">
+      <metrics statements="126" coveredstatements="105" conditionals="57" coveredconditionals="34" methods="16" coveredmethods="15"/>
+      <file name="api.ts" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/services/api.ts">
+        <metrics statements="10" coveredstatements="9" conditionals="3" coveredconditionals="2" methods="2" coveredmethods="1"/>
+        <line num="1" count="20" type="stmt"/>
+        <line num="5" count="20" type="stmt"/>
+        <line num="8" count="20" type="stmt"/>
+        <line num="16" count="20" type="stmt"/>
+        <line num="17" count="0" type="stmt"/>
+        <line num="19" count="68" type="cond" truecount="2" falsecount="1"/>
+        <line num="20" count="68" type="stmt"/>
+        <line num="26" count="20" type="stmt"/>
+        <line num="27" count="20" type="stmt"/>
+        <line num="28" count="20" type="stmt"/>
+      </file>
+      <file name="orderService.ts" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/services/orderService.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="6" count="2" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="17" count="1" type="stmt"/>
+      </file>
+      <file name="productService.ts" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/services/productService.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="1" count="4" type="stmt"/>
+        <line num="4" count="4" type="stmt"/>
+        <line num="6" count="2" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="17" count="1" type="stmt"/>
+      </file>
+      <file name="shippingService.ts" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/services/shippingService.ts">
+        <metrics statements="94" coveredstatements="74" conditionals="54" coveredconditionals="32" methods="6" coveredmethods="6"/>
+        <line num="1" count="11" type="stmt"/>
+        <line num="22" count="11" type="stmt"/>
+        <line num="23" count="11" type="stmt"/>
+        <line num="24" count="11" type="stmt"/>
+        <line num="25" count="11" type="stmt"/>
+        <line num="26" count="11" type="stmt"/>
+        <line num="43" count="11" type="stmt"/>
+        <line num="57" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="60" count="7" type="stmt"/>
+        <line num="61" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="62" count="3" type="stmt"/>
+        <line num="63" count="3" type="stmt"/>
+        <line num="64" count="2" type="stmt"/>
+        <line num="67" count="2" type="cond" truecount="1" falsecount="0"/>
+        <line num="69" count="1" type="stmt"/>
+        <line num="82" count="6" type="stmt"/>
+        <line num="83" count="6" type="stmt"/>
+        <line num="84" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="85" count="6" type="stmt"/>
+        <line num="87" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="88" count="5" type="stmt"/>
+        <line num="91" count="6" type="stmt"/>
+        <line num="92" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="94" count="6" type="stmt"/>
+        <line num="95" count="5" type="stmt"/>
+        <line num="98" count="5" type="stmt"/>
+        <line num="105" count="5" type="stmt"/>
+        <line num="113" count="5" type="stmt"/>
+        <line num="116" count="1" type="stmt"/>
+        <line num="124" count="1" type="stmt"/>
+        <line num="141" count="119" type="cond" truecount="2" falsecount="0"/>
+        <line num="144" count="119" type="stmt"/>
+        <line num="145" count="119" type="cond" truecount="0" falsecount="1"/>
+        <line num="146" count="0" type="stmt"/>
+        <line num="147" count="0" type="stmt"/>
+        <line num="148" count="0" type="stmt"/>
+        <line num="151" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="155" count="0" type="stmt"/>
+        <line num="156" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="157" count="0" type="stmt"/>
+        <line num="160" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="162" count="0" type="stmt"/>
+        <line num="164" count="0" type="stmt"/>
+        <line num="179" count="119" type="stmt"/>
+        <line num="180" count="119" type="stmt"/>
+        <line num="181" count="119" type="cond" truecount="1" falsecount="0"/>
+        <line num="182" count="119" type="stmt"/>
+        <line num="184" count="119" type="cond" truecount="1" falsecount="0"/>
+        <line num="185" count="49" type="stmt"/>
+        <line num="188" count="119" type="stmt"/>
+        <line num="189" count="119" type="cond" truecount="1" falsecount="1"/>
+        <line num="191" count="119" type="stmt"/>
+        <line num="192" count="4" type="stmt"/>
+        <line num="195" count="4" type="stmt"/>
+        <line num="203" count="4" type="stmt"/>
+        <line num="211" count="4" type="stmt"/>
+        <line num="214" count="61" type="stmt"/>
+        <line num="224" count="61" type="stmt"/>
+        <line num="245" count="7" type="cond" truecount="2" falsecount="2"/>
+        <line num="248" count="7" type="cond" truecount="1" falsecount="1"/>
+        <line num="251" count="7" type="stmt"/>
+        <line num="252" count="7" type="cond" truecount="0" falsecount="1"/>
+        <line num="253" count="0" type="stmt"/>
+        <line num="254" count="0" type="stmt"/>
+        <line num="255" count="0" type="stmt"/>
+        <line num="258" count="0" type="cond" truecount="0" falsecount="1"/>
+        <line num="259" count="0" type="stmt"/>
+        <line num="267" count="7" type="stmt"/>
+        <line num="268" count="7" type="stmt"/>
+        <line num="269" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="270" count="7" type="stmt"/>
+        <line num="272" count="7" type="cond" truecount="1" falsecount="2"/>
+        <line num="273" count="0" type="stmt"/>
+        <line num="275" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="276" count="7" type="stmt"/>
+        <line num="278" count="7" type="cond" truecount="1" falsecount="0"/>
+        <line num="279" count="7" type="stmt"/>
+        <line num="282" count="7" type="stmt"/>
+        <line num="283" count="7" type="cond" truecount="1" falsecount="1"/>
+        <line num="285" count="7" type="stmt"/>
+        <line num="286" count="0" type="stmt"/>
+        <line num="289" count="0" type="stmt"/>
+        <line num="297" count="0" type="stmt"/>
+        <line num="300" count="7" type="stmt"/>
+        <line num="301" count="7" type="stmt"/>
+        <line num="309" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="310" count="1" type="stmt"/>
+        <line num="311" count="1" type="stmt"/>
+        <line num="313" count="1" type="stmt"/>
+        <line num="314" count="1" type="cond" truecount="1" falsecount="2"/>
+        <line num="315" count="0" type="stmt"/>
+        <line num="320" count="1" type="stmt"/>
+        <line num="321" count="3" type="cond" truecount="4" falsecount="0"/>
+        <line num="324" count="2" type="stmt"/>
+      </file>
+      <file name="userService.ts" path="/Users/brandongarlock/projects/Fully-Compliant-Pipeline/ui/src/services/userService.ts">
+        <metrics statements="6" coveredstatements="6" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="1" count="3" type="stmt"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="6" count="2" type="stmt"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="11" count="2" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

@@ -1,0 +1,106 @@
+.tracking-header {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.tracking-header-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.order-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.order-info h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #333;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-processing {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+.status-shipped {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.status-delivered {
+  background: #d4edda;
+  color: #155724;
+}
+
+.tracking-number {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tracking-number strong {
+  color: #666;
+}
+
+.tracking-code {
+  font-family: monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0066cc;
+  background: #f0f8ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.carrier-name {
+  color: #666;
+  font-size: 14px;
+}
+
+.delivery-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+  color: #666;
+}
+
+.delivery-info strong {
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .tracking-header-main {
+    flex-direction: column;
+  }
+  
+  .order-info {
+    width: 100%;
+  }
+}
