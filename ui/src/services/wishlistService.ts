@@ -1,5 +1,5 @@
 import { productApi } from './api';
-import { Product } from '../types';
+import type { Product } from '../types';
 
 export const wishlistService = {
   getWishlist: async (userId: string): Promise<Product[]> => {

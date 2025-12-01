@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Product } from '../types';
+import type { Product } from '../types';
 import './WishlistButton.css';
 
 interface WishlistButtonProps {
