@@ -66,6 +66,7 @@ public class E2EWorkflowTest {
         shippingBannerPage = new ShippingBannerPage(driver);
         shippingCostCalculatorPage = new ShippingCostCalculatorPage(driver);
         shippingRecommendationsPage = new ShippingRecommendationsPage(driver);
+        wishlistPage = new pages.WishlistPage(driver);
     }
     
     @AfterEach
@@ -160,10 +161,38 @@ public class E2EWorkflowTest {
              * System.out.println("✓ All 3 products verified in product list");
              */
             
+            // Step 6b: Test Wishlist Flow (SCRUM-14)
+            System.out.println("\nStep 6b: Testing Wishlist Flow...");
+            String product1Name = TestConfig.TestData.PRODUCT1_NAME + " " + timestamp;
+            
+            // Add Product 1 to wishlist
+            productsPage.addProductToWishlist(product1Name);
+            System.out.println("✓ Added " + TestConfig.TestData.PRODUCT1_NAME + " to wishlist");
+            
+            // Navigate to Wishlist Page
+            wishlistPage.navigateToWishlist();
+            
+            // Verify product is in wishlist
+            assertTrue(wishlistPage.isProductInWishlist(product1Name), 
+                "Product should be in wishlist: " + product1Name);
+            System.out.println("✓ Verified product in wishlist");
+            
+            // Move to Cart
+            wishlistPage.moveProductToCart(product1Name);
+            System.out.println("✓ Moved product from wishlist to cart");
+            
+            // Verify product removed from wishlist
+            wishlistPage.verifyProductRemovedFromWishlist(product1Name);
+            System.out.println("✓ Verified product removed from wishlist");
+            
+            // Navigate back to products page to continue workflow
+            productsPage.navigateToProductsPage();
+            
             // Step 7: Add products to cart and create order
-            System.out.println("\nStep 7: Adding products to cart...");
-            productsPage.addProductToCart(TestConfig.TestData.PRODUCT1_NAME + " " + timestamp);
-            System.out.println("✓ Added " + TestConfig.TestData.PRODUCT1_NAME + " to cart");
+            System.out.println("\nStep 7: Adding remaining products to cart...");
+            // Product 1 was added via wishlist, so we skip adding it again here
+            // productsPage.addProductToCart(TestConfig.TestData.PRODUCT1_NAME + " " + timestamp);
+            System.out.println("✓ Added " + TestConfig.TestData.PRODUCT1_NAME + " to cart (via wishlist)");
             
             // Verify shipping banner appears when cart has items (SCRUM-6)
             shippingBannerPage.waitForShippingBanner();

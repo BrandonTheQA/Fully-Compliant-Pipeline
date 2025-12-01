@@ -222,6 +222,24 @@ public class ProductsPage extends BasePage {
     }
 
     /**
+     * Adds a product to wishlist by clicking its wishlist button.
+     * 
+     * @param productName Product name to add to wishlist
+     */
+    public void addProductToWishlist(String productName) {
+        // Locate the product card first
+        WebElement productCard = wait.until(ExpectedConditions.visibilityOfElementLocated(
+            By.xpath("//div[contains(@class, 'product-card') and .//h3[text()='" + productName + "']]")
+        ));
+        
+        WebElement wishlistButton = productCard.findElement(By.className("wishlist-button"));
+        wishlistButton.click();
+        
+        // Verify button state changed
+        wait.until(ExpectedConditions.attributeContains(wishlistButton, "class", "active"));
+    }
+
+    /**
      * Convenience method to create a product in one go.
      * 
      * @param name Product name
