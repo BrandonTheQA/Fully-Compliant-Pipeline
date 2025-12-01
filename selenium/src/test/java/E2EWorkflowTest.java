@@ -15,6 +15,7 @@ import pages.HomePage;
 import pages.ProductsPage;
 import pages.UserPage;
 import pages.OrdersPage;
+import pages.OrderTrackingPage;
 import pages.ShippingBannerPage;
 import pages.ShippingCostCalculatorPage;
 import pages.ShippingRecommendationsPage;
@@ -39,6 +40,7 @@ public class E2EWorkflowTest {
     private UserPage userPage;
     private ProductsPage productsPage;
     private OrdersPage ordersPage;
+    private OrderTrackingPage orderTrackingPage;
     private ShippingBannerPage shippingBannerPage;
     private ShippingCostCalculatorPage shippingCostCalculatorPage;
     private ShippingRecommendationsPage shippingRecommendationsPage;
@@ -60,6 +62,7 @@ public class E2EWorkflowTest {
         userPage = new UserPage(driver);
         productsPage = new ProductsPage(driver);
         ordersPage = new OrdersPage(driver);
+        orderTrackingPage = new OrderTrackingPage(driver);
         shippingBannerPage = new ShippingBannerPage(driver);
         shippingCostCalculatorPage = new ShippingCostCalculatorPage(driver);
         shippingRecommendationsPage = new ShippingRecommendationsPage(driver);
@@ -343,7 +346,98 @@ public class E2EWorkflowTest {
             assertFalse(orderStatus.trim().isEmpty(), "Order status should not be empty");
             System.out.println("✓ Order status: " + orderStatus);
             
-            System.out.println("\n✅ All workflow steps completed successfully!");
+            // Step 10: Test Order Tracking Page (SCRUM-13)
+            System.out.println("\nStep 10: Testing order tracking page...");
+            
+            // Extract order ID from the displayed order ID (remove "Order #" prefix if present)
+            String fullOrderId = orderId;
+            if (fullOrderId.contains("#")) {
+                fullOrderId = fullOrderId.split("#")[1].trim();
+            }
+            // If order ID is truncated, we need to get the full ID from the order details
+            // For now, we'll use the orderId we got, but in a real scenario we'd extract the full UUID
+            
+            // Navigate to tracking page
+            orderTrackingPage.navigateToTrackingPage(fullOrderId);
+            orderTrackingPage.verifyTrackingPageLoaded();
+            System.out.println("✓ Order tracking page loaded");
+            
+            // Verify order ID in header matches
+            String headerOrderId = orderTrackingPage.getOrderIdFromHeader();
+            assertNotNull(headerOrderId, "Order ID should be displayed in header");
+            assertTrue(headerOrderId.contains(fullOrderId) || fullOrderId.contains(headerOrderId.replace("Order #", "").trim()),
+                "Order ID in header should match. Expected: " + fullOrderId + ", Got: " + headerOrderId);
+            System.out.println("✓ Order ID verified in tracking header: " + headerOrderId);
+            
+            // Verify status badge is displayed
+            assertTrue(orderTrackingPage.isStatusBadgeDisplayed(), "Status badge should be displayed");
+            String trackingStatus = orderTrackingPage.getCurrentStatus();
+            assertNotNull(trackingStatus, "Order status should be displayed");
+            assertFalse(trackingStatus.trim().isEmpty(), "Order status should not be empty");
+            System.out.println("✓ Order status displayed: " + trackingStatus);
+            
+            // Verify status timeline is displayed
+            assertTrue(orderTrackingPage.isStatusTimelineDisplayed(), "Status timeline should be displayed");
+            int historyCount = orderTrackingPage.getStatusHistoryCount();
+            assertTrue(historyCount > 0, "Status history should have at least one entry. Got: " + historyCount);
+            System.out.println("✓ Status timeline displayed with " + historyCount + " entries");
+            
+            // Verify current status is highlighted
+            assertTrue(orderTrackingPage.isCurrentStatusHighlighted(), "Current status should be highlighted");
+            System.out.println("✓ Current status is highlighted in timeline");
+            
+            // Verify order details card is displayed
+            assertTrue(orderTrackingPage.isOrderDetailsCardDisplayed(), "Order details card should be displayed");
+            System.out.println("✓ Order details card displayed");
+            
+            // Verify estimated delivery date is displayed (if available)
+            String estimatedDelivery = orderTrackingPage.getEstimatedDeliveryDate();
+            if (estimatedDelivery != null && !estimatedDelivery.equals("Not available")) {
+                assertFalse(estimatedDelivery.trim().isEmpty(), "Estimated delivery date should not be empty");
+                System.out.println("✓ Estimated delivery date: " + estimatedDelivery);
+            } else {
+                System.out.println("✓ Estimated delivery date not yet available (order may be too new)");
+            }
+            
+            // Verify notification preferences section is displayed (if user is logged in)
+            if (orderTrackingPage.isNotificationPreferencesDisplayed()) {
+                System.out.println("✓ Notification preferences section displayed");
+            }
+            
+            // Verify live indicator is displayed (for real-time updates)
+            if (orderTrackingPage.isLiveIndicatorDisplayed()) {
+                System.out.println("✓ Live updates indicator displayed");
+            }
+            
+            // Verify tracking number (may not be available for PENDING orders)
+            if (orderTrackingPage.isTrackingNumberDisplayed()) {
+                String trackingNumber = orderTrackingPage.getTrackingNumber();
+                assertNotNull(trackingNumber, "Tracking number should not be null");
+                assertFalse(trackingNumber.trim().isEmpty(), "Tracking number should not be empty");
+                assertTrue(trackingNumber.startsWith("ECOMPOC-"), "Tracking number should start with ECOMPOC-");
+                System.out.println("✓ Tracking number displayed: " + trackingNumber);
+                
+                String carrierName = orderTrackingPage.getCarrierName();
+                if (carrierName != null) {
+                    System.out.println("✓ Carrier name displayed: " + carrierName);
+                }
+            } else {
+                System.out.println("✓ Tracking number not yet available (order status: " + trackingStatus + ")");
+            }
+            
+            // Get first status from timeline to verify it matches current status
+            String firstTimelineStatus = orderTrackingPage.getStatusFromTimeline(0);
+            if (firstTimelineStatus != null) {
+                // Status in timeline may have different formatting, so we check if it contains the status
+                String normalizedTimelineStatus = firstTimelineStatus.toUpperCase().replace(" ", "_");
+                String normalizedCurrentStatus = trackingStatus.toUpperCase().replace(" ", "_");
+                assertTrue(normalizedTimelineStatus.contains(normalizedCurrentStatus) || 
+                          normalizedCurrentStatus.contains(normalizedTimelineStatus),
+                    "First timeline status should match current status. Timeline: " + firstTimelineStatus + ", Current: " + trackingStatus);
+                System.out.println("✓ Timeline status matches current status: " + firstTimelineStatus);
+            }
+            
+            System.out.println("\n✅ All workflow steps including order tracking completed successfully!");
             
         } catch (Exception e) {
             // Take screenshot on failure

@@ -30,6 +30,7 @@ public class OrdersPage extends BasePage {
     private static final By ORDER_CARDS = By.cssSelector(".order-card");
     private static final By QUANTITY_CONTROL_PLUS = By.xpath("//div[contains(@class, 'quantity-control')]//button[contains(text(), '+')]");
     private static final By QUANTITY_CONTROL_MINUS = By.xpath("//div[contains(@class, 'quantity-control')]//button[contains(text(), '-')]");
+    private static final By ORDER_CARD_LINK = By.cssSelector(".order-card");
 
     public OrdersPage(WebDriver driver) {
         super(driver);
@@ -214,6 +215,42 @@ public class OrdersPage extends BasePage {
                 break;
             }
         }
+    }
+    
+    /**
+     * Clicks on an order card to view order details or navigate to tracking.
+     * 
+     * @param orderId Order ID to click on (searches for order card containing this ID)
+     */
+    public void clickOrderCard(String orderId) {
+        // Find order card that contains the order ID
+        List<WebElement> orderCards = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(ORDER_CARDS));
+        for (WebElement card : orderCards) {
+            if (card.getText().contains(orderId)) {
+                card.click();
+                break;
+            }
+        }
+    }
+    
+    /**
+     * Gets the order ID from the first order card in the list.
+     * 
+     * @return Order ID text
+     */
+    public String getFirstOrderId() {
+        List<WebElement> orderCards = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(ORDER_CARDS));
+        if (!orderCards.isEmpty()) {
+            // Order ID is typically in an h3 element
+            WebElement orderIdElement = orderCards.get(0).findElement(By.cssSelector("h3"));
+            String orderText = orderIdElement.getText();
+            // Extract order ID (format: "Order #12345678")
+            if (orderText.contains("#")) {
+                return orderText.split("#")[1].trim();
+            }
+            return orderText;
+        }
+        return null;
     }
 }
 
