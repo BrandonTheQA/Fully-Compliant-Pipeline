@@ -19,6 +19,7 @@ buildNumber.properties
 .settings/
 .project
 .classpath
+.cursor/
 
 # OS
 .DS_Store
