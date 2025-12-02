@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Quick script to run specific Selenium tests before committing
-# This runs the SCRUM7ShippingCostCalculatorTest which has been failing in CI
+# This runs a quick smoke test to verify basic functionality
 # Usage: ./scripts/run-selenium-tests-quick.sh [BASE_URL]
 #   BASE_URL defaults to http://localhost:8084
 
@@ -23,7 +23,7 @@ NC='\033[0m' # No Color
 echo "========================================="
 echo "Quick Selenium Test Check"
 echo "========================================="
-echo "Running: SCRUM7ShippingCostCalculatorTest"
+echo "Running: E2EWorkflowTest (smoke test)"
 echo "Base URL: $BASE_URL"
 echo ""
 
@@ -65,9 +65,9 @@ fi
 
 cd "$SELENIUM_DIR"
 
-# Run only the SCRUM7ShippingCostCalculatorTest
+# Run the E2E workflow test as a smoke test
 echo "Running tests..."
-BASE_URL="$BASE_URL" mvn clean test -Dtest=SCRUM7ShippingCostCalculatorTest
+BASE_URL="$BASE_URL" mvn clean test -Dtest=E2EWorkflowTest
 
 # Capture exit code
 TEST_EXIT_CODE=$?
@@ -75,9 +75,9 @@ TEST_EXIT_CODE=$?
 echo ""
 echo "========================================="
 if [ $TEST_EXIT_CODE -eq 0 ]; then
-    echo -e "${GREEN}✅ SCRUM7ShippingCostCalculatorTest passed!${NC}"
+    echo -e "${GREEN}✅ E2E Workflow Test passed!${NC}"
 else
-    echo -e "${RED}❌ SCRUM7ShippingCostCalculatorTest failed${NC}"
+    echo -e "${RED}❌ E2E Workflow Test failed${NC}"
     echo -e "${YELLOW}Fix the issues before committing.${NC}"
 fi
 echo "========================================="
