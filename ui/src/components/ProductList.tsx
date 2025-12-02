@@ -45,7 +45,11 @@ export const ProductList: React.FC<ProductListProps> = ({
   };
 
   if (loading) {
-    return <div className="loading">Loading products...</div>;
+    return (
+      <div className="loading" role="status" aria-live="polite" aria-busy="true">
+        Loading products...
+      </div>
+    );
   }
 
   if (error) {

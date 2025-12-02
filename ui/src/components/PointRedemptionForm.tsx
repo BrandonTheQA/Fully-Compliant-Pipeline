@@ -90,6 +90,7 @@ export const PointRedemptionForm: React.FC<PointRedemptionFormProps> = ({
           value={pointsToRedeem || ''}
           onChange={(e) => setPointsToRedeem(parseInt(e.target.value) || 0)}
           placeholder={`Minimum: ${MIN_REDEMPTION}`}
+          aria-describedby={error ? 'points-error' : undefined}
         />
       </div>
 
@@ -100,7 +101,9 @@ export const PointRedemptionForm: React.FC<PointRedemptionFormProps> = ({
       )}
 
       {error && (
-        <div className="point-redemption-form-error">{error}</div>
+        <div id="points-error" className="point-redemption-form-error" role="alert">
+          {error}
+        </div>
       )}
 
       <div className="point-redemption-form-quick-options">

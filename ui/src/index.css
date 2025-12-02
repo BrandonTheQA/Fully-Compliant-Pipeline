@@ -95,6 +95,11 @@ code {
   cursor: not-allowed;
 }
 
+.btn:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
 .form-group {
   margin-bottom: 1rem;
 }
@@ -116,7 +121,8 @@ code {
 
 .form-group input:focus,
 .form-group textarea:focus {
-  outline: none;
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
 }

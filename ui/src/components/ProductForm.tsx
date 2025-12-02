@@ -80,6 +80,7 @@ export const ProductForm: React.FC = () => {
             onChange={handleChange}
             required
             disabled={loading}
+            aria-describedby={error && (error.includes('name') || error.includes('Name')) ? 'product-error' : undefined}
           />
         </div>
 
@@ -93,6 +94,7 @@ export const ProductForm: React.FC = () => {
             required
             disabled={loading}
             rows={3}
+            aria-describedby={error && error.includes('Description') ? 'product-error' : undefined}
           />
         </div>
 
@@ -109,6 +111,7 @@ export const ProductForm: React.FC = () => {
               min="0"
               step="0.01"
               disabled={loading}
+              aria-describedby={error && error.includes('Price') ? 'product-error' : undefined}
             />
           </div>
 
@@ -123,6 +126,7 @@ export const ProductForm: React.FC = () => {
               required
               min="0"
               disabled={loading}
+              aria-describedby={error && error.includes('Quantity') ? 'product-error' : undefined}
             />
           </div>
         </div>
@@ -137,11 +141,20 @@ export const ProductForm: React.FC = () => {
             onChange={handleChange}
             required
             disabled={loading}
+            aria-describedby={error && error.includes('Category') ? 'product-error' : undefined}
           />
         </div>
 
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">Product created successfully!</div>}
+        {error && (
+          <div id="product-error" className="error-message" role="alert">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="success-message" role="alert" aria-live="polite">
+            Product created successfully!
+          </div>
+        )}
 
         <button type="submit" disabled={loading} className="btn btn-primary">
           {loading ? 'Creating...' : 'Create Product'}

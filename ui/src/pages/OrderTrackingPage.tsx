@@ -69,7 +69,9 @@ export const OrderTrackingPage: React.FC = () => {
   if (loading) {
     return (
       <div className="page-container">
-        <div className="loading">Loading order tracking information...</div>
+        <div className="loading" role="status" aria-live="polite" aria-busy="true">
+          Loading order tracking information...
+        </div>
       </div>
     );
   }

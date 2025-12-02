@@ -62,8 +62,12 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
     <div className="notification-preferences">
       <h3>Notification Preferences</h3>
       
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">Preferences saved successfully!</div>}
+      {error && <div className="error-message" role="alert">{error}</div>}
+      {success && (
+        <div className="success-message" role="alert" aria-live="polite">
+          Preferences saved successfully!
+        </div>
+      )}
 
       <div className="preferences-form">
         <div className="preference-item">

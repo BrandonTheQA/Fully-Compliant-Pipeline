@@ -156,14 +156,16 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
                 <button
                   onClick={() => updateCartQuantity(item.id, item.orderQuantity - 1)}
                   className="btn btn-sm"
+                  aria-label={`Decrease quantity of ${item.name}`}
                 >
                   -
                 </button>
-                <span>{item.orderQuantity}</span>
+                <span aria-label={`Current quantity: ${item.orderQuantity}`}>{item.orderQuantity}</span>
                 <button
                   onClick={() => updateCartQuantity(item.id, item.orderQuantity + 1)}
                   className="btn btn-sm"
                   disabled={item.orderQuantity >= item.quantity}
+                  aria-label={`Increase quantity of ${item.name}`}
                 >
                   +
                 </button>
@@ -252,8 +254,17 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
         </div>
       </div>
       <form onSubmit={handleSubmit}>
-        {error && <div className="error-message">{error}</div>}
-        <button type="submit" disabled={loading} className="btn btn-primary btn-large">
+        {error && (
+          <div id="order-error" className="error-message" role="alert">
+            {error}
+          </div>
+        )}
+        <button 
+          type="submit" 
+          disabled={loading} 
+          className="btn btn-primary btn-large"
+          aria-describedby={error ? 'order-error' : undefined}
+        >
           {loading ? 'Creating Order...' : 'Place Order'}
         </button>
       </form>

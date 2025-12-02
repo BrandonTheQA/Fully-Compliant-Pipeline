@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { Home } from './pages/Home';
 import { UserPage } from './pages/UserPage';
@@ -12,6 +12,7 @@ import './App.css';
 
 const Navigation: React.FC = () => {
   const { cart } = useAppContext();
+  const location = useLocation();
   
   return (
     <nav className="main-nav">
@@ -20,11 +21,11 @@ const Navigation: React.FC = () => {
           E-Commerce <span className="version-badge">v{__APP_VERSION__}</span>
         </Link>
         <div className="nav-links">
-          <Link to="/">Home</Link>
-          <Link to="/user">User</Link>
-          <Link to="/products">Products</Link>
-          <Link to="/wishlist">Wishlist</Link>
-          <Link to="/orders">
+          <Link to="/" aria-current={location.pathname === '/' ? 'page' : undefined}>Home</Link>
+          <Link to="/user" aria-current={location.pathname === '/user' ? 'page' : undefined}>User</Link>
+          <Link to="/products" aria-current={location.pathname === '/products' ? 'page' : undefined}>Products</Link>
+          <Link to="/wishlist" aria-current={location.pathname === '/wishlist' ? 'page' : undefined}>Wishlist</Link>
+          <Link to="/orders" aria-current={location.pathname.startsWith('/orders') ? 'page' : undefined}>
             Orders {cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
           </Link>
         </div>

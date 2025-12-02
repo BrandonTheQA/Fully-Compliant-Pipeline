@@ -35,7 +35,11 @@ export const LoyaltyBalance: React.FC<LoyaltyBalanceProps> = ({ userId, onBalanc
   };
 
   if (loading) {
-    return <div className="loyalty-balance loading">Loading...</div>;
+    return (
+      <div className="loyalty-balance loading" role="status" aria-live="polite" aria-busy="true">
+        Loading...
+      </div>
+    );
   }
 
   if (error || !account) {

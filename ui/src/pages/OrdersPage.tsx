@@ -88,13 +88,20 @@ export const OrdersPage: React.FC = () => {
       {viewMode === 'list' && (
         <div className="orders-list">
           {loading ? (
-            <div className="loading">Loading orders...</div>
+            <div className="loading" role="status" aria-live="polite" aria-busy="true">
+              Loading orders...
+            </div>
           ) : orders.length === 0 ? (
             <div className="no-orders">No orders found. Create your first order!</div>
           ) : (
             <div className="orders-grid">
               {orders.map((order) => (
-                <div key={order.id} className="order-card" onClick={() => handleViewOrder(order.id)}>
+                <button 
+                  key={order.id} 
+                  className="order-card" 
+                  onClick={() => handleViewOrder(order.id)}
+                  aria-label={`View order ${order.id.slice(0, 8)}`}
+                >
                   <h3>Order #{order.id.slice(0, 8)}</h3>
                   <p><strong>Status:</strong> {order.status}</p>
                   <p><strong>Total:</strong> ${order.totalAmount.toFixed(2)}</p>
@@ -102,7 +109,7 @@ export const OrdersPage: React.FC = () => {
                   {order.createdAt && (
                     <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
                   )}
-                </div>
+                </button>
               ))}
             </div>
           )}

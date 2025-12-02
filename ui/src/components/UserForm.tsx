@@ -79,6 +79,7 @@ export const UserForm: React.FC = () => {
             onChange={handleChange}
             required
             disabled={loading}
+            aria-describedby={error && error.includes('Name') ? 'name-error' : undefined}
           />
         </div>
 
@@ -92,6 +93,7 @@ export const UserForm: React.FC = () => {
             onChange={handleChange}
             required
             disabled={loading}
+            aria-describedby={error && error.includes('Email') ? 'email-error' : undefined}
           />
         </div>
 
@@ -106,11 +108,35 @@ export const UserForm: React.FC = () => {
             required
             minLength={6}
             disabled={loading}
+            aria-describedby={error && error.includes('Password') ? 'password-error' : undefined}
           />
         </div>
 
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">User created successfully!</div>}
+        {error && error.includes('Name') && (
+          <div id="name-error" className="error-message" role="alert">
+            {error}
+          </div>
+        )}
+        {error && error.includes('Email') && !error.includes('Name') && (
+          <div id="email-error" className="error-message" role="alert">
+            {error}
+          </div>
+        )}
+        {error && error.includes('Password') && !error.includes('Name') && !error.includes('Email') && (
+          <div id="password-error" className="error-message" role="alert">
+            {error}
+          </div>
+        )}
+        {error && !error.includes('Name') && !error.includes('Email') && !error.includes('Password') && (
+          <div id="form-error" className="error-message" role="alert">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="success-message" role="alert" aria-live="polite">
+            User created successfully!
+          </div>
+        )}
 
         <button type="submit" disabled={loading} className="btn btn-primary">
           {loading ? 'Creating...' : 'Create User'}
