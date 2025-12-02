@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { loyaltyService } from '../services/loyaltyService';
-import { LoyaltyBalance } from './LoyaltyBalance';
 import { LoyaltyTierBadge } from './LoyaltyTierBadge';
 import { ReferralSection } from './ReferralSection';
-import type { LoyaltyDashboard as LoyaltyDashboardType, LoyaltyTransaction } from '../types';
+import type { LoyaltyDashboard as LoyaltyDashboardType } from '../types';
 import './LoyaltyDashboard.css';
 
 interface LoyaltyDashboardProps {

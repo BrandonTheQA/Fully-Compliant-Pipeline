@@ -12,12 +12,9 @@ interface PointRedemptionFormProps {
 }
 
 export const PointRedemptionForm: React.FC<PointRedemptionFormProps> = ({
-  userId,
   currentBalance,
   orderTotal,
-  orderId,
   onRedemptionSuccess,
-  onError,
 }) => {
   const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
   const [discountAmount, setDiscountAmount] = useState<number>(0);

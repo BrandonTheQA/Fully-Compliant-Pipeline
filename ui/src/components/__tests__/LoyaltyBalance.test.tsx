@@ -1,4 +1,3 @@
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { LoyaltyBalance } from '../LoyaltyBalance';
 import { loyaltyService } from '../../services/loyaltyService';

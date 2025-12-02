@@ -10,8 +10,7 @@ interface LoyaltyTierBadgeProps {
 
 export const LoyaltyTierBadge: React.FC<LoyaltyTierBadgeProps> = ({ 
   tier, 
-  pointsToNextTier = 0,
-  currentPoints = 0 
+  pointsToNextTier = 0
 }) => {
   const getTierColor = (tier: LoyaltyTier): string => {
     switch (tier) {

@@ -100,9 +100,11 @@ run_ui_typecheck() {
   echo -e "${YELLOW}Running TypeScript type check for UI...${NC}"
   cd "$REPO_ROOT/ui"
   
-  # Use tsc -b to match the build script behavior (build mode is stricter)
-  if ! npx tsc -b; then
+  # Use tsc -b --noEmit to match the build script behavior (build mode is stricter)
+  # This will catch unused variables, unused imports, and other type errors
+  if ! npx tsc -b --noEmit 2>&1; then
     echo -e "${RED}✗ TypeScript type check failed for UI${NC}"
+    echo -e "${YELLOW}Fix TypeScript errors before committing.${NC}"
     return 1
   fi
   
