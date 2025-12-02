@@ -112,6 +112,19 @@ get_repo_root_commit() {
   git rev-list --max-parents=0 HEAD | tail -n 1
 }
 
+validate_commit_sha() {
+  local sha="$1"
+  if [ -z "${sha}" ]; then
+    return 1
+  fi
+  # Check if the commit exists in the repository
+  if git rev-parse --verify "${sha}^{commit}" >/dev/null 2>&1; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 generate_commit_list() {
   local base_sha="$1"
   if [ -n "${base_sha}" ]; then
@@ -129,9 +142,14 @@ DEPS_JSON="$(fetch_deployments)" || {
 PREVIOUS_SHA="$(determine_previous_prod_sha "${DEPS_JSON}")"
 
 FALLBACK_NOTE=""
-if [ -z "${PREVIOUS_SHA}" ]; then
+if [ -z "${PREVIOUS_SHA}" ] || ! validate_commit_sha "${PREVIOUS_SHA}"; then
+  if [ -n "${PREVIOUS_SHA}" ] && ! validate_commit_sha "${PREVIOUS_SHA}"; then
+    log "Previous deployment SHA ${PREVIOUS_SHA} not found in repository (likely due to history rewrite); falling back to repository root."
+    FALLBACK_NOTE="(previous deployment SHA not found; starting from repository root)"
+  else
+    FALLBACK_NOTE="(no prior deployments; starting from repository root)"
+  fi
   PREVIOUS_SHA="$(get_repo_root_commit)"
-  FALLBACK_NOTE="(no prior deployments; starting from repository root)"
 fi
 
 if [ -z "${PREVIOUS_SHA}" ]; then
