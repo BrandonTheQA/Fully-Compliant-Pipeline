@@ -17,6 +17,8 @@ public class CreateOrderRequest {
     @Valid
     private List<OrderItemRequest> items;
     
+    private Integer pointsToRedeem;
+    
     // Default constructor
     public CreateOrderRequest() {}
     
@@ -24,6 +26,13 @@ public class CreateOrderRequest {
     public CreateOrderRequest(String userId, List<OrderItemRequest> items) {
         this.userId = userId;
         this.items = items;
+    }
+    
+    // Constructor with points redemption
+    public CreateOrderRequest(String userId, List<OrderItemRequest> items, Integer pointsToRedeem) {
+        this.userId = userId;
+        this.items = items;
+        this.pointsToRedeem = pointsToRedeem;
     }
     
     // Getters and Setters
@@ -41,6 +50,14 @@ public class CreateOrderRequest {
     
     public void setItems(List<OrderItemRequest> items) {
         this.items = items;
+    }
+    
+    public Integer getPointsToRedeem() {
+        return pointsToRedeem;
+    }
+    
+    public void setPointsToRedeem(Integer pointsToRedeem) {
+        this.pointsToRedeem = pointsToRedeem;
     }
     
     /**

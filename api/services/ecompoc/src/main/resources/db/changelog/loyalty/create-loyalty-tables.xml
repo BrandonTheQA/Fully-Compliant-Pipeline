@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="create-loyalty-accounts-table" author="system">
+        <createTable tableName="loyalty_accounts">
+            <column name="account_id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="current_points" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="current_tier" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="highest_tier_achieved" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lifetime_points_earned" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lifetime_points_redeemed" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referral_code" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="enrollment_date" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enrollment_source" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BIT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_activity_date" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="loyalty_accounts" 
+            baseColumnNames="user_id"
+            constraintName="fk_loyalty_accounts_user"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+        
+        <createIndex indexName="idx_loyalty_accounts_user_id" tableName="loyalty_accounts">
+            <column name="user_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_loyalty_accounts_referral_code" tableName="loyalty_accounts">
+            <column name="referral_code"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create-loyalty-transactions-table" author="system">
+        <createTable tableName="loyalty_transactions">
+            <column name="transaction_id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="account_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_type" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="points" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activity_type" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="related_order_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="related_review_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="related_referral_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="expiration_date" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="description" type="NVARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="loyalty_transactions" 
+            baseColumnNames="account_id"
+            constraintName="fk_loyalty_transactions_account"
+            referencedTableName="loyalty_accounts"
+            referencedColumnNames="account_id"
+            onDelete="CASCADE"/>
+        
+        <addForeignKeyConstraint 
+            baseTableName="loyalty_transactions" 
+            baseColumnNames="user_id"
+            constraintName="fk_loyalty_transactions_user"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+        
+        <addForeignKeyConstraint 
+            baseTableName="loyalty_transactions" 
+            baseColumnNames="related_order_id"
+            constraintName="fk_loyalty_transactions_order"
+            referencedTableName="orders"
+            referencedColumnNames="id"
+            onDelete="SET NULL"/>
+        
+        <createIndex indexName="idx_loyalty_transactions_account_id" tableName="loyalty_transactions">
+            <column name="account_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_loyalty_transactions_user_id" tableName="loyalty_transactions">
+            <column name="user_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_loyalty_transactions_expiration_date" tableName="loyalty_transactions">
+            <column name="expiration_date"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create-loyalty-referrals-table" author="system">
+        <createTable tableName="loyalty_referrals">
+            <column name="referral_id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="referrer_account_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referred_user_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referral_code" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="referral_method" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="points_awarded" type="BIT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_at" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="loyalty_referrals" 
+            baseColumnNames="referrer_account_id"
+            constraintName="fk_loyalty_referrals_referrer_account"
+            referencedTableName="loyalty_accounts"
+            referencedColumnNames="account_id"
+            onDelete="CASCADE"/>
+        
+        <addForeignKeyConstraint 
+            baseTableName="loyalty_referrals" 
+            baseColumnNames="referred_user_id"
+            constraintName="fk_loyalty_referrals_referred_user"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+        
+        <createIndex indexName="idx_loyalty_referrals_referrer" tableName="loyalty_referrals">
+            <column name="referrer_account_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_loyalty_referrals_referred" tableName="loyalty_referrals">
+            <column name="referred_user_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_loyalty_referrals_code" tableName="loyalty_referrals">
+            <column name="referral_code"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="add-loyalty-transactions-referral-fk" author="system">
+        <addForeignKeyConstraint 
+            baseTableName="loyalty_transactions" 
+            baseColumnNames="related_referral_id"
+            constraintName="fk_loyalty_transactions_referral"
+            referencedTableName="loyalty_referrals"
+            referencedColumnNames="referral_id"
+            onDelete="SET NULL"/>
+    </changeSet>
+        
+        <createIndex indexName="idx_loyalty_referrals_referrer" tableName="loyalty_referrals">
+            <column name="referrer_account_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_loyalty_referrals_referred" tableName="loyalty_referrals">
+            <column name="referred_user_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_loyalty_referrals_code" tableName="loyalty_referrals">
+            <column name="referral_code"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

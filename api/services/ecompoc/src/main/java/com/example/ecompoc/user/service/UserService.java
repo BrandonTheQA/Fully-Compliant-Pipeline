@@ -9,6 +9,9 @@ import com.example.ecompoc.user.exception.UserAlreadyExistsException;
 import com.example.ecompoc.user.exception.UserNotFoundException;
 import com.example.ecompoc.user.model.User;
 import com.example.ecompoc.user.repository.UserRepository;
+import com.example.ecompoc.loyalty.service.LoyaltyService;
+import com.example.ecompoc.loyalty.model.EnrollmentSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -22,9 +25,15 @@ import java.util.UUID;
 public class UserService {
     
     private final UserRepository userRepository;
+    private LoyaltyService loyaltyService;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+    
+    @Autowired(required = false)
+    public void setLoyaltyService(LoyaltyService loyaltyService) {
+        this.loyaltyService = loyaltyService;
     }
     
     /**
@@ -40,6 +49,20 @@ public class UserService {
         String userId = UUID.randomUUID().toString();
         User user = new User(userId, request.getName(), request.getEmail(), request.getPassword());
         User savedUser = userRepository.save(user);
+        
+        // Auto-enroll in loyalty program
+        if (loyaltyService != null) {
+            try {
+                // Check if CreateUserRequest has referralCode field (optional)
+                String referralCode = null;
+                // Note: If CreateUserRequest is extended with referralCode, use it here
+                loyaltyService.enrollUser(userId, EnrollmentSource.AUTO, referralCode);
+                // Log success but don't fail user creation if enrollment fails
+            } catch (Exception e) {
+                // Log but don't fail user creation if loyalty enrollment fails
+                // This ensures user creation succeeds even if loyalty service is unavailable
+            }
+        }
         
         return mapToResponse(savedUser);
     }

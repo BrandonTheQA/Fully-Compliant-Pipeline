@@ -74,11 +74,29 @@
   justify-content: space-between;
   font-size: 1.25rem;
   font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.summary-row-discount {
+  color: #2e7d32;
+}
+
+.discount-amount {
+  color: #2e7d32;
+  font-weight: bold;
 }
 
 .total-amount {
   color: var(--primary-color);
   font-size: 1.5rem;
+}
+
+.loyalty-section {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
 }
 
 .shipping-free-text {

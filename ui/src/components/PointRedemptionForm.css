@@ -1,0 +1,106 @@
+.point-redemption-form {
+  padding: 1.5rem;
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  max-width: 400px;
+}
+
+.point-redemption-form-title {
+  margin: 0 0 1rem 0;
+  font-size: 1.25rem;
+  color: #2c3e50;
+}
+
+.point-redemption-form-balance {
+  margin-bottom: 1rem;
+  font-weight: 500;
+  color: #666;
+}
+
+.point-redemption-form-input-group {
+  margin-bottom: 1rem;
+}
+
+.point-redemption-form-input-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.point-redemption-form-input-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.point-redemption-form-input-group input:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.point-redemption-form-discount {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #e8f5e9;
+  border-radius: 4px;
+  font-weight: bold;
+  color: #2e7d32;
+}
+
+.point-redemption-form-error {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background-color: #ffebee;
+  border-radius: 4px;
+  color: #c62828;
+}
+
+.point-redemption-form-quick-options {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.point-redemption-form-quick-btn {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.point-redemption-form-quick-btn:hover:not(:disabled) {
+  background-color: #f5f5f5;
+}
+
+.point-redemption-form-quick-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.point-redemption-form-submit {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.point-redemption-form-submit:hover:not(:disabled) {
+  background-color: #357abd;
+}
+
+.point-redemption-form-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

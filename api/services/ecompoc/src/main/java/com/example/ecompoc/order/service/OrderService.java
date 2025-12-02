@@ -14,11 +14,14 @@ import com.example.ecompoc.order.notification.service.OrderNotificationService;
 import com.example.ecompoc.order.repository.OrderRepository;
 import com.example.ecompoc.order.repository.OrderStatusHistoryRepository;
 import com.example.ecompoc.order.service.OrderTrackingStreamService;
+import com.example.ecompoc.loyalty.service.LoyaltyPointsService;
+import com.example.ecompoc.loyalty.service.LoyaltyReferralService;
 import com.example.ecompoc.product.model.Product;
 import com.example.ecompoc.product.repository.ProductRepository;
 import com.example.ecompoc.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +46,8 @@ public class OrderService {
     private final TrackingNumberService trackingNumberService;
     private final OrderNotificationService notificationService;
     private final OrderTrackingStreamService streamService;
+    private LoyaltyPointsService loyaltyPointsService;
+    private LoyaltyReferralService loyaltyReferralService;
 
     public OrderService(OrderRepository orderRepository,
                         UserRepository userRepository,
@@ -60,6 +65,16 @@ public class OrderService {
         this.trackingNumberService = trackingNumberService;
         this.notificationService = notificationService;
         this.streamService = streamService;
+    }
+    
+    @Autowired(required = false)
+    public void setLoyaltyPointsService(LoyaltyPointsService loyaltyPointsService) {
+        this.loyaltyPointsService = loyaltyPointsService;
+    }
+    
+    @Autowired(required = false)
+    public void setLoyaltyReferralService(LoyaltyReferralService loyaltyReferralService) {
+        this.loyaltyReferralService = loyaltyReferralService;
     }
 
     /**
@@ -96,7 +111,7 @@ public class OrderService {
             .mapToDouble(OrderItem::getSubtotal)
             .sum();
 
-        // Create order
+        // Create order first (we'll apply discount and redeem points after)
         String orderId = UUID.randomUUID().toString();
         Order order = new Order(orderId, request.getUserId(), orderItems, totalAmount, OrderStatus.PENDING.name());
         
@@ -108,6 +123,27 @@ public class OrderService {
         
         // Create initial status history entry
         createStatusHistoryEntry(savedOrder, OrderStatus.PENDING.name(), null, "Order created");
+
+        // Handle points redemption if applicable (after order is created so we have orderId)
+        if (request.getPointsToRedeem() != null && request.getPointsToRedeem() > 0 && loyaltyPointsService != null) {
+            try {
+                LoyaltyPointsService.RedeemResult redeemResult = loyaltyPointsService.redeemPoints(
+                    request.getUserId(), request.getPointsToRedeem(), orderId, totalAmount);
+                double discountAmount = redeemResult.getDiscountAmount();
+                // Update order total with discount
+                savedOrder.setTotalAmount(Math.max(0, totalAmount - discountAmount));
+                savedOrder = orderRepository.save(savedOrder);
+                logger.info("Applied {} points redemption: ${} discount, new total: ${}", 
+                    request.getPointsToRedeem(), discountAmount, savedOrder.getTotalAmount());
+            } catch (Exception e) {
+                logger.warn("Failed to redeem points for order: {}", e.getMessage());
+                // Continue with order creation without redemption
+            }
+        }
+
+        // Award loyalty points for purchase (after order is created and status is COMPLETED)
+        // Note: Points are awarded when order status changes to COMPLETED, not at creation
+        // This will be handled in updateOrderStatus when status changes to COMPLETED
 
         logger.info("Created order {} for user {} with {} items", orderId, request.getUserId(), orderItems.size());
         return mapToResponse(savedOrder);
@@ -173,6 +209,47 @@ public class OrderService {
             notificationService.sendStatusChangeNotification(savedOrder, oldStatusEnum, newStatus);
         } catch (IllegalArgumentException e) {
             logger.warn("Invalid old status '{}' for order {}, skipping notification", oldStatus, orderId);
+        }
+        
+        // Award loyalty points when order is confirmed (completed/paid)
+        if (newStatus == OrderStatus.CONFIRMED && loyaltyPointsService != null) {
+            try {
+                loyaltyPointsService.awardPurchasePoints(savedOrder.getUserId(), orderId, savedOrder.getTotalAmount());
+                logger.info("Awarded loyalty points for completed order {}", orderId);
+                
+                // Process referral completion if this is the user's first completed order
+                if (loyaltyReferralService != null) {
+                    try {
+                        // Check if this is user's first confirmed order
+                        // Count confirmed orders excluding the current one
+                        List<Order> userOrders = orderRepository.findByUserId(savedOrder.getUserId());
+                        long previousConfirmedOrders = userOrders.stream()
+                            .filter(o -> !o.getId().equals(orderId) && OrderStatus.CONFIRMED.name().equals(o.getStatus()))
+                            .count();
+                        
+                        // If this is the first confirmed order, process referral
+                        if (previousConfirmedOrders == 0) {
+                            loyaltyReferralService.processReferralCompletion(savedOrder.getUserId(), orderId);
+                            logger.info("Processed referral completion for user {} on order {}", savedOrder.getUserId(), orderId);
+                        }
+                    } catch (Exception e) {
+                        logger.warn("Failed to process referral completion for order {}: {}", orderId, e.getMessage());
+                    }
+                }
+            } catch (Exception e) {
+                logger.warn("Failed to award loyalty points for order {}: {}", orderId, e.getMessage());
+                // Don't fail order status update if loyalty points fail
+            }
+        }
+        
+        // Reverse loyalty points if order is cancelled
+        if (newStatus == OrderStatus.CANCELLED && loyaltyPointsService != null) {
+            try {
+                loyaltyPointsService.reversePoints(savedOrder.getUserId(), orderId);
+                logger.info("Reversed loyalty points for cancelled order {}", orderId);
+            } catch (Exception e) {
+                logger.warn("Failed to reverse loyalty points for cancelled order {}: {}", orderId, e.getMessage());
+            }
         }
         
         // Broadcast status update to SSE subscribers

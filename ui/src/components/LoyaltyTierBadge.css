@@ -1,0 +1,38 @@
+.loyalty-tier-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background-color: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.loyalty-tier-badge-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.loyalty-tier-badge-info {
+  flex: 1;
+}
+
+.loyalty-tier-badge-label {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #2c3e50;
+  margin-bottom: 0.25rem;
+}
+
+.loyalty-tier-badge-progress {
+  font-size: 0.85rem;
+  color: #666;
+}

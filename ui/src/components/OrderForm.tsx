@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { orderService } from '../services/orderService';
 import { ShippingCostCalculator } from './ShippingCostCalculator';
 import { ShippingRecommendations } from './ShippingRecommendations';
-import type { Order } from '../types';
+import { LoyaltyBalance } from './LoyaltyBalance';
+import { PointRedemptionForm } from './PointRedemptionForm';
+import { loyaltyService } from '../services/loyaltyService';
+import type { Order, RedeemPointsResponse } from '../types';
 import './OrderForm.css';
 
 interface OrderFormProps {
@@ -31,6 +34,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [pointsToRedeem, setPointsToRedeem] = useState<number>(0);
+  const [pointsDiscount, setPointsDiscount] = useState<number>(0);
+  const [loyaltyBalance, setLoyaltyBalance] = useState<number>(0);
 
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.orderQuantity,
@@ -38,7 +44,18 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
   );
   
   const currentShippingCost = shippingCost !== null ? shippingCost : (defaultShippingCost || 0);
-  const totalAmount = subtotal + currentShippingCost;
+  const totalAmount = Math.max(0, subtotal + currentShippingCost - pointsDiscount);
+
+  // Load loyalty balance when user is available
+  useEffect(() => {
+    if (user) {
+      loyaltyService.getBalance(user.userId)
+        .then(account => setLoyaltyBalance(account.currentPoints))
+        .catch(() => {
+          // Silently fail if loyalty service is not available
+        });
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,11 +80,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
           productId: item.id,
           quantity: item.orderQuantity,
         })),
+        pointsToRedeem: pointsToRedeem > 0 ? pointsToRedeem : undefined,
       };
 
       const order = await orderService.createOrder(orderData);
       setCreatedOrder(order);
       clearCart();
+      setPointsToRedeem(0);
+      setPointsDiscount(0);
       
       if (onOrderCreated) {
         onOrderCreated(order);
@@ -187,6 +207,24 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
           />
         </>
       )}
+      {user && loyaltyBalance > 0 && (
+        <div className="loyalty-section">
+          <LoyaltyBalance userId={user.userId} onBalanceChange={setLoyaltyBalance} />
+          <PointRedemptionForm
+            userId={user.userId}
+            currentBalance={loyaltyBalance}
+            orderTotal={subtotal + currentShippingCost}
+            onRedemptionSuccess={(response: RedeemPointsResponse) => {
+              setPointsToRedeem(response.pointsRedeemed);
+              setPointsDiscount(response.discountAmount);
+              setLoyaltyBalance(response.remainingBalance);
+            }}
+            onError={(errorMsg: string) => {
+              setError(errorMsg);
+            }}
+          />
+        </div>
+      )}
       <div className="order-summary">
         <div className="summary-row">
           <span>Subtotal:</span>
@@ -202,6 +240,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
             )}
           </span>
         </div>
+        {pointsDiscount > 0 && (
+          <div className="summary-row summary-row-discount">
+            <span>Points Discount:</span>
+            <span className="discount-amount">-${pointsDiscount.toFixed(2)}</span>
+          </div>
+        )}
         <div className="summary-row">
           <span>Total:</span>
           <span className="total-amount">${totalAmount.toFixed(2)}</span>

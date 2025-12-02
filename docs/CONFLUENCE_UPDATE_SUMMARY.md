@@ -114,3 +114,4 @@ As a shopper completing my purchase, I want to choose from multiple shipping opt
 - Full Jira story document created at: `docs/JIRA_STORY_MULTI_OPTION_SHIPPING.md`
 - Jira-ready format available at: `docs/JIRA_STORY_MULTI_OPTION_SHIPPING_JIRA_FORMAT.txt`
 - This feature complements all existing shipping features and addresses a clear gap in the product offering
+

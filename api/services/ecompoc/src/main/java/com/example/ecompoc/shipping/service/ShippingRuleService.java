@@ -1,6 +1,9 @@
 package com.example.ecompoc.shipping.service;
 
 import com.example.ecompoc.shipping.model.ShippingRule;
+import com.example.ecompoc.loyalty.service.LoyaltyService;
+import com.example.ecompoc.loyalty.model.LoyaltyTier;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +37,13 @@ public class ShippingRuleService {
     
     @Value("${shipping.rules.default.default-shipping-cost:5.99}")
     private BigDecimal defaultShippingCost;
+    
+    private LoyaltyService loyaltyService;
+    
+    @Autowired(required = false)
+    public void setLoyaltyService(LoyaltyService loyaltyService) {
+        this.loyaltyService = loyaltyService;
+    }
     
     @PostConstruct
     public void initializeRules() {
@@ -80,10 +90,43 @@ public class ShippingRuleService {
      * @return Shipping cost (0 if qualifies for free shipping, otherwise default cost)
      */
     public BigDecimal calculateShippingCost(BigDecimal orderTotal, String region) {
+        return calculateShippingCost(orderTotal, region, null);
+    }
+    
+    /**
+     * Calculate shipping cost based on order total, region, and user tier
+     * 
+     * @param orderTotal Total order amount
+     * @param region Region code
+     * @param userId User ID for tier-based free shipping (optional)
+     * @return Shipping cost (0 if qualifies for free shipping, otherwise default cost)
+     */
+    public BigDecimal calculateShippingCost(BigDecimal orderTotal, String region, String userId) {
         ShippingRule rule = getShippingRule(region);
         
         if (orderTotal == null || orderTotal.compareTo(BigDecimal.ZERO) <= 0) {
             return rule.getDefaultShippingCost();
+        }
+        
+        // Check tier-based free shipping
+        if (userId != null && loyaltyService != null) {
+            try {
+                com.example.ecompoc.loyalty.dto.LoyaltyAccountResponse account = loyaltyService.getAccount(userId);
+                LoyaltyTier tier = LoyaltyTier.valueOf(account.getCurrentTier());
+                
+                // Gold and Platinum: Free shipping on all orders
+                if (tier == LoyaltyTier.GOLD || tier == LoyaltyTier.PLATINUM) {
+                    return BigDecimal.ZERO;
+                }
+                
+                // Silver: Free shipping on orders $25+
+                if (tier == LoyaltyTier.SILVER && orderTotal.compareTo(new BigDecimal("25.00")) >= 0) {
+                    return BigDecimal.ZERO;
+                }
+            } catch (Exception e) {
+                // If loyalty service fails, fall back to standard rules
+                // Log but don't fail shipping calculation
+            }
         }
         
         // If order total meets or exceeds threshold, shipping is free

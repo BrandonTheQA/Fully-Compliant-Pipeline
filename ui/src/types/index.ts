@@ -134,3 +134,64 @@ export interface NotificationPreferences {
   updatedAt?: string;
 }
 
+export type LoyaltyTier = 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM';
+
+export interface LoyaltyAccount {
+  accountId: string;
+  userId: string;
+  currentPoints: number;
+  currentTier: LoyaltyTier;
+  highestTierAchieved: LoyaltyTier;
+  lifetimePointsEarned: number;
+  lifetimePointsRedeemed: number;
+  referralCode: string;
+  enrollmentDate: string;
+  isActive: boolean;
+}
+
+export interface LoyaltyTransaction {
+  transactionId: string;
+  transactionType: 'EARNED' | 'REDEEMED' | 'EXPIRED' | 'ADMIN_ADJUSTMENT';
+  points: number;
+  activityType: string;
+  description?: string;
+  createdAt: string;
+  expirationDate?: string;
+}
+
+export interface LoyaltyDashboard {
+  account: LoyaltyAccount;
+  recentTransactions: LoyaltyTransaction[];
+  pointsToNextTier: number;
+  expiringPoints?: number;
+  expiringPointsDate?: string;
+  tierBenefits: TierBenefits;
+}
+
+export interface TierBenefits {
+  tier: LoyaltyTier;
+  multiplier: number;
+  benefits: string[];
+  pointsToNextTier: number;
+}
+
+export interface ReferralStats {
+  totalReferrals: number;
+  successfulReferrals: number;
+  pointsEarned: number;
+  successRate: number;
+}
+
+export interface RedeemPointsRequest {
+  points: number;
+  orderId?: string;
+  orderTotal?: number;
+}
+
+export interface RedeemPointsResponse {
+  pointsRedeemed: number;
+  discountAmount: number;
+  remainingBalance: number;
+  message: string;
+}
+

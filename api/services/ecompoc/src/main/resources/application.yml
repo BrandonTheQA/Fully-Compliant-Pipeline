@@ -75,3 +75,34 @@ order-tracking:
   carrier-api:
     enabled: false
 
+loyalty:
+  enabled: true
+  points:
+    purchase-rate: 1
+    review: 50
+    referral: 100
+    social-share: 25
+    welcome: 100
+    birthday: 50
+    anniversary: 100
+  redemption:
+    rate: 100
+    minimum: 500
+    max-percentage: 50
+  tiers:
+    bronze:
+      threshold: 0
+      multiplier: 1.0
+    silver:
+      threshold: 1000
+      multiplier: 1.25
+    gold:
+      threshold: 2500
+      multiplier: 1.5
+    platinum:
+      threshold: 5000
+      multiplier: 2.0
+  expiration:
+    months: 12
+    warning-days: [30, 7, 1]
+

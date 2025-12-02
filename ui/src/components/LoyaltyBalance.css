@@ -1,0 +1,24 @@
+.loyalty-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.loyalty-balance-label {
+  color: #666;
+  font-weight: 500;
+}
+
+.loyalty-balance-value {
+  color: #2c3e50;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.loyalty-balance.loading {
+  color: #999;
+}
