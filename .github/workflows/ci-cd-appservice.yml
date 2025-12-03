@@ -107,6 +107,7 @@ jobs:
       - name: Run tests (including accessibility)
         working-directory: ui
         run: npm test
+
       - name: Build UI
         working-directory: ui
         run: npm run build
@@ -117,6 +118,135 @@ jobs:
           name: ecompoc-ui
           path: ui
           retention-days: 3
+
+  test-coverage:
+    name: Generate Test Coverage Reports
+    runs-on: ubuntu-latest
+    needs: [release-report]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'maven'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install UI dependencies
+        working-directory: ui
+        run: npm ci
+
+      - name: Generate backend test coverage
+        working-directory: api/services/ecompoc
+        run: mvn -B clean test jacoco:report
+
+      - name: Generate UI test coverage
+        working-directory: ui
+        run: npm run test:coverage
+
+      - name: Create coverage summary
+        run: |
+          mkdir -p coverage-summary
+          
+          # Extract backend coverage from JaCoCo XML
+          if [ -f api/services/ecompoc/target/site/jacoco/jacoco.xml ]; then
+            BACKEND_LINES=$(grep -oP 'type="INSTRUCTION".*missed="\K[0-9]+' api/services/ecompoc/target/site/jacoco/jacoco.xml | head -1 || echo "0")
+            BACKEND_COVERED=$(grep -oP 'type="INSTRUCTION".*covered="\K[0-9]+' api/services/ecompoc/target/site/jacoco/jacoco.xml | head -1 || echo "0")
+            if [ -n "$BACKEND_LINES" ] && [ -n "$BACKEND_COVERED" ] && ([ "$BACKEND_LINES" != "0" ] || [ "$BACKEND_COVERED" != "0" ]); then
+              BACKEND_TOTAL=$((BACKEND_LINES + BACKEND_COVERED))
+              BACKEND_PCT=$((BACKEND_COVERED * 100 / BACKEND_TOTAL))
+              echo "Backend Coverage: ${BACKEND_PCT}% (${BACKEND_COVERED}/${BACKEND_TOTAL} instructions)" > coverage-summary/backend-coverage.txt
+            else
+              echo "Backend Coverage: Unable to calculate" > coverage-summary/backend-coverage.txt
+            fi
+          fi
+          
+          # Extract UI coverage from Jest summary
+          if [ -f ui/coverage/coverage-summary.json ]; then
+            UI_LINES=$(jq -r '.total.lines.pct' ui/coverage/coverage-summary.json 2>/dev/null || echo "0")
+            UI_STATEMENTS=$(jq -r '.total.statements.pct' ui/coverage/coverage-summary.json 2>/dev/null || echo "0")
+            UI_BRANCHES=$(jq -r '.total.branches.pct' ui/coverage/coverage-summary.json 2>/dev/null || echo "0")
+            UI_FUNCTIONS=$(jq -r '.total.functions.pct' ui/coverage/coverage-summary.json 2>/dev/null || echo "0")
+            echo "UI Coverage:" > coverage-summary/ui-coverage.txt
+            echo "  Lines: ${UI_LINES}%" >> coverage-summary/ui-coverage.txt
+            echo "  Statements: ${UI_STATEMENTS}%" >> coverage-summary/ui-coverage.txt
+            echo "  Branches: ${UI_BRANCHES}%" >> coverage-summary/ui-coverage.txt
+            echo "  Functions: ${UI_FUNCTIONS}%" >> coverage-summary/ui-coverage.txt
+          fi
+          
+          # Create combined markdown report
+          {
+            echo "# Test Coverage Report"
+            echo ""
+            echo "Generated: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+            echo "Workflow Run: [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            echo ""
+            echo "## Backend Coverage (Java/Maven)"
+            echo ""
+            if [ -f coverage-summary/backend-coverage.txt ]; then
+              cat coverage-summary/backend-coverage.txt
+            else
+              echo "Backend coverage report not available"
+            fi
+            echo ""
+            echo "## Frontend Coverage (Jest)"
+            echo ""
+            if [ -f coverage-summary/ui-coverage.txt ]; then
+              cat coverage-summary/ui-coverage.txt
+            else
+              echo "UI coverage report not available"
+            fi
+            echo ""
+            echo "---"
+            echo ""
+            echo "## Coverage Artifacts"
+            echo ""
+            echo "Detailed coverage reports are available as workflow artifacts:"
+            echo "- Backend: JaCoCo HTML report in \`backend-coverage\` artifact"
+            echo "- Frontend: Jest HTML report in \`ui-coverage\` artifact"
+          } > coverage-summary/COVERAGE_REPORT.md
+
+      - name: Upload backend coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: |
+            api/services/ecompoc/target/site/jacoco/**
+            coverage-summary/backend-coverage.txt
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Upload UI coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-coverage
+          path: |
+            ui/coverage/**
+            coverage-summary/ui-coverage.txt
+          retention-days: 90
+          if-no-files-found: warn
+
+      - name: Upload coverage summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-summary
+          path: coverage-summary/COVERAGE_REPORT.md
+          retention-days: 90
+
+      - name: Display coverage summary
+        run: |
+          echo "## Test Coverage Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f coverage-summary/COVERAGE_REPORT.md ]; then
+            cat coverage-summary/COVERAGE_REPORT.md >> $GITHUB_STEP_SUMMARY
+          fi
 
   deploy-dev:
     name: Deploy to Dev Environment
