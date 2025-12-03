@@ -107,5 +107,180 @@ describe('orderService', () => {
       expect(result).toEqual(mockOrders);
     });
   });
+
+  describe('getOrderTracking', () => {
+    it('should get order tracking successfully', async () => {
+      const orderId = 'order-1';
+      const mockTracking = {
+        orderId: 'order-1',
+        status: 'SHIPPED',
+        trackingNumber: 'TRACK123',
+        carrierName: 'FedEx',
+        estimatedDeliveryDate: '2024-01-15T10:00:00Z',
+        shippingAddress: '123 Main St',
+        shippingMethod: 'Standard',
+        currentLocation: 'Distribution Center',
+        statusHistory: [],
+      };
+
+      mockOrderApi.get.mockResolvedValue({ data: mockTracking });
+
+      const result = await orderService.getOrderTracking(orderId);
+
+      expect(mockOrderApi.get).toHaveBeenCalledWith('/orders/order-1/tracking');
+      expect(result).toEqual(mockTracking);
+    });
+  });
+
+  describe('getOrderStatusHistory', () => {
+    it('should get order status history successfully', async () => {
+      const orderId = 'order-1';
+      const mockHistory = [
+        {
+          id: 'status-1',
+          status: 'PENDING',
+          createdAt: '2024-01-10T10:00:00Z',
+        },
+        {
+          id: 'status-2',
+          status: 'SHIPPED',
+          createdAt: '2024-01-12T10:00:00Z',
+        },
+      ];
+
+      mockOrderApi.get.mockResolvedValue({ data: mockHistory });
+
+      const result = await orderService.getOrderStatusHistory(orderId);
+
+      expect(mockOrderApi.get).toHaveBeenCalledWith('/orders/order-1/status-history');
+      expect(result).toEqual(mockHistory);
+    });
+  });
+
+  describe('subscribeToOrderUpdates', () => {
+    it('should create EventSource for order updates', () => {
+      const orderId = 'order-1';
+      const onUpdate = jest.fn();
+      const mockEventSource = {
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+        close: jest.fn(),
+        onerror: null,
+        readyState: 0,
+      };
+
+      global.EventSource = jest.fn().mockImplementation(() => mockEventSource) as any;
+
+      const eventSource = orderService.subscribeToOrderUpdates(orderId, onUpdate);
+
+      expect(global.EventSource).toHaveBeenCalledWith('/api/orders/order-1/tracking/stream');
+      expect(mockEventSource.addEventListener).toHaveBeenCalledWith('connected', expect.any(Function));
+      expect(mockEventSource.addEventListener).toHaveBeenCalledWith('status-update', expect.any(Function));
+      expect(eventSource).toBe(mockEventSource);
+    });
+
+    it('should call onUpdate when status-update event is received', () => {
+      const orderId = 'order-1';
+      const onUpdate = jest.fn();
+      const mockEventSource = {
+        addEventListener: jest.fn((event, handler) => {
+          if (event === 'status-update') {
+            // Simulate event
+            setTimeout(() => {
+              handler({ data: JSON.stringify({ status: 'SHIPPED' }) });
+            }, 0);
+          }
+        }),
+        removeEventListener: jest.fn(),
+        close: jest.fn(),
+        onerror: null,
+        readyState: 0,
+      };
+
+      global.EventSource = jest.fn().mockImplementation(() => mockEventSource) as any;
+
+      orderService.subscribeToOrderUpdates(orderId, onUpdate);
+
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          expect(onUpdate).toHaveBeenCalledWith({ status: 'SHIPPED' });
+          resolve(undefined);
+        }, 10);
+      });
+    });
+
+    it('should handle JSON parse errors gracefully', () => {
+      const orderId = 'order-1';
+      const onUpdate = jest.fn();
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const mockEventSource = {
+        addEventListener: jest.fn((event, handler) => {
+          if (event === 'status-update') {
+            // Simulate invalid JSON
+            setTimeout(() => {
+              handler({ data: 'invalid json' });
+            }, 0);
+          }
+        }),
+        removeEventListener: jest.fn(),
+        close: jest.fn(),
+        onerror: null,
+        readyState: 0,
+      };
+
+      global.EventSource = jest.fn().mockImplementation(() => mockEventSource) as any;
+
+      orderService.subscribeToOrderUpdates(orderId, onUpdate);
+
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          expect(consoleErrorSpy).toHaveBeenCalled();
+          consoleErrorSpy.mockRestore();
+          resolve(undefined);
+        }, 10);
+      });
+    });
+  });
+
+  describe('updateNotificationPreferences', () => {
+    it('should update notification preferences successfully', async () => {
+      const userId = 'user-123';
+      const preferences = {
+        emailEnabled: true,
+        smsEnabled: false,
+        phoneNumber: '',
+        notificationFrequency: 'ALL' as const,
+      };
+
+      mockOrderApi.put.mockResolvedValue({ data: preferences });
+
+      const result = await orderService.updateNotificationPreferences(userId, preferences);
+
+      expect(mockOrderApi.put).toHaveBeenCalledWith(
+        '/notifications/preferences?userId=user-123',
+        preferences
+      );
+      expect(result).toEqual(preferences);
+    });
+  });
+
+  describe('getNotificationPreferences', () => {
+    it('should get notification preferences successfully', async () => {
+      const userId = 'user-123';
+      const preferences = {
+        emailEnabled: true,
+        smsEnabled: false,
+        phoneNumber: '',
+        notificationFrequency: 'ALL' as const,
+      };
+
+      mockOrderApi.get.mockResolvedValue({ data: preferences });
+
+      const result = await orderService.getNotificationPreferences(userId);
+
+      expect(mockOrderApi.get).toHaveBeenCalledWith('/notifications/preferences?userId=user-123');
+      expect(result).toEqual(preferences);
+    });
+  });
 });
 
