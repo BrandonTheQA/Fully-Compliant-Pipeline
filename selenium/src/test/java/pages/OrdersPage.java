@@ -197,8 +197,8 @@ public class OrdersPage extends BasePage {
         
         // Find the cart item with the matching product name
         for (WebElement cartItem : cartItems) {
-            // Find the h4 element containing the product name
-            WebElement nameElement = cartItem.findElement(By.cssSelector("h4"));
+            // Find the h3 element containing the product name
+            WebElement nameElement = cartItem.findElement(By.cssSelector("h3"));
             if (nameElement.getText().equals(productName)) {
                 // Find the + button within this cart item
                 WebElement plusButton = cartItem.findElement(QUANTITY_CONTROL_PLUS);
