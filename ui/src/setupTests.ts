@@ -27,8 +27,16 @@ console.error = (...args: unknown[]) => {
     // Suppress these expected errors
     return;
   }
+  
+  // Check all arguments for error patterns
+  const errorMessage = args.map(arg => {
+    if (typeof arg === 'string') return arg;
+    if (arg instanceof Error) return arg.message;
+    if (arg && typeof arg === 'object' && 'message' in arg) return String(arg.message);
+    return String(arg);
+  }).join(' ');
+  
   // Suppress AggregateError messages related to XMLHttpRequest
-  const errorMessage = args[0]?.toString() || '';
   if (
     errorMessage.includes('AggregateError') &&
     (errorMessage.includes('XMLHttpRequest') || errorMessage.includes('xhr-utils'))
@@ -36,6 +44,19 @@ console.error = (...args: unknown[]) => {
     // Suppress these expected errors
     return;
   }
+  
+  // Suppress expected network errors from application code in test environment
+  // These occur when components try to make API calls but backend isn't available
+  if (
+    errorMessage.includes('Network Error') ||
+    errorMessage.includes('Failed to load wishlist') ||
+    errorMessage.includes('Failed to fetch') ||
+    (errorMessage.includes('Error') && errorMessage.includes('Network'))
+  ) {
+    // Suppress these expected network errors in test environment
+    return;
+  }
+  
   // Pass through all other errors
   originalError.apply(console, args);
 };
