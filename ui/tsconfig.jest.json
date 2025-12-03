@@ -14,5 +14,5 @@
     "noUnusedParameters": false,
     "noEmit": true
   },
-  "include": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/setupTests.ts", "src/test-setup.d.ts", "src/utils/test-utils.tsx"]
+  "include": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/**/*.ts", "src/**/*.tsx", "src/setupTests.ts", "src/test-setup.d.ts", "src/utils/test-utils.tsx", "src/vite-env.d.ts", "src/global.d.ts"]
 }
