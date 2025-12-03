@@ -11,6 +11,56 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
+// Initialize sessionStorage mock for jsdom
+// This ensures sessionStorage is available in the test environment and works with Object.keys()
+if (typeof window !== 'undefined') {
+  const sessionStorageMock = (() => {
+    const store: Record<string, string> = {};
+    const storage = {
+      getItem: (key: string) => store[key] || null,
+      setItem: (key: string, value: string) => {
+        store[key] = value.toString();
+      },
+      removeItem: (key: string) => {
+        delete store[key];
+      },
+      clear: () => {
+        Object.keys(store).forEach(key => delete store[key]);
+      },
+      get length() {
+        return Object.keys(store).length;
+      },
+      key: (index: number) => {
+        const keys = Object.keys(store);
+        return keys[index] || null;
+      },
+    };
+    // Make store enumerable so Object.keys() works
+    return new Proxy(storage, {
+      ownKeys: () => Reflect.ownKeys(store),
+      getOwnPropertyDescriptor: (target, prop) => {
+        if (typeof prop === 'string' && prop in store) {
+          return {
+            enumerable: true,
+            configurable: true,
+            value: store[prop],
+          };
+        }
+        return Reflect.getOwnPropertyDescriptor(target, prop);
+      },
+      has: (target, prop) => {
+        return typeof prop === 'string' && prop in store ? true : Reflect.has(target, prop);
+      },
+    });
+  })();
+  
+  Object.defineProperty(window, 'sessionStorage', {
+    value: sessionStorageMock,
+    writable: true,
+    configurable: true,
+  });
+}
+
 // Suppress expected XMLHttpRequest errors in test environment
 // These occur when components try to make API calls but the backend isn't available
 // Tests should mock API calls, but some components may still attempt real requests during mount

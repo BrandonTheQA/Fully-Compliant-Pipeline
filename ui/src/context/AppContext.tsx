@@ -43,13 +43,19 @@ interface AppProviderProps {
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [user, setUserState] = useState<User | null>(() => {
-    const savedUser = sessionStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const savedUser = sessionStorage.getItem('user');
+      return savedUser ? JSON.parse(savedUser) : null;
+    }
+    return null;
   });
 
   const [cart, setCart] = useState<CartItem[]>(() => {
-    const savedCart = sessionStorage.getItem('cart');
-    return savedCart ? JSON.parse(savedCart) : [];
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      const savedCart = sessionStorage.getItem('cart');
+      return savedCart ? JSON.parse(savedCart) : [];
+    }
+    return [];
   });
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -249,19 +255,25 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const setUser = (user: User | null) => {
     setUserState(user);
-    if (user) {
-      sessionStorage.setItem('user', JSON.stringify(user));
-    } else {
-      sessionStorage.removeItem('user');
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      if (user) {
+        sessionStorage.setItem('user', JSON.stringify(user));
+      } else {
+        sessionStorage.removeItem('user');
+      }
+    }
+    if (!user) {
       setWishlist([]); // Clear wishlist on logout
     }
   };
 
   useEffect(() => {
-    if (cart.length > 0) {
-      sessionStorage.setItem('cart', JSON.stringify(cart));
-    } else {
-      sessionStorage.removeItem('cart');
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      if (cart.length > 0) {
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+      } else {
+        sessionStorage.removeItem('cart');
+      }
     }
   }, [cart]);
 
@@ -297,7 +309,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
 
   const clearCart = () => {
     setCart([]);
-    sessionStorage.removeItem('cart');
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      sessionStorage.removeItem('cart');
+    }
   };
 
   const value: AppContextType = {
