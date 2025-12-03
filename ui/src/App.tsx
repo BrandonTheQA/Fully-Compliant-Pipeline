@@ -37,8 +37,11 @@ const Navigation: React.FC = () => {
 function AppContent() {
   return (
     <Router>
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
       <Navigation />
-      <main className="main-content">
+      <main id="main-content" className="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/user" element={<UserPage />} />

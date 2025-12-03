@@ -20,7 +20,7 @@ export const Home: React.FC = () => {
       <div className="workflow-steps">
         <div className="step">
           <div className="step-number">1</div>
-          <h3>Create User</h3>
+          <h2>Create User</h2>
           <p>Start by creating a user account</p>
           <Link to="/user" className="btn btn-primary">
             {user ? 'View/Update User' : 'Create User'}
@@ -29,7 +29,7 @@ export const Home: React.FC = () => {
 
         <div className="step">
           <div className="step-number">2</div>
-          <h3>Products</h3>
+          <h2>Products</h2>
           <p>Browse and manage products</p>
           <Link to="/products" className="btn btn-primary">
             View Products
@@ -38,7 +38,7 @@ export const Home: React.FC = () => {
 
         <div className="step">
           <div className="step-number">3</div>
-          <h3>Orders</h3>
+          <h2>Orders</h2>
           <p>Create and view orders</p>
           <Link to="/orders" className="btn btn-primary">
             {cart.length > 0 ? `Cart (${cart.length})` : 'View Orders'}

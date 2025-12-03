@@ -96,8 +96,8 @@ export const OrderTrackingPage: React.FC = () => {
           ← Back to Orders
         </Link>
         {connected && (
-          <div className="live-indicator">
-            <span className="live-dot"></span>
+          <div className="live-indicator" role="status" aria-live="polite" aria-label="Live updates enabled">
+            <span className="live-dot" aria-hidden="true"></span>
             Live Updates
           </div>
         )}

@@ -144,11 +144,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
   return (
     <div className="order-form-container">
       <h2>Review Your Order</h2>
-      <div className="cart-items">
-        {cart.map((item) => (
+      <fieldset className="cart-items-fieldset">
+        <legend>Cart Items</legend>
+        <div className="cart-items">
+          {cart.map((item) => (
           <div key={item.id} className="cart-item">
             <div className="cart-item-info">
-              <h4>{item.name}</h4>
+              <h3>{item.name}</h3>
               <p className="cart-item-price">${item.price.toFixed(2)} each</p>
             </div>
             <div className="cart-item-controls">
@@ -165,10 +167,17 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
                   onClick={() => updateCartQuantity(item.id, item.orderQuantity + 1)}
                   className="btn btn-sm"
                   disabled={item.orderQuantity >= item.quantity}
+                  aria-disabled={item.orderQuantity >= item.quantity}
                   aria-label={`Increase quantity of ${item.name}`}
+                  aria-describedby={item.orderQuantity >= item.quantity ? `max-quantity-${item.id}` : undefined}
                 >
                   +
                 </button>
+                {item.orderQuantity >= item.quantity && (
+                  <span id={`max-quantity-${item.id}`} className="sr-only">
+                    Maximum quantity reached for {item.name}
+                  </span>
+                )}
               </div>
               <p className="cart-item-subtotal">
                 ${(item.price * item.orderQuantity).toFixed(2)}
@@ -181,10 +190,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
               </button>
             </div>
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </fieldset>
       {shippingRegion && freeShippingThreshold !== null && shippingCost !== null && defaultShippingCost !== null && (
-        <>
+        <fieldset className="shipping-fieldset">
+          <legend>Shipping Information</legend>
           {/* Show recommendations only when cart doesn't qualify for free shipping */}
           {!qualifiesForFreeShipping && (
             <ShippingRecommendations
@@ -207,52 +218,58 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
             remainingAmount={Math.max(0, freeShippingThreshold - subtotal)}
             qualifiesForFreeShipping={subtotal >= freeShippingThreshold}
           />
-        </>
+        </fieldset>
       )}
       {user && loyaltyBalance > 0 && (
-        <div className="loyalty-section">
-          <LoyaltyBalance userId={user.userId} onBalanceChange={setLoyaltyBalance} />
-          <PointRedemptionForm
-            userId={user.userId}
-            currentBalance={loyaltyBalance}
-            orderTotal={subtotal + currentShippingCost}
-            onRedemptionSuccess={(response: RedeemPointsResponse) => {
-              setPointsToRedeem(response.pointsRedeemed);
-              setPointsDiscount(response.discountAmount);
-              setLoyaltyBalance(response.remainingBalance);
-            }}
-            onError={(errorMsg: string) => {
-              setError(errorMsg);
-            }}
-          />
-        </div>
-      )}
-      <div className="order-summary">
-        <div className="summary-row">
-          <span>Subtotal:</span>
-          <span>${subtotal.toFixed(2)}</span>
-        </div>
-        <div className="summary-row">
-          <span>Shipping:</span>
-          <span>
-            {shippingCost !== null && shippingCost === 0 ? (
-              <span className="shipping-free-text">FREE</span>
-            ) : (
-              `$${currentShippingCost.toFixed(2)}`
-            )}
-          </span>
-        </div>
-        {pointsDiscount > 0 && (
-          <div className="summary-row summary-row-discount">
-            <span>Points Discount:</span>
-            <span className="discount-amount">-${pointsDiscount.toFixed(2)}</span>
+        <fieldset className="loyalty-fieldset">
+          <legend>Loyalty Points</legend>
+          <div className="loyalty-section">
+            <LoyaltyBalance userId={user.userId} onBalanceChange={setLoyaltyBalance} />
+            <PointRedemptionForm
+              userId={user.userId}
+              currentBalance={loyaltyBalance}
+              orderTotal={subtotal + currentShippingCost}
+              onRedemptionSuccess={(response: RedeemPointsResponse) => {
+                setPointsToRedeem(response.pointsRedeemed);
+                setPointsDiscount(response.discountAmount);
+                setLoyaltyBalance(response.remainingBalance);
+              }}
+              onError={(errorMsg: string) => {
+                setError(errorMsg);
+              }}
+            />
           </div>
-        )}
-        <div className="summary-row">
-          <span>Total:</span>
-          <span className="total-amount">${totalAmount.toFixed(2)}</span>
+        </fieldset>
+      )}
+      <fieldset className="order-summary-fieldset">
+        <legend>Order Summary</legend>
+        <div className="order-summary">
+          <div className="summary-row">
+            <span>Subtotal:</span>
+            <span>${subtotal.toFixed(2)}</span>
+          </div>
+          <div className="summary-row">
+            <span>Shipping:</span>
+            <span>
+              {shippingCost !== null && shippingCost === 0 ? (
+                <span className="shipping-free-text">FREE</span>
+              ) : (
+                `$${currentShippingCost.toFixed(2)}`
+              )}
+            </span>
+          </div>
+          {pointsDiscount > 0 && (
+            <div className="summary-row summary-row-discount">
+              <span>Points Discount:</span>
+              <span className="discount-amount">-${pointsDiscount.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="summary-row">
+            <span>Total:</span>
+            <span className="total-amount">${totalAmount.toFixed(2)}</span>
+          </div>
         </div>
-      </div>
+      </fieldset>
       <form onSubmit={handleSubmit}>
         {error && (
           <div id="order-error" className="error-message" role="alert">

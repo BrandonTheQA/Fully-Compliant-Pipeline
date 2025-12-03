@@ -21,7 +21,9 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
         </div>
         <div className="info-row">
           <span className="label">Status:</span>
-          <span className="value status-badge">{order.status}</span>
+          <span className="value status-badge" aria-label={`Order status: ${order.status}`}>
+            {order.status}
+          </span>
         </div>
         <div className="info-row">
           <span className="label">Total Amount:</span>
@@ -40,10 +42,10 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
         <table className="items-table">
           <thead>
             <tr>
-              <th>Product Name</th>
-              <th>Quantity</th>
-              <th>Price</th>
-              <th>Subtotal</th>
+              <th scope="col">Product Name</th>
+              <th scope="col">Quantity</th>
+              <th scope="col">Price</th>
+              <th scope="col">Subtotal</th>
             </tr>
           </thead>
           <tbody>

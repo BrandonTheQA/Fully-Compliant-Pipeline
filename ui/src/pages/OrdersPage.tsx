@@ -103,7 +103,7 @@ export const OrdersPage: React.FC = () => {
                   aria-label={`View order ${order.id.slice(0, 8)}`}
                 >
                   <h3>Order #{order.id.slice(0, 8)}</h3>
-                  <p><strong>Status:</strong> {order.status}</p>
+                  <p><strong>Status:</strong> <span aria-label={`Order status: ${order.status}`}>{order.status}</span></p>
                   <p><strong>Total:</strong> ${order.totalAmount.toFixed(2)}</p>
                   <p><strong>Items:</strong> {order.items.length}</p>
                   {order.createdAt && (

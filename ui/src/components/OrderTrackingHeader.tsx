@@ -31,7 +31,10 @@ export const OrderTrackingHeader: React.FC<OrderTrackingHeaderProps> = ({ tracki
       <div className="tracking-header-main">
         <div className="order-info">
           <h2>Order #{tracking.orderId.slice(0, 8)}</h2>
-          <div className={`status-badge ${getStatusColor(tracking.status)}`}>
+          <div 
+            className={`status-badge ${getStatusColor(tracking.status)}`}
+            aria-label={`Order status: ${tracking.status.replace('_', ' ')}`}
+          >
             {tracking.status.replace('_', ' ')}
           </div>
         </div>

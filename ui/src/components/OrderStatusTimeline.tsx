@@ -41,9 +41,11 @@ export const OrderStatusTimeline: React.FC<OrderStatusTimelineProps> = ({
             <div 
               key={entry.id} 
               className={`timeline-item ${isCurrentStatus(entry.status) ? 'current' : ''}`}
+              aria-current={isCurrentStatus(entry.status) ? 'step' : undefined}
+              aria-label={isCurrentStatus(entry.status) ? `Current status: ${entry.status.replace('_', ' ')}` : undefined}
             >
               <div className="timeline-marker">
-                {isCurrentStatus(entry.status) && <div className="current-indicator" />}
+                {isCurrentStatus(entry.status) && <div className="current-indicator" aria-hidden="true" />}
               </div>
               <div className="timeline-content">
                 <div className="timeline-header">

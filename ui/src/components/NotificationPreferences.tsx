@@ -71,8 +71,9 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
 
       <div className="preferences-form">
         <div className="preference-item">
-          <label>
+          <label htmlFor="email-notifications">
             <input
+              id="email-notifications"
               type="checkbox"
               checked={preferences.emailEnabled}
               onChange={(e) => setPreferences({ ...preferences, emailEnabled: e.target.checked })}
@@ -82,8 +83,9 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
         </div>
 
         <div className="preference-item">
-          <label>
+          <label htmlFor="sms-notifications">
             <input
+              id="sms-notifications"
               type="checkbox"
               checked={preferences.smsEnabled}
               onChange={(e) => setPreferences({ ...preferences, smsEnabled: e.target.checked })}
@@ -94,9 +96,10 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
 
         {preferences.smsEnabled && (
           <div className="preference-item">
-            <label>
+            <label htmlFor="phone-number">
               Phone Number:
               <input
+                id="phone-number"
                 type="tel"
                 value={preferences.phoneNumber || ''}
                 onChange={(e) => setPreferences({ ...preferences, phoneNumber: e.target.value })}
@@ -107,9 +110,10 @@ export const NotificationPreferences: React.FC<NotificationPreferencesProps> = (
         )}
 
         <div className="preference-item">
-          <label>
+          <label htmlFor="notification-frequency">
             Notification Frequency:
             <select
+              id="notification-frequency"
               value={preferences.notificationFrequency}
               onChange={(e) => setPreferences({ 
                 ...preferences, 

@@ -21,7 +21,7 @@ export const ShippingBanner: React.FC<ShippingBannerProps> = ({
       <div className="shipping-banner-content">
         {qualifiesForFreeShipping ? (
           <div className="shipping-banner-message shipping-banner-success-message">
-            <span className="shipping-banner-icon">🎉</span>
+            <span className="shipping-banner-icon" aria-label="Celebration">🎉</span>
             <span>You've qualified for FREE shipping!</span>
           </div>
         ) : (

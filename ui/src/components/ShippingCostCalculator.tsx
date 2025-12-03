@@ -34,7 +34,7 @@ export const ShippingCostCalculator: React.FC<ShippingCostCalculatorProps> = ({
             {qualifiesForFreeShipping ? (
               <>
                 <span className="shipping-free-text">FREE</span>
-                <span className="shipping-free-icon">🎉</span>
+                <span className="shipping-free-icon" aria-label="Celebration">🎉</span>
               </>
             ) : (
               `$${shippingCost.toFixed(2)}`

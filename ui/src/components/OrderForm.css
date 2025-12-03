@@ -9,8 +9,27 @@
   margin-bottom: 1.5rem;
 }
 
+.cart-items-fieldset,
+.shipping-fieldset,
+.loyalty-fieldset,
+.order-summary-fieldset {
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.cart-items-fieldset legend,
+.shipping-fieldset legend,
+.loyalty-fieldset legend,
+.order-summary-fieldset legend {
+  padding: 0 0.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
 .cart-items {
-  margin-bottom: 2rem;
+  margin-bottom: 0;
 }
 
 .cart-item {
