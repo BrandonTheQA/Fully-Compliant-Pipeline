@@ -1,6 +1,10 @@
 /// <reference types="@testing-library/jest-dom" />
 import '@testing-library/jest-dom';
+import { toHaveNoViolations } from 'jest-axe';
 /// <reference path="./test-setup.d.ts" />
+
+// Extend Jest expect with jest-axe matchers
+expect.extend(toHaveNoViolations);
 
 // Polyfill for TextEncoder/TextDecoder for react-router compatibility
 import { TextEncoder, TextDecoder } from 'util';

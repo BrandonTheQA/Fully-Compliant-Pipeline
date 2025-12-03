@@ -104,6 +104,9 @@ jobs:
         working-directory: ui
         run: npm ci
 
+      - name: Run tests (including accessibility)
+        working-directory: ui
+        run: npm test
       - name: Build UI
         working-directory: ui
         run: npm run build
