@@ -1,5 +1,5 @@
-import { render, RenderResult } from '@testing-library/react';
-import { axe, AxeResults } from 'jest-axe';
+import { render, type RenderResult } from '@testing-library/react';
+import { axe } from 'jest-axe';
 import React from 'react';
 
 /**
@@ -22,7 +22,7 @@ import React from 'react';
  */
 export async function renderAndCheckA11y(
   component: React.ReactElement
-): Promise<RenderResult & { axeResults: AxeResults }> {
+): Promise<RenderResult & { axeResults: Awaited<ReturnType<typeof axe>> }> {
   const renderResult = render(component);
   const axeResults = await axe(renderResult.container);
   expect(axeResults).toHaveNoViolations();
