@@ -427,6 +427,8 @@ jobs:
           RAND=$(date +%s)
           BACKEND_URL="https://app-ecompoc-dev-backend.azurewebsites.net/api"
           echo "Running Postman tests against: ${BACKEND_URL}"
+          # NOTE: Test password is intentionally weak for automated testing only
+          # See SECURITY.md for production security requirements
           newman run postman/IntegrationTest.postman_collection.json \
             --env-var apiBaseUrl="${BACKEND_URL}" \
             --env-var userName="John Doe" \

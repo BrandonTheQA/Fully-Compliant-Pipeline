@@ -125,6 +125,8 @@ Test data constants are defined in `TestConfig.java`:
 - **Product 3**: Keyboard, $79.99, Electronics, Qty: 25
 - **Expected Order Total**: $1,089.97
 
+**⚠️ Security Note:** Test passwords (e.g., `SecurePassword123`) are intentionally weak and are **ONLY** for automated testing purposes. These should never be used in production or real-world scenarios. See [SECURITY.md](../SECURITY.md) for more information.
+
 ## Page Object Model
 
 The tests use the Page Object Model pattern for maintainability:

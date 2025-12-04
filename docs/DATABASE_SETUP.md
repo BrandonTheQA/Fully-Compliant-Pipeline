@@ -8,10 +8,12 @@ All services (user, product, and order) now use a shared Azure SQL Database inst
 
 ## Database Connection
 
+**Note:** The server, database name, and username shown below are **examples** for demonstration purposes. In production, these should be configured via environment variables and not hardcoded in the repository.
+
 The services connect to:
-- **Server**: `sqlserverpoc121212.database.windows.net`
-- **Database**: `pocdb`
-- **Username**: `bgarlock`
+- **Server**: `sqlserverpoc121212.database.windows.net` (example - use environment variable in production)
+- **Database**: `pocdb` (example)
+- **Username**: `bgarlock` (example - use environment variable in production)
 - **Password**: Set via GitHub Secret (see below)
 
 ## Setting Up GitHub Secret
@@ -28,8 +30,10 @@ The database password must be configured as a GitHub Secret to securely deploy s
 2. **Add New Secret**
    - Click **New repository secret**
    - Name: `SQL_SERVER_PASSWORD`
-   - Value: Enter your Azure SQL Database password (the password for `bgarlock`)
+   - Value: Enter your Azure SQL Database password (the password for the database user)
    - Click **Add secret**
+   
+   **Note:** The username `bgarlock` shown in examples is for demonstration purposes only. Use your actual database credentials.
 
 3. **Verify Secret**
    - The secret should now appear in your secrets list
@@ -127,7 +131,7 @@ jdbc:sqlserver://sqlserverpoc121212.database.windows.net:1433;database=pocdb;enc
 ```
 
 With username and password:
-- **Username**: `bgarlock`
+- **Username**: Set via environment variable (example shown: `bgarlock` - replace with your actual database username)
 - **Password**: Set via `SQL_SERVER_PASSWORD` environment variable
 
 Make sure:

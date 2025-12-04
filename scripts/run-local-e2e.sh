@@ -85,6 +85,8 @@ RAND=$(date +%s)
 COLLECTION="$ROOT_DIR/postman/IntegrationTest.postman_collection.json"
 
 echo "Running Postman tests with Newman..."
+# NOTE: Test password is intentionally weak for automated testing only
+# See SECURITY.md for production security requirements
 newman run "$COLLECTION" \
   --env-var apiBaseUrl="http://localhost:$ECOMPOC_PORT/api" \
   --env-var userName="John Doe" \

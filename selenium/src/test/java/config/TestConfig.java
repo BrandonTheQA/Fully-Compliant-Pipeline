@@ -26,6 +26,8 @@ public class TestConfig {
     public static class TestData {
         // User data
         public static final String USER_NAME = "John Doe";
+        // NOTE: Test passwords are intentionally weak for automated testing purposes only.
+        // These should NEVER be used in production or real-world scenarios.
         public static final String USER_PASSWORD = "SecurePassword123";
         
         // Product 1 (Laptop)
