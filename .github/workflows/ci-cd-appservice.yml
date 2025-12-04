@@ -56,6 +56,32 @@ jobs:
           echo "Dry-run preview of release report:"
           cat release-report/release-report-${{ github.run_id }}.md
 
+  validate-jira-stories:
+    name: Validate JIRA Story Status
+    runs-on: ubuntu-latest
+    needs: [release-report]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download release report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-report
+          path: release-report
+
+      - name: Validate JIRA stories
+        env:
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN || '' }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL || '' }}
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL || 'https://ecompoc.atlassian.net' }}
+          JIRA_VALIDATION_ENABLED: ${{ secrets.JIRA_VALIDATION_ENABLED || 'true' }}
+          RELEASE_REPORT_DIR: release-report
+        run: |
+          chmod +x scripts/validate-jira-stories.sh
+          scripts/validate-jira-stories.sh
+
   build-backend:
     name: Build ecomPOC Service Artifact
     runs-on: ubuntu-latest
@@ -557,7 +583,7 @@ jobs:
   deploy-prod:
     name: Deploy to Prod Environment
     runs-on: ubuntu-latest
-    needs: [deploy-qa]
+    needs: [deploy-qa, validate-jira-stories]
     environment: prod
     steps:
       - name: Checkout repository
