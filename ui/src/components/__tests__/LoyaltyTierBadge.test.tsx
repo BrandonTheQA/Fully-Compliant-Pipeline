@@ -53,31 +53,36 @@ describe('LoyaltyTierBadge', () => {
   });
 
   it('should apply correct color for BRONZE tier', () => {
-    render(<LoyaltyTierBadge tier="BRONZE" />);
+    const { container } = render(<LoyaltyTierBadge tier="BRONZE" />);
     
-    const badgeIcon = screen.getByText('B').closest('.loyalty-tier-badge-icon');
-    expect(badgeIcon).toHaveStyle({ backgroundColor: '#cd7f32' });
+    const badgeIcon = container.querySelector('.loyalty-tier-badge-icon') as HTMLElement;
+    expect(badgeIcon).toBeInTheDocument();
+    // Verify the badge icon has the correct background color
+    expect(badgeIcon.style.backgroundColor).toBe('rgb(205, 127, 50)'); // #cd7f32 in rgb
   });
 
   it('should apply correct color for SILVER tier', () => {
-    render(<LoyaltyTierBadge tier="SILVER" />);
+    const { container } = render(<LoyaltyTierBadge tier="SILVER" />);
     
-    const badgeIcon = screen.getByText('S').closest('.loyalty-tier-badge-icon');
-    expect(badgeIcon).toHaveStyle({ backgroundColor: '#c0c0c0' });
+    const badgeIcon = container.querySelector('.loyalty-tier-badge-icon') as HTMLElement;
+    expect(badgeIcon).toBeInTheDocument();
+    expect(badgeIcon.style.backgroundColor).toBe('rgb(192, 192, 192)'); // #c0c0c0 in rgb
   });
 
   it('should apply correct color for GOLD tier', () => {
-    render(<LoyaltyTierBadge tier="GOLD" />);
+    const { container } = render(<LoyaltyTierBadge tier="GOLD" />);
     
-    const badgeIcon = screen.getByText('G').closest('.loyalty-tier-badge-icon');
-    expect(badgeIcon).toHaveStyle({ backgroundColor: '#ffd700' });
+    const badgeIcon = container.querySelector('.loyalty-tier-badge-icon') as HTMLElement;
+    expect(badgeIcon).toBeInTheDocument();
+    expect(badgeIcon.style.backgroundColor).toBe('rgb(255, 215, 0)'); // #ffd700 in rgb
   });
 
   it('should apply correct color for PLATINUM tier', () => {
-    render(<LoyaltyTierBadge tier="PLATINUM" />);
+    const { container } = render(<LoyaltyTierBadge tier="PLATINUM" />);
     
-    const badgeIcon = screen.getByText('P').closest('.loyalty-tier-badge-icon');
-    expect(badgeIcon).toHaveStyle({ backgroundColor: '#e8e8e8' });
+    const badgeIcon = container.querySelector('.loyalty-tier-badge-icon') as HTMLElement;
+    expect(badgeIcon).toBeInTheDocument();
+    expect(badgeIcon.style.backgroundColor).toBe('rgb(232, 232, 232)'); // #e8e8e8 in rgb
   });
 
   it('should format tier label correctly', () => {
@@ -90,15 +95,16 @@ describe('LoyaltyTierBadge', () => {
     render(<LoyaltyTierBadge tier="GOLD" />);
     
     const badgeIcon = screen.getByText('G').closest('.loyalty-tier-badge-icon');
-    expect(badgeIcon).toHaveAttribute('aria-label', 'Gold tier');
+    expect(badgeIcon?.getAttribute('aria-label')).toBe('Gold tier');
   });
 
   it('should handle default tier (BRONZE) for unknown tier', () => {
-    render(<LoyaltyTierBadge tier={'UNKNOWN' as LoyaltyTier} />);
+    const { container } = render(<LoyaltyTierBadge tier={'UNKNOWN' as LoyaltyTier} />);
     
     // Should default to BRONZE color
-    const badgeIcon = screen.getByText('U').closest('.loyalty-tier-badge-icon');
-    expect(badgeIcon).toHaveStyle({ backgroundColor: '#cd7f32' });
+    const badgeIcon = container.querySelector('.loyalty-tier-badge-icon') as HTMLElement;
+    expect(badgeIcon).toBeInTheDocument();
+    expect(badgeIcon.style.backgroundColor).toBe('rgb(205, 127, 50)'); // #cd7f32 in rgb
   });
 
   it('should display formatted points to next tier with commas', () => {

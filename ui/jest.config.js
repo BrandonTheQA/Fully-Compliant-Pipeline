@@ -1,3 +1,7 @@
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const packageJson = require('./package.json');
+
 export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'jsdom',
@@ -14,6 +18,7 @@ export default {
     'ts-jest': {
       tsconfig: 'tsconfig.jest.json',
     },
+    __APP_VERSION__: packageJson.version,
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node'],
   collectCoverageFrom: [

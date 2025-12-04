@@ -183,7 +183,7 @@ describe('orderService', () => {
       const orderId = 'order-1';
       const onUpdate = jest.fn();
       const mockEventSource = {
-        addEventListener: jest.fn((event, handler) => {
+        addEventListener: jest.fn((event: string, handler: (e: any) => void) => {
           if (event === 'status-update') {
             // Simulate event
             setTimeout(() => {
@@ -212,9 +212,9 @@ describe('orderService', () => {
     it('should handle JSON parse errors gracefully', () => {
       const orderId = 'order-1';
       const onUpdate = jest.fn();
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       const mockEventSource = {
-        addEventListener: jest.fn((event, handler) => {
+        addEventListener: jest.fn((event: string, handler: (e: any) => void) => {
           if (event === 'status-update') {
             // Simulate invalid JSON
             setTimeout(() => {
@@ -246,6 +246,7 @@ describe('orderService', () => {
     it('should update notification preferences successfully', async () => {
       const userId = 'user-123';
       const preferences = {
+        userId: 'user-123',
         emailEnabled: true,
         smsEnabled: false,
         phoneNumber: '',
@@ -268,6 +269,7 @@ describe('orderService', () => {
     it('should get notification preferences successfully', async () => {
       const userId = 'user-123';
       const preferences = {
+        userId: 'user-123',
         emailEnabled: true,
         smsEnabled: false,
         phoneNumber: '',
