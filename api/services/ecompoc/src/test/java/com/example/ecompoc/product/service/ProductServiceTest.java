@@ -121,7 +121,7 @@ class ProductServiceTest {
                 "New Product", "New Description", 39.99, 50, "Electronics");
         Product savedProduct = new Product("product-id", "New Product", "New Description", 39.99, 50, "Electronics");
         
-        when(productRepository.findAll()).thenReturn(Arrays.asList());
+        when(productRepository.findByName("New Product")).thenReturn(Optional.empty());
         when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
 
         // When
@@ -137,7 +137,7 @@ class ProductServiceTest {
         assertEquals("Electronics", result.getCategory());
         assertNotNull(result.getCreatedAt());
         
-        verify(productRepository).findAll();
+        verify(productRepository).findByName("New Product");
         verify(productRepository).save(any(Product.class));
     }
 
@@ -149,7 +149,7 @@ class ProductServiceTest {
                 "Existing Product", "Updated Description", 49.99, 75, "Updated Category");
         Product existingProduct = new Product("product-id", "Existing Product", "Old Description", 29.99, 50, "Old Category");
         
-        when(productRepository.findAll()).thenReturn(Arrays.asList(existingProduct));
+        when(productRepository.findByName("Existing Product")).thenReturn(Optional.of(existingProduct));
         when(productRepository.save(any(Product.class))).thenReturn(existingProduct);
 
         // When
@@ -160,6 +160,7 @@ class ProductServiceTest {
         assertEquals("product-id", result.getId());
         assertEquals("Existing Product", result.getName());
         // Verify the product was updated
+        verify(productRepository).findByName("Existing Product");
         verify(productRepository).save(any(Product.class));
         
         // Verify updated fields

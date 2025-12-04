@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -53,37 +54,31 @@ public class ProductService {
      * If product with same name exists, updates it; otherwise creates new one
      */
     public ProductResponse createOrUpdateProduct(CreateProductRequest request) {
-        // Check if product with same name exists
-        List<Product> existingProducts = productRepository.findAll();
-        Product existingProduct = existingProducts.stream()
-                .filter(p -> p.getName().equals(request.getName()))
-                .findFirst()
-                .orElse(null);
+        Product product = productRepository.findByName(request.getName())
+                .map(existingProduct -> {
+                    // Update existing product
+                    existingProduct.setDescription(request.getDescription());
+                    existingProduct.setPrice(request.getPrice());
+                    existingProduct.setQuantity(request.getQuantity());
+                    existingProduct.setCategory(request.getCategory());
+                    existingProduct.setUpdatedAt(LocalDateTime.now());
+                    return existingProduct;
+                })
+                .orElseGet(() -> {
+                    // Create new product
+                    String productId = UUID.randomUUID().toString();
+                    return new Product(
+                            productId,
+                            request.getName(),
+                            request.getDescription(),
+                            request.getPrice(),
+                            request.getQuantity(),
+                            request.getCategory()
+                    );
+                });
         
-        Product product;
-        if (existingProduct != null) {
-            // Update existing product
-            existingProduct.setDescription(request.getDescription());
-            existingProduct.setPrice(request.getPrice());
-            existingProduct.setQuantity(request.getQuantity());
-            existingProduct.setCategory(request.getCategory());
-            existingProduct.setUpdatedAt(LocalDateTime.now());
-            product = productRepository.save(existingProduct);
-        } else {
-            // Create new product
-            String productId = UUID.randomUUID().toString();
-            product = new Product(
-                    productId,
-                    request.getName(),
-                    request.getDescription(),
-                    request.getPrice(),
-                    request.getQuantity(),
-                    request.getCategory()
-            );
-            product = productRepository.save(product);
-        }
-        
-        return mapToResponse(product);
+        Product savedProduct = productRepository.save(product);
+        return mapToResponse(savedProduct);
     }
     
     /**
