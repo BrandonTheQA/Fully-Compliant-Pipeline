@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import type { User, Product, CartItem, RecommendationResponse } from '../types';
 import { shippingService } from '../services/shippingService';
 import { wishlistService } from '../services/wishlistService';
+import { stockService } from '../services/stockService';
 
 interface AppContextType {
   user: User | null;
@@ -275,6 +276,38 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         sessionStorage.removeItem('cart');
       }
     }
+  }, [cart]);
+
+  // Stock status polling for cart items (refresh every 30 seconds)
+  useEffect(() => {
+    if (cart.length === 0) return;
+
+    const updateCartStockStatus = async () => {
+      try {
+        const productIds = cart.map(item => item.id);
+        const stockStatuses = await stockService.getBulkStockStatus(productIds);
+        
+        setCart((prevCart) =>
+          prevCart.map((item) => {
+            const status = stockStatuses.find(s => s.productId === item.id);
+            return status
+              ? { ...item, stockStatus: status.status as 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' }
+              : item;
+          })
+        );
+      } catch (error) {
+        // Silently fail - stock status is optional
+        console.debug('Failed to update stock status:', error);
+      }
+    };
+
+    // Update immediately
+    updateCartStockStatus();
+
+    // Then update every 30 seconds
+    const interval = setInterval(updateCartStockStatus, 30000);
+
+    return () => clearInterval(interval);
   }, [cart]);
 
   const addToCart = (product: Product, quantity: number) => {

@@ -1722,6 +1722,268 @@
 				"description": "Gets shipping cost for product priced at $1000.00 - very high price edge case (SCRUM-9)"
 			},
 			"response": []
+		},
+		{
+			"name": "28. SCRUM-21: Get Stock Status for Product",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has stock status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('productId');",
+							"    pm.expect(jsonData).to.have.property('status');",
+							"    pm.expect(jsonData).to.have.property('quantity');",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"    pm.expect(['IN_STOCK', 'LOW_STOCK', 'OUT_OF_STOCK']).to.include(jsonData.status);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/products/{{product1Id}}/stock",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"products",
+						"{{product1Id}}",
+						"stock"
+					]
+				},
+				"description": "Gets stock status for a product (SCRUM-21)"
+			},
+			"response": []
+		},
+		{
+			"name": "29. SCRUM-21: Get Bulk Stock Status",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has statuses array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('statuses');",
+							"    pm.expect(jsonData.statuses).to.be.an('array');",
+							"    pm.expect(jsonData.statuses.length).to.be.greaterThan(0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"productIds\": [\"{{product1Id}}\", \"{{product2Id}}\", \"{{product3Id}}\"]\n}"
+				},
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/products/stock/bulk",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"products",
+						"stock",
+						"bulk"
+					]
+				},
+				"description": "Gets bulk stock status for multiple products (SCRUM-21)"
+			},
+			"response": []
+		},
+		{
+			"name": "30. SCRUM-21: Sign Up for Back-in-Stock Notification",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"productId\": \"{{product1Id}}\",\n    \"email\": \"{{userEmail}}\"\n}"
+				},
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/products/{{product1Id}}/notify-me",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"products",
+						"{{product1Id}}",
+						"notify-me"
+					]
+				},
+				"description": "Signs up for back-in-stock notification (SCRUM-21)"
+			},
+			"response": []
+		},
+		{
+			"name": "31. SCRUM-21: Get User Stock Notifications",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is an array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/stock/notifications?userId={{userId}}",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"stock",
+						"notifications"
+					],
+					"query": [
+						{
+							"key": "userId",
+							"value": "{{userId}}",
+							"description": "User ID"
+						}
+					]
+				},
+				"description": "Gets user's stock notification subscriptions (SCRUM-21)"
+			},
+			"response": []
+		},
+		{
+			"name": "32. SCRUM-21: Get Low Stock Products (Admin)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is an array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/admin/stock/low-stock",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"admin",
+						"stock",
+						"low-stock"
+					]
+				},
+				"description": "Gets low stock products for admin (SCRUM-21)"
+			},
+			"response": []
+		},
+		{
+			"name": "33. SCRUM-21: Get Stock Analytics (Admin)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has analytics data\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('totalProducts');",
+							"    pm.expect(jsonData).to.have.property('inStock');",
+							"    pm.expect(jsonData).to.have.property('lowStock');",
+							"    pm.expect(jsonData).to.have.property('outOfStock');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/admin/stock/analytics",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"admin",
+						"stock",
+						"analytics"
+					]
+				},
+				"description": "Gets stock analytics for admin dashboard (SCRUM-21)"
+			},
+			"response": []
 		}
 	],
 	"variable": [

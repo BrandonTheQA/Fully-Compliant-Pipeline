@@ -35,6 +35,9 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
+    @Column(name = "low_stock_threshold")
+    private Integer lowStockThreshold;
+    
     // Default constructor
     public Product() {}
     
@@ -122,6 +125,14 @@ public class Product {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public Integer getLowStockThreshold() {
+        return lowStockThreshold;
+    }
+    
+    public void setLowStockThreshold(Integer lowStockThreshold) {
+        this.lowStockThreshold = lowStockThreshold;
     }
 }
 

@@ -31,6 +31,8 @@ public class ProductsPage extends BasePage {
     private static final By PRODUCT_PRICES = By.cssSelector(".product-price");
     private static final By LOADING_MESSAGE = By.xpath("//*[contains(text(), 'Loading products')]");
     private static final By ADD_TO_CART_BUTTON = By.xpath("//button[contains(text(), 'Add to Cart')]");
+    private static final By STOCK_STATUS_BADGE = By.className("stock-status-badge");
+    private static final By NOTIFY_ME_BUTTON = By.xpath("//button[contains(text(), 'Notify Me When Available')]");
 
     public ProductsPage(WebDriver driver) {
         super(driver);
@@ -258,6 +260,86 @@ public class ProductsPage extends BasePage {
             wait.until(ExpectedConditions.elementToBeClickable(HIDE_CREATE_FORM_BUTTON)).click();
         } catch (Exception e) {
             // Ignore if button not clickable
+        }
+    }
+    
+    /**
+     * Checks if stock status badge is displayed for a product.
+     * 
+     * @param productName Product name to check
+     * @return true if stock status badge is displayed
+     */
+    public boolean isStockStatusBadgeDisplayed(String productName) {
+        try {
+            WebElement productCard = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//div[contains(@class, 'product-card') and .//h3[text()='" + productName + "']]")
+            ));
+            
+            List<WebElement> badges = productCard.findElements(STOCK_STATUS_BADGE);
+            return !badges.isEmpty() && badges.get(0).isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Checks if "Add to Cart" button is enabled for a product.
+     * 
+     * @param productName Product name to check
+     * @return true if Add to Cart button is enabled
+     */
+    public boolean isAddToCartButtonEnabled(String productName) {
+        try {
+            WebElement productCard = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//div[contains(@class, 'product-card') and .//h3[text()='" + productName + "']]")
+            ));
+            
+            List<WebElement> addToCartButtons = productCard.findElements(ADD_TO_CART_BUTTON);
+            if (!addToCartButtons.isEmpty()) {
+                WebElement button = addToCartButtons.get(0);
+                return button.isDisplayed() && button.isEnabled();
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Checks if "Notify Me When Available" button is displayed for a product.
+     * 
+     * @param productName Product name to check
+     * @return true if Notify Me button is displayed
+     */
+    public boolean isNotifyMeButtonDisplayed(String productName) {
+        try {
+            WebElement productCard = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//div[contains(@class, 'product-card') and .//h3[text()='" + productName + "']]")
+            ));
+            
+            List<WebElement> notifyButtons = productCard.findElements(NOTIFY_ME_BUTTON);
+            return !notifyButtons.isEmpty() && notifyButtons.get(0).isDisplayed();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Checks if low stock warning is displayed for a product.
+     * 
+     * @param productName Product name to check
+     * @return true if low stock warning is displayed
+     */
+    public boolean isLowStockWarningDisplayed(String productName) {
+        try {
+            WebElement productCard = wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//div[contains(@class, 'product-card') and .//h3[text()='" + productName + "']]")
+            ));
+            
+            List<WebElement> warnings = productCard.findElements(By.className("low-stock-warning"));
+            return !warnings.isEmpty() && warnings.get(0).isDisplayed();
+        } catch (Exception e) {
+            return false;
         }
     }
 }

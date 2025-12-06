@@ -1,0 +1,36 @@
+.cart-stock-status {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.cart-stock-status-header {
+  margin-bottom: 8px;
+}
+
+.cart-stock-out-of-stock {
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+}
+
+.out-of-stock-message {
+  margin: 0 0 12px 0;
+  color: #856404;
+  font-size: 0.9rem;
+}
+
+.out-of-stock-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.out-of-stock-actions .btn {
+  flex: 1;
+  min-width: 120px;
+}
+

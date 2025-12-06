@@ -4,6 +4,9 @@ import { productService } from '../services/productService';
 import type { Product } from '../types';
 import { ProductShippingPreview } from './ProductShippingPreview';
 import { WishlistButton } from './WishlistButton';
+import { StockStatusBadge } from './StockStatusBadge';
+import { LowStockWarning } from './LowStockWarning';
+import { NotifyMeButton } from './NotifyMeButton';
 import './ProductList.css';
 
 interface ProductListProps {
@@ -83,19 +86,29 @@ export const ProductList: React.FC<ProductListProps> = ({
               <span className="product-category">{product.category}</span>
               <span className="product-quantity">Stock: {product.quantity}</span>
             </div>
+            <div className="product-stock-status">
+              <StockStatusBadge product={product} />
+            </div>
+            <LowStockWarning product={product} />
             <ProductShippingPreview 
               key={`${product.id}-${shippingRegion || 'default'}`}
               product={product} 
               region={shippingRegion} 
             />
             {showActions && (
-              <button
-                onClick={() => handleAddToCart(product)}
-                className="btn btn-primary"
-                disabled={product.quantity === 0}
-              >
-                Add to Cart
-              </button>
+              <>
+                {(product.stockStatus === 'OUT_OF_STOCK' || product.quantity === 0) ? (
+                  <NotifyMeButton productId={product.id} productName={product.name} />
+                ) : (
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="btn btn-primary"
+                    disabled={product.quantity === 0}
+                  >
+                    Add to Cart
+                  </button>
+                )}
+              </>
             )}
           </div>
         ))}

@@ -5,12 +5,15 @@ import com.example.ecompoc.product.dto.ProductResponse;
 import com.example.ecompoc.product.exception.ProductNotFoundException;
 import com.example.ecompoc.product.model.Product;
 import com.example.ecompoc.product.repository.ProductRepository;
+import com.example.ecompoc.stock.model.StockStatus;
+import com.example.ecompoc.stock.service.StockStatusService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -21,9 +24,18 @@ import java.util.stream.Collectors;
 public class ProductService {
     
     private final ProductRepository productRepository;
+    private StockStatusService stockStatusService;
+    
+    @Value("${stock-management.enabled:true}")
+    private boolean stockManagementEnabled;
 
     public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
+    }
+    
+    @Autowired(required = false)
+    public void setStockStatusService(StockStatusService stockStatusService) {
+        this.stockStatusService = stockStatusService;
     }
     
     /**
@@ -83,6 +95,7 @@ public class ProductService {
     
     /**
      * Map Product entity to ProductResponse DTO
+     * Includes stock status when stock management feature is enabled
      */
     private ProductResponse mapToResponse(Product product) {
         String createdAtStr = product.getCreatedAt() != null 
@@ -91,7 +104,8 @@ public class ProductService {
         String updatedAtStr = product.getUpdatedAt() != null 
             ? product.getUpdatedAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) 
             : null;
-        return new ProductResponse(
+        
+        ProductResponse response = new ProductResponse(
                 product.getId(),
                 product.getName(),
                 product.getDescription(),
@@ -101,6 +115,16 @@ public class ProductService {
                 createdAtStr,
                 updatedAtStr
         );
+        
+        // Include stock status when feature is enabled
+        if (stockManagementEnabled && stockStatusService != null) {
+            StockStatus status = stockStatusService.calculateStockStatus(product);
+            if (status != null) {
+                response.setStockStatus(status.name());
+            }
+        }
+        
+        return response;
     }
 }
 

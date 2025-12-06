@@ -18,6 +18,7 @@ import com.example.ecompoc.loyalty.service.LoyaltyPointsService;
 import com.example.ecompoc.loyalty.service.LoyaltyReferralService;
 import com.example.ecompoc.product.model.Product;
 import com.example.ecompoc.product.repository.ProductRepository;
+import com.example.ecompoc.stock.service.StockDeductionService;
 import com.example.ecompoc.user.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +49,7 @@ public class OrderService {
     private final OrderTrackingStreamService streamService;
     private LoyaltyPointsService loyaltyPointsService;
     private LoyaltyReferralService loyaltyReferralService;
+    private StockDeductionService stockDeductionService;
 
     public OrderService(OrderRepository orderRepository,
                         UserRepository userRepository,
@@ -75,6 +77,11 @@ public class OrderService {
     @Autowired(required = false)
     public void setLoyaltyReferralService(LoyaltyReferralService loyaltyReferralService) {
         this.loyaltyReferralService = loyaltyReferralService;
+    }
+    
+    @Autowired(required = false)
+    public void setStockDeductionService(StockDeductionService stockDeductionService) {
+        this.stockDeductionService = stockDeductionService;
     }
 
     /**
@@ -123,6 +130,21 @@ public class OrderService {
         
         // Create initial status history entry
         createStatusHistoryEntry(savedOrder, OrderStatus.PENDING.name(), null, "Order created");
+
+        // Deduct stock for all order items (if stock management enabled)
+        if (stockDeductionService != null) {
+            for (OrderItem item : orderItems) {
+                try {
+                    stockDeductionService.deductStock(item.getProductId(), item.getQuantity());
+                    logger.debug("Deducted {} units from product {} stock", item.getQuantity(), item.getProductId());
+                } catch (Exception e) {
+                    logger.error("Failed to deduct stock for product {}: {}", item.getProductId(), e.getMessage());
+                    // Rollback order creation if stock deduction fails
+                    throw new OrderValidationException(
+                        "Failed to deduct stock for product " + item.getProductId() + ": " + e.getMessage());
+                }
+            }
+        }
 
         // Handle points redemption if applicable (after order is created so we have orderId)
         if (request.getPointsToRedeem() != null && request.getPointsToRedeem() > 0 && loyaltyPointsService != null) {
@@ -355,17 +377,32 @@ public class OrderService {
 
     /**
      * Verify product availability and get product details
+     * Uses stock-aware validation when stock management feature is enabled
      */
     private Product verifyProductAvailability(String productId, Integer requestedQuantity) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new OrderValidationException("Product not found: " + productId));
 
-        Integer availableQuantity = product.getQuantity();
-        if (availableQuantity == null || availableQuantity < requestedQuantity) {
-            throw new OrderValidationException(
-                "Product " + productId + " does not have sufficient quantity. " +
-                "Requested: " + requestedQuantity + ", Available: " + availableQuantity
-            );
+        // Use stock-aware validation if stock management is enabled
+        if (stockDeductionService != null) {
+            boolean hasStock = stockDeductionService.verifyStockAvailability(productId, requestedQuantity);
+            if (!hasStock) {
+                Integer availableQuantity = product.getQuantity();
+                throw new OrderValidationException(
+                    "Product " + productId + " does not have sufficient stock. " +
+                    "Requested: " + requestedQuantity + ", Available: " + 
+                    (availableQuantity != null ? availableQuantity : 0)
+                );
+            }
+        } else {
+            // Fallback to original validation if stock management is disabled
+            Integer availableQuantity = product.getQuantity();
+            if (availableQuantity == null || availableQuantity < requestedQuantity) {
+                throw new OrderValidationException(
+                    "Product " + productId + " does not have sufficient quantity. " +
+                    "Requested: " + requestedQuantity + ", Available: " + availableQuantity
+                );
+            }
         }
 
         if (product.getPrice() == null) {

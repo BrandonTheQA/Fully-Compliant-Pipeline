@@ -15,6 +15,7 @@ export interface Product {
   category: string;
   createdAt?: string;
   updatedAt?: string;
+  stockStatus?: 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK';
 }
 
 export interface OrderItem {

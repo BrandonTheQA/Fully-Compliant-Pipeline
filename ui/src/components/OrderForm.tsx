@@ -5,6 +5,7 @@ import { ShippingCostCalculator } from './ShippingCostCalculator';
 import { ShippingRecommendations } from './ShippingRecommendations';
 import { LoyaltyBalance } from './LoyaltyBalance';
 import { PointRedemptionForm } from './PointRedemptionForm';
+import { CartStockStatus } from './CartStockStatus';
 import { loyaltyService } from '../services/loyaltyService';
 import type { Order, RedeemPointsResponse } from '../types';
 import './OrderForm.css';
@@ -67,6 +68,15 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
 
     if (cart.length === 0) {
       setError('Your cart is empty. Add products to create an order.');
+      return;
+    }
+
+    // Check for out-of-stock items
+    const outOfStockItems = cart.filter(item => 
+      item.stockStatus === 'OUT_OF_STOCK' || item.quantity === 0
+    );
+    if (outOfStockItems.length > 0) {
+      setError('Some items in your cart are out of stock. Please remove them before placing your order.');
       return;
     }
 
@@ -153,6 +163,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
               <h3>{item.name}</h3>
               <p className="cart-item-price">${item.price.toFixed(2)} each</p>
             </div>
+            <CartStockStatus 
+              item={item} 
+              onRemove={() => removeFromCart(item.id)}
+            />
             <div className="cart-item-controls">
               <div className="quantity-control">
                 <button
@@ -166,8 +180,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({ onOrderCreated }) => {
                 <button
                   onClick={() => updateCartQuantity(item.id, item.orderQuantity + 1)}
                   className="btn btn-sm"
-                  disabled={item.orderQuantity >= item.quantity}
-                  aria-disabled={item.orderQuantity >= item.quantity}
+                  disabled={item.orderQuantity >= item.quantity || item.stockStatus === 'OUT_OF_STOCK'}
+                  aria-disabled={item.orderQuantity >= item.quantity || item.stockStatus === 'OUT_OF_STOCK'}
                   aria-label={`Increase quantity of ${item.name}`}
                   aria-describedby={item.orderQuantity >= item.quantity ? `max-quantity-${item.id}` : undefined}
                 >

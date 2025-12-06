@@ -15,6 +15,7 @@
     <include file="db/changelog/order/create-order-notifications-table.xml"/>
     <include file="db/changelog/wishlist/create-wishlist-table.xml"/>
     <include file="db/changelog/loyalty/create-loyalty-tables.xml"/>
+    <include file="db/changelog/stock/create-stock-tables.xml"/>
 
 </databaseChangeLog>
 

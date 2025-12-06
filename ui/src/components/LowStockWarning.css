@@ -1,0 +1,22 @@
+.low-stock-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  margin: 8px 0;
+  color: #856404;
+}
+
+.low-stock-warning-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.low-stock-warning-message {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+

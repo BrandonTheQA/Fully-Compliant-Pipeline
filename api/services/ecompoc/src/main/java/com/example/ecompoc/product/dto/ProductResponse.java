@@ -31,6 +31,9 @@ public class ProductResponse {
     @JsonProperty("updatedAt")
     private String updatedAt;
     
+    @JsonProperty("stockStatus")
+    private String stockStatus; // Optional: IN_STOCK, LOW_STOCK, OUT_OF_STOCK
+    
     // Default constructor
     public ProductResponse() {}
     
@@ -109,6 +112,14 @@ public class ProductResponse {
     
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public String getStockStatus() {
+        return stockStatus;
+    }
+    
+    public void setStockStatus(String stockStatus) {
+        this.stockStatus = stockStatus;
     }
 }
 

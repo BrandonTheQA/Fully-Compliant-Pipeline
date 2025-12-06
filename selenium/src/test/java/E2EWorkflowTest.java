@@ -163,9 +163,23 @@ public class E2EWorkflowTest {
              * System.out.println("✓ All 3 products verified in product list");
              */
             
+            // Step 6a: Test Stock Status Display (SCRUM-21)
+            System.out.println("\nStep 6a: Testing Stock Status Display...");
+            String product1Name = TestConfig.TestData.PRODUCT1_NAME + " " + timestamp;
+            
+            // Verify stock status badge appears on products
+            productsPage.waitForProductListToLoad();
+            assertTrue(productsPage.isStockStatusBadgeDisplayed(product1Name),
+                "Stock status badge should be displayed for product: " + product1Name);
+            System.out.println("✓ Stock status badge displayed for products");
+            
+            // Verify "Add to Cart" button is enabled for in-stock products
+            assertTrue(productsPage.isAddToCartButtonEnabled(product1Name),
+                "Add to Cart button should be enabled for in-stock product: " + product1Name);
+            System.out.println("✓ Add to Cart button enabled for in-stock products");
+            
             // Step 6b: Test Wishlist Flow (SCRUM-14)
             System.out.println("\nStep 6b: Testing Wishlist Flow...");
-            String product1Name = TestConfig.TestData.PRODUCT1_NAME + " " + timestamp;
             
             // Add Product 1 to wishlist
             productsPage.addProductToWishlist(product1Name);
@@ -218,6 +232,11 @@ public class E2EWorkflowTest {
             
             // Debug: Print cart items
             ordersPage.printCartItems();
+            
+            // Verify stock status is displayed in cart (SCRUM-21)
+            assertTrue(ordersPage.isStockStatusDisplayedInCart(product1Name),
+                "Stock status should be displayed for cart item: " + product1Name);
+            System.out.println("✓ Stock status displayed in cart");
             
             // Verify shipping cost calculator appears (SCRUM-7)
             shippingCostCalculatorPage.waitForShippingCostCalculator();

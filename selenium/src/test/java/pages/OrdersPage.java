@@ -31,6 +31,9 @@ public class OrdersPage extends BasePage {
     private static final By QUANTITY_CONTROL_PLUS = By.xpath("//div[contains(@class, 'quantity-control')]//button[contains(text(), '+')]");
     private static final By QUANTITY_CONTROL_MINUS = By.xpath("//div[contains(@class, 'quantity-control')]//button[contains(text(), '-')]");
     private static final By ORDER_CARD_LINK = By.cssSelector(".order-card");
+    private static final By CART_STOCK_STATUS = By.className("cart-stock-status");
+    private static final By STOCK_STATUS_BADGE = By.className("stock-status-badge");
+    private static final By LOW_STOCK_WARNING = By.className("low-stock-warning");
 
     public OrdersPage(WebDriver driver) {
         super(driver);
@@ -251,6 +254,50 @@ public class OrdersPage extends BasePage {
             return orderText;
         }
         return null;
+    }
+    
+    /**
+     * Checks if stock status is displayed for a cart item.
+     * 
+     * @param productName Product name to check
+     * @return true if stock status is displayed
+     */
+    public boolean isStockStatusDisplayedInCart(String productName) {
+        try {
+            List<WebElement> cartItems = driver.findElements(CART_ITEMS);
+            for (WebElement cartItem : cartItems) {
+                WebElement nameElement = cartItem.findElement(By.cssSelector("h3"));
+                if (nameElement.getText().equals(productName)) {
+                    List<WebElement> stockStatuses = cartItem.findElements(STOCK_STATUS_BADGE);
+                    return !stockStatuses.isEmpty() && stockStatuses.get(0).isDisplayed();
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Checks if low stock warning is displayed for a cart item.
+     * 
+     * @param productName Product name to check
+     * @return true if low stock warning is displayed
+     */
+    public boolean isLowStockWarningDisplayedInCart(String productName) {
+        try {
+            List<WebElement> cartItems = driver.findElements(CART_ITEMS);
+            for (WebElement cartItem : cartItems) {
+                WebElement nameElement = cartItem.findElement(By.cssSelector("h3"));
+                if (nameElement.getText().equals(productName)) {
+                    List<WebElement> warnings = cartItem.findElements(LOW_STOCK_WARNING);
+                    return !warnings.isEmpty() && warnings.get(0).isDisplayed();
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
 

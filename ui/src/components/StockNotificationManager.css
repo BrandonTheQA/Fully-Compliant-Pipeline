@@ -1,0 +1,91 @@
+.stock-notification-manager {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.notification-manager-description {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.no-notifications {
+  padding: 40px;
+  text-align: center;
+  color: #666;
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.notification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background-color: #fff;
+}
+
+.notification-info {
+  flex: 1;
+}
+
+.notification-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.1rem;
+}
+
+.notification-status {
+  margin: 4px 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.status-pending {
+  color: #856404;
+  font-weight: 500;
+}
+
+.status-notified {
+  color: #155724;
+  font-weight: 500;
+}
+
+.status-unsubscribed {
+  color: #721c24;
+  font-weight: 500;
+}
+
+.notification-date {
+  margin: 4px 0;
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.notification-actions {
+  margin-left: 16px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.error-message {
+  padding: 12px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+

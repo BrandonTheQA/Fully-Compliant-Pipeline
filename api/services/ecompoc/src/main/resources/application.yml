@@ -106,3 +106,9 @@ loyalty:
     months: 12
     warning-days: [30, 7, 1]
 
+stock-management:
+  enabled: true
+  low-stock-threshold-default: 10
+  notification-delay-minutes: 60
+  admin-email: admin@example.com
+

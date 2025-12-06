@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="add-low-stock-threshold-to-products" author="system">
+        <addColumn tableName="products">
+            <column name="low_stock_threshold" type="INT">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="create-stock-notifications-table" author="system">
+        <createTable tableName="stock_notifications">
+            <column name="notification_id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="email" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="signup_date" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notified_date" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="status" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="stock_notifications" 
+            baseColumnNames="product_id"
+            constraintName="fk_stock_notifications_product"
+            referencedTableName="products"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+            
+        <addForeignKeyConstraint 
+            baseTableName="stock_notifications" 
+            baseColumnNames="user_id"
+            constraintName="fk_stock_notifications_user"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+            
+        <createIndex indexName="idx_stock_notifications_product_id" tableName="stock_notifications">
+            <column name="product_id"/>
+        </createIndex>
+        <createIndex indexName="idx_stock_notifications_user_id" tableName="stock_notifications">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="idx_stock_notifications_email" tableName="stock_notifications">
+            <column name="email"/>
+        </createIndex>
+        <createIndex indexName="idx_stock_notifications_status" tableName="stock_notifications">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create-low-stock-alerts-table" author="system">
+        <createTable tableName="low_stock_alerts">
+            <column name="alert_id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stock_level" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="threshold" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="alert_sent_at" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="status" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="low_stock_alerts" 
+            baseColumnNames="product_id"
+            constraintName="fk_low_stock_alerts_product"
+            referencedTableName="products"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+            
+        <createIndex indexName="idx_low_stock_alerts_product_id" tableName="low_stock_alerts">
+            <column name="product_id"/>
+        </createIndex>
+        <createIndex indexName="idx_low_stock_alerts_status" tableName="low_stock_alerts">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+
