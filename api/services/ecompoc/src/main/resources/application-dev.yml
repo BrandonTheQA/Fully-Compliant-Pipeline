@@ -49,3 +49,9 @@ springdoc:
 abandoned-cart:
   enabled: false
 
+stock-management:
+  enabled: true
+  low-stock-threshold-default: 10
+  notification-delay-minutes: 60
+  admin-email: admin@example.com
+
