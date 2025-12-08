@@ -112,3 +112,7 @@ stock-management:
   notification-delay-minutes: 60
   admin-email: admin@example.com
 
+password:
+  hashing:
+    bcrypt-strength: 10
+

@@ -12,6 +12,7 @@ import com.example.ecompoc.user.repository.UserRepository;
 import com.example.ecompoc.loyalty.service.LoyaltyService;
 import com.example.ecompoc.loyalty.model.EnrollmentSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,10 +26,12 @@ import java.util.UUID;
 public class UserService {
     
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
     private LoyaltyService loyaltyService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
     
     @Autowired(required = false)
@@ -45,9 +48,10 @@ public class UserService {
             throw new UserAlreadyExistsException("User with email " + request.getEmail() + " already exists");
         }
         
-        // Create new user
+        // Create new user with hashed password
         String userId = UUID.randomUUID().toString();
-        User user = new User(userId, request.getName(), request.getEmail(), request.getPassword());
+        String hashedPassword = passwordEncoder.encode(request.getPassword());
+        User user = new User(userId, request.getName(), request.getEmail(), hashedPassword);
         User savedUser = userRepository.save(user);
         
         // Auto-enroll in loyalty program
@@ -87,7 +91,7 @@ public class UserService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new AuthenticationException("Invalid email or password"));
         
-        if (!user.getPassword().equals(request.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new AuthenticationException("Invalid email or password");
         }
         

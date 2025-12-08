@@ -14,14 +14,15 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -33,12 +34,27 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private UserService userService;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        userService = new UserService(userRepository);
+        userService = new UserService(userRepository, passwordEncoder);
+        
+        // Default behavior: encode returns hashed password, matches returns true for same password
+        when(passwordEncoder.encode(anyString())).thenAnswer(invocation -> {
+            String plainPassword = invocation.getArgument(0);
+            return "$2a$10$" + plainPassword.hashCode() + "hashed"; // Mock BCrypt hash
+        });
+        when(passwordEncoder.matches(anyString(), anyString())).thenAnswer(invocation -> {
+            String plainPassword = invocation.getArgument(0);
+            String hashedPassword = invocation.getArgument(1);
+            // Simple mock: if hashed password contains the plain password hash, it matches
+            return hashedPassword.contains(String.valueOf(plainPassword.hashCode()));
+        });
     }
 
     @Test
@@ -46,10 +62,18 @@ class UserServiceTest {
     void shouldCreateUserSuccessfully() {
         // Given
         CreateUserRequest request = new CreateUserRequest("John Doe", "john@example.com", "password123");
-        User savedUser = new User("user-id", "John Doe", "john@example.com", "password123");
+        String hashedPassword = "$2a$10$hashedpassword123";
+        User savedUser = new User("user-id", "John Doe", "john@example.com", hashedPassword);
         
         when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        when(passwordEncoder.encode("password123")).thenReturn(hashedPassword);
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            // Verify password was hashed
+            assertTrue(user.getPassword().startsWith("$2a$"), "Password should be hashed");
+            assertNotEquals("password123", user.getPassword(), "Password should not be plaintext");
+            return savedUser;
+        });
 
         // When
         UserResponse result = userService.createUser(request);
@@ -62,6 +86,7 @@ class UserServiceTest {
         assertNotNull(result.getCreatedAt());
         
         verify(userRepository).existsByEmail(request.getEmail());
+        verify(passwordEncoder).encode("password123");
         verify(userRepository).save(any(User.class));
     }
 
@@ -121,9 +146,11 @@ class UserServiceTest {
     void shouldAuthenticateUserSuccessfully() {
         // Given
         LoginRequest request = new LoginRequest("john@example.com", "password123");
-        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        String hashedPassword = "$2a$10$hashedpassword123";
+        User user = new User("user-id", "John Doe", "john@example.com", hashedPassword);
         
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", hashedPassword)).thenReturn(true);
 
         // When
         LoginResponse result = userService.authenticate(request);
@@ -138,6 +165,7 @@ class UserServiceTest {
         assertNotNull(result.getLoginTime());
         
         verify(userRepository).findByEmail(request.getEmail());
+        verify(passwordEncoder).matches("password123", hashedPassword);
     }
 
     @Test
@@ -159,24 +187,29 @@ class UserServiceTest {
     void shouldThrowAuthenticationExceptionWhenPasswordIsWrong() {
         // Given
         LoginRequest request = new LoginRequest("john@example.com", "wrongpassword");
-        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        String hashedPassword = "$2a$10$hashedpassword123";
+        User user = new User("user-id", "John Doe", "john@example.com", hashedPassword);
         
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongpassword", hashedPassword)).thenReturn(false);
 
         // When & Then
         assertThrows(AuthenticationException.class, () -> userService.authenticate(request));
         
         verify(userRepository).findByEmail(request.getEmail());
+        verify(passwordEncoder).matches("wrongpassword", hashedPassword);
     }
 
     @Test
     @DisplayName("Should map user to response correctly")
     void shouldMapUserToResponseCorrectly() {
         // Given
-        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        String hashedPassword = "$2a$10$hashedpassword123";
+        User user = new User("user-id", "John Doe", "john@example.com", hashedPassword);
 
         // When - Test the mapping indirectly through createUser
         when(userRepository.existsByEmail(user.getEmail())).thenReturn(false);
+        when(passwordEncoder.encode("password123")).thenReturn(hashedPassword);
         when(userRepository.save(any(User.class))).thenReturn(user);
         
         CreateUserRequest request = new CreateUserRequest("John Doe", "john@example.com", "password123");
@@ -206,9 +239,11 @@ class UserServiceTest {
     void shouldGenerateUniqueTokensForEachLogin() {
         // Given
         LoginRequest request = new LoginRequest("john@example.com", "password123");
-        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        String hashedPassword = "$2a$10$hashedpassword123";
+        User user = new User("user-id", "John Doe", "john@example.com", hashedPassword);
         
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", hashedPassword)).thenReturn(true);
 
         // When
         LoginResponse result1 = userService.authenticate(request);
@@ -225,9 +260,11 @@ class UserServiceTest {
     void shouldFormatLoginTimeCorrectly() {
         // Given
         LoginRequest request = new LoginRequest("john@example.com", "password123");
-        User user = new User("user-id", "John Doe", "john@example.com", "password123");
+        String hashedPassword = "$2a$10$hashedpassword123";
+        User user = new User("user-id", "John Doe", "john@example.com", hashedPassword);
         
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password123", hashedPassword)).thenReturn(true);
 
         // When
         LoginResponse result = userService.authenticate(request);

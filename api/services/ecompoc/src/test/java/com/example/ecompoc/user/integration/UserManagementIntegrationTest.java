@@ -7,6 +7,8 @@ import com.example.ecompoc.user.dto.UserResponse;
 import com.example.ecompoc.user.exception.AuthenticationException;
 import com.example.ecompoc.user.exception.UserAlreadyExistsException;
 import com.example.ecompoc.user.exception.UserNotFoundException;
+import com.example.ecompoc.user.model.User;
+import com.example.ecompoc.user.repository.UserRepository;
 import com.example.ecompoc.user.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +17,8 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,6 +33,9 @@ class UserManagementIntegrationTest {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Test
     @DisplayName("Should complete user registration and login flow")
@@ -145,5 +152,32 @@ class UserManagementIntegrationTest {
         // Then - Verify both profiles are correct
         assertEquals("John Doe", retrievedUser1.getName());
         assertEquals("Jane Smith", retrievedUser2.getName());
+    }
+
+    @Test
+    @DisplayName("Should hash password before storing in database")
+    void shouldHashPasswordBeforeStoringInDatabase() {
+        // Given
+        CreateUserRequest createRequest = new CreateUserRequest("John Doe", "john@example.com", "password123");
+        String plainPassword = "password123";
+
+        // When - Create user
+        UserResponse userResponse = userService.createUser(createRequest);
+
+        // Then - Verify user was created
+        assertNotNull(userResponse);
+        
+        // Verify password is hashed in database
+        Optional<User> userOptional = userRepository.findById(userResponse.getUserId());
+        assertTrue(userOptional.isPresent(), "User should exist in database");
+        
+        User user = userOptional.get();
+        String storedPassword = user.getPassword();
+        
+        // Verify password is hashed (BCrypt hashes start with $2a$, $2b$, or $2y$)
+        assertTrue(storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$") || storedPassword.startsWith("$2y$"),
+                "Password should be hashed using BCrypt. Got: " + storedPassword);
+        assertNotEquals(plainPassword, storedPassword, "Stored password should not match plaintext password");
+        assertEquals(60, storedPassword.length(), "BCrypt hash should be 60 characters long");
     }
 }
