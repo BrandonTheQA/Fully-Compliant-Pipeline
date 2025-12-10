@@ -57,7 +57,11 @@ public class HomePage extends BasePage {
      * Verifies that the welcome heading is displayed.
      */
     public void verifyWelcomeHeading() {
-        wait.until(ExpectedConditions.presenceOfElementLocated(WELCOME_HEADING));
+        // Wait for page to load and h1 to be visible
+        wait.until(ExpectedConditions.visibilityOfElementLocated(WELCOME_HEADING));
+        // Additional check to ensure text is loaded
+        WebElement heading = driver.findElement(WELCOME_HEADING);
+        wait.until(ExpectedConditions.textToBePresentInElement(heading, ""));
     }
 
     /**

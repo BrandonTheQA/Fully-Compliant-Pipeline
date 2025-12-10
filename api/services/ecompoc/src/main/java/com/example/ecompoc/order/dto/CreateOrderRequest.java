@@ -19,6 +19,8 @@ public class CreateOrderRequest {
     
     private Integer pointsToRedeem;
     
+    private List<String> giftCardCodes;
+    
     // Default constructor
     public CreateOrderRequest() {}
     
@@ -58,6 +60,14 @@ public class CreateOrderRequest {
     
     public void setPointsToRedeem(Integer pointsToRedeem) {
         this.pointsToRedeem = pointsToRedeem;
+    }
+    
+    public List<String> getGiftCardCodes() {
+        return giftCardCodes;
+    }
+    
+    public void setGiftCardCodes(List<String> giftCardCodes) {
+        this.giftCardCodes = giftCardCodes;
     }
     
     /**

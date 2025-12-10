@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +51,7 @@ public class OrderService {
     private LoyaltyPointsService loyaltyPointsService;
     private LoyaltyReferralService loyaltyReferralService;
     private StockDeductionService stockDeductionService;
+    private com.example.ecompoc.giftcard.service.GiftCardRedemptionService giftCardRedemptionService;
 
     public OrderService(OrderRepository orderRepository,
                         UserRepository userRepository,
@@ -82,6 +84,11 @@ public class OrderService {
     @Autowired(required = false)
     public void setStockDeductionService(StockDeductionService stockDeductionService) {
         this.stockDeductionService = stockDeductionService;
+    }
+    
+    @Autowired(required = false)
+    public void setGiftCardRedemptionService(com.example.ecompoc.giftcard.service.GiftCardRedemptionService giftCardRedemptionService) {
+        this.giftCardRedemptionService = giftCardRedemptionService;
     }
 
     /**
@@ -146,7 +153,39 @@ public class OrderService {
             }
         }
 
+        // Handle gift card redemption if applicable (before points redemption)
+        BigDecimal giftCardDiscountTotal = BigDecimal.ZERO;
+        if (request.getGiftCardCodes() != null && !request.getGiftCardCodes().isEmpty() && giftCardRedemptionService != null) {
+            try {
+                java.math.BigDecimal orderTotalDecimal = BigDecimal.valueOf(totalAmount);
+                List<java.util.Map<String, Object>> giftCardResults = giftCardRedemptionService.applyMultipleGiftCards(
+                    request.getGiftCardCodes(), orderTotalDecimal, orderId);
+                
+                // Calculate total gift card discount
+                for (java.util.Map<String, Object> result : giftCardResults) {
+                    BigDecimal appliedAmount = (BigDecimal) result.get("appliedAmount");
+                    giftCardDiscountTotal = giftCardDiscountTotal.add(appliedAmount);
+                }
+                
+                // Update order total with gift card discount
+                totalAmount = Math.max(0, totalAmount - giftCardDiscountTotal.doubleValue());
+                savedOrder.setTotalAmount(totalAmount);
+                
+                // Store gift card codes and discount
+                savedOrder.setGiftCardCodes(String.join(",", request.getGiftCardCodes()));
+                savedOrder.setGiftCardDiscount(giftCardDiscountTotal);
+                savedOrder = orderRepository.save(savedOrder);
+                
+                logger.info("Applied gift cards: ${} discount, new total: ${}", 
+                    giftCardDiscountTotal.doubleValue(), savedOrder.getTotalAmount());
+            } catch (Exception e) {
+                logger.warn("Failed to apply gift cards for order: {}", e.getMessage());
+                // Continue with order creation without gift cards
+            }
+        }
+        
         // Handle points redemption if applicable (after order is created so we have orderId)
+        // Points redemption is applied after gift cards
         if (request.getPointsToRedeem() != null && request.getPointsToRedeem() > 0 && loyaltyPointsService != null) {
             try {
                 LoyaltyPointsService.RedeemResult redeemResult = loyaltyPointsService.redeemPoints(

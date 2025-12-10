@@ -408,3 +408,4 @@ TBD - To be assigned during sprint planning
 - Admin dashboard should provide insights to optimize tier thresholds and point rates based on customer behavior
 - Consider implementing point purchase option (customers can buy points) for additional revenue stream
 - Loyalty program data can inform personalized marketing campaigns and product recommendations
+

@@ -71,8 +71,10 @@ public class ProductsPage extends BasePage {
         wait.until(ExpectedConditions.presenceOfElementLocated(CREATE_NEW_PRODUCT_BUTTON));
         WebElement createButton = wait.until(ExpectedConditions.elementToBeClickable(CREATE_NEW_PRODUCT_BUTTON));
         createButton.click();
-        // Wait for form to appear
-        wait.until(ExpectedConditions.presenceOfElementLocated(PRODUCT_FORM_CONTAINER));
+        // Wait for form to appear and be visible, then wait for name input to be ready
+        wait.until(ExpectedConditions.visibilityOfElementLocated(PRODUCT_FORM_CONTAINER));
+        // Additional wait for the form inputs to be ready
+        wait.until(ExpectedConditions.presenceOfElementLocated(PRODUCT_NAME_INPUT));
     }
 
     /**
@@ -85,23 +87,25 @@ public class ProductsPage extends BasePage {
      * @param category Product category
      */
     public void fillProductForm(String name, String description, double price, int quantity, String category) {
-        WebElement nameInput = wait.until(ExpectedConditions.presenceOfElementLocated(PRODUCT_NAME_INPUT));
+        // Wait for form container and name input to be visible and ready
+        wait.until(ExpectedConditions.visibilityOfElementLocated(PRODUCT_FORM_CONTAINER));
+        WebElement nameInput = wait.until(ExpectedConditions.elementToBeClickable(PRODUCT_NAME_INPUT));
         nameInput.clear();
         nameInput.sendKeys(name);
         
-        WebElement descInput = driver.findElement(PRODUCT_DESCRIPTION_TEXTAREA);
+        WebElement descInput = wait.until(ExpectedConditions.elementToBeClickable(PRODUCT_DESCRIPTION_TEXTAREA));
         descInput.clear();
         descInput.sendKeys(description);
         
-        WebElement priceInput = driver.findElement(PRODUCT_PRICE_INPUT);
+        WebElement priceInput = wait.until(ExpectedConditions.elementToBeClickable(PRODUCT_PRICE_INPUT));
         priceInput.clear();
         priceInput.sendKeys(String.valueOf(price));
         
-        WebElement quantityInput = driver.findElement(PRODUCT_QUANTITY_INPUT);
+        WebElement quantityInput = wait.until(ExpectedConditions.elementToBeClickable(PRODUCT_QUANTITY_INPUT));
         quantityInput.clear();
         quantityInput.sendKeys(String.valueOf(quantity));
         
-        WebElement categoryInput = driver.findElement(PRODUCT_CATEGORY_INPUT);
+        WebElement categoryInput = wait.until(ExpectedConditions.elementToBeClickable(PRODUCT_CATEGORY_INPUT));
         categoryInput.clear();
         categoryInput.sendKeys(category);
     }

@@ -4,6 +4,9 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import java.time.Duration;
 
 /**
  * Page object for the user creation page.
@@ -11,6 +14,8 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 public class UserPage extends BasePage {
     
     // Locators
+    private static final By USER_FORM_CONTAINER = By.className("user-form-container");
+    private static final By USER_FORM = By.className("user-form");
     private static final By NAME_INPUT = By.id("name");
     private static final By EMAIL_INPUT = By.id("email");
     private static final By PASSWORD_INPUT = By.id("password");
@@ -32,6 +37,36 @@ public class UserPage extends BasePage {
      */
     public void navigateToUserPage() {
         navigateTo("/user");
+        // Wait for React to render - check for any content in root or common elements
+        // Try multiple strategies to handle different rendering states
+        try {
+            // First, wait for root to have content
+            WebDriverWait rootWait = new WebDriverWait(driver, Duration.ofSeconds(15));
+            rootWait.until(webDriver -> {
+                org.openqa.selenium.JavascriptExecutor js = (org.openqa.selenium.JavascriptExecutor) webDriver;
+                try {
+                    Object result = js.executeScript(
+                        "var root = document.getElementById('root'); return root && root.innerHTML.trim().length > 0;"
+                    );
+                    return result != null && (Boolean) result;
+                } catch (Exception e) {
+                    return false;
+                }
+            });
+        } catch (Exception e) {
+            // Continue anyway - try to find elements
+        }
+        
+        // Wait for any of the expected elements to appear
+        wait.until(ExpectedConditions.or(
+            ExpectedConditions.presenceOfElementLocated(USER_FORM_CONTAINER),
+            ExpectedConditions.presenceOfElementLocated(NAME_INPUT),
+            ExpectedConditions.presenceOfElementLocated(USER_INFO_SECTION),
+            ExpectedConditions.presenceOfElementLocated(USER_FORM),
+            ExpectedConditions.presenceOfElementLocated(By.tagName("form")),
+            ExpectedConditions.presenceOfElementLocated(By.className("page-container")),
+            ExpectedConditions.presenceOfElementLocated(By.xpath("//h2[contains(text(), 'Create User') or contains(text(), 'Current User')]"))
+        ));
     }
 
     /**
@@ -42,15 +77,16 @@ public class UserPage extends BasePage {
      * @param password User's password
      */
     public void fillUserForm(String name, String email, String password) {
-        WebElement nameInput = wait.until(ExpectedConditions.presenceOfElementLocated(NAME_INPUT));
+        // Wait for form to be visible and inputs to be ready
+        WebElement nameInput = wait.until(ExpectedConditions.elementToBeClickable(NAME_INPUT));
         nameInput.clear();
         nameInput.sendKeys(name);
         
-        WebElement emailInput = driver.findElement(EMAIL_INPUT);
+        WebElement emailInput = wait.until(ExpectedConditions.elementToBeClickable(EMAIL_INPUT));
         emailInput.clear();
         emailInput.sendKeys(email);
         
-        WebElement passwordInput = driver.findElement(PASSWORD_INPUT);
+        WebElement passwordInput = wait.until(ExpectedConditions.elementToBeClickable(PASSWORD_INPUT));
         passwordInput.clear();
         passwordInput.sendKeys(password);
     }

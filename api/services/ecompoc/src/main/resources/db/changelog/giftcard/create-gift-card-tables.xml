@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="create-gift-cards-table" author="system">
+        <createTable tableName="gift_cards">
+            <column name="gift_card_id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="code" type="VARCHAR(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="amount" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="balance" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="purchaser_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="purchaser_email" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="recipient_email" type="NVARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="recipient_name" type="NVARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="personal_message" type="NVARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="design" type="NVARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="purchase_date" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expiration_date" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="scheduled_delivery_date" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="gift_cards" 
+            baseColumnNames="purchaser_id"
+            constraintName="fk_gift_cards_purchaser"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            onDelete="SET NULL"/>
+        
+        <createIndex indexName="idx_gift_cards_code" tableName="gift_cards">
+            <column name="code"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_gift_cards_purchaser_email" tableName="gift_cards">
+            <column name="purchaser_email"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_gift_cards_recipient_email" tableName="gift_cards">
+            <column name="recipient_email"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_gift_cards_status" tableName="gift_cards">
+            <column name="status"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_gift_cards_expiration_date" tableName="gift_cards">
+            <column name="expiration_date"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_gift_cards_purchaser_id" tableName="gift_cards">
+            <column name="purchaser_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create-gift-card-transactions-table" author="system">
+        <createTable tableName="gift_card_transactions">
+            <column name="transaction_id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="gift_card_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="transaction_type" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="description" type="NVARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="gift_card_transactions" 
+            baseColumnNames="gift_card_id"
+            constraintName="fk_gift_card_transactions_gift_card"
+            referencedTableName="gift_cards"
+            referencedColumnNames="gift_card_id"
+            onDelete="CASCADE"/>
+        
+        <addForeignKeyConstraint 
+            baseTableName="gift_card_transactions" 
+            baseColumnNames="order_id"
+            constraintName="fk_gift_card_transactions_order"
+            referencedTableName="orders"
+            referencedColumnNames="id"
+            onDelete="SET NULL"/>
+        
+        <createIndex indexName="idx_gift_card_transactions_gift_card_id" tableName="gift_card_transactions">
+            <column name="gift_card_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_gift_card_transactions_order_id" tableName="gift_card_transactions">
+            <column name="order_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_gift_card_transactions_type" tableName="gift_card_transactions">
+            <column name="transaction_type"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

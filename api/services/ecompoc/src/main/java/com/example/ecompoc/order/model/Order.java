@@ -52,6 +52,12 @@ public class Order {
     @Column(name = "current_location", columnDefinition = "NVARCHAR(200)")
     private String currentLocation;
     
+    @Column(name = "gift_card_codes", columnDefinition = "NVARCHAR(500)")
+    private String giftCardCodes; // Comma-separated list of gift card codes
+    
+    @Column(name = "gift_card_discount", precision = 10, scale = 2)
+    private BigDecimal giftCardDiscount;
+    
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OrderStatusHistory> statusHistory = new ArrayList<>();
     
@@ -196,6 +202,30 @@ public class Order {
     
     public void setCurrentLocation(String currentLocation) {
         this.currentLocation = currentLocation;
+    }
+    
+    public String getGiftCardCodes() {
+        return giftCardCodes;
+    }
+    
+    public void setGiftCardCodes(String giftCardCodes) {
+        this.giftCardCodes = giftCardCodes;
+    }
+    
+    public BigDecimal getGiftCardDiscount() {
+        return giftCardDiscount;
+    }
+    
+    public void setGiftCardDiscount(BigDecimal giftCardDiscount) {
+        this.giftCardDiscount = giftCardDiscount;
+    }
+    
+    public Double getGiftCardDiscountDouble() {
+        return giftCardDiscount != null ? giftCardDiscount.doubleValue() : null;
+    }
+    
+    public void setGiftCardDiscountDouble(Double giftCardDiscount) {
+        this.giftCardDiscount = giftCardDiscount != null ? BigDecimal.valueOf(giftCardDiscount) : null;
     }
     
     public List<OrderStatusHistory> getStatusHistory() {

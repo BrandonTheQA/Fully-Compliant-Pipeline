@@ -77,9 +77,12 @@ public class TestConfig {
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--window-size=1920,1080");
         options.addArguments("--disable-blink-features=AutomationControlled");
+        // Enable logging to capture JavaScript errors
+        options.setCapability("goog:loggingPrefs", java.util.Map.of("browser", "ALL"));
         
         WebDriver driver = new ChromeDriver(options);
         driver.manage().timeouts().implicitlyWait(IMPLICIT_WAIT);
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60)); // Longer page load timeout for Vite
         driver.manage().window().maximize();
         
         return driver;

@@ -112,6 +112,16 @@ stock-management:
   notification-delay-minutes: 60
   admin-email: admin@example.com
 
+gift-card:
+  enabled: true
+  min-amount: 10
+  max-amount: 1000
+  fixed-amounts: [25, 50, 100, 150, 200, 250, 500]
+  expiration-months: 12
+  expiration-warning-days: [30, 7, 1]
+  email:
+    enabled: true
+
 password:
   hashing:
     bcrypt-strength: 10

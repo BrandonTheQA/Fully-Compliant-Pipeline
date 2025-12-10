@@ -7,6 +7,8 @@ import { ProductsPage } from './pages/ProductsPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { OrderTrackingPage } from './pages/OrderTrackingPage';
 import { WishlistPage } from './pages/WishlistPage';
+import { GiftCardPurchasePage } from './pages/GiftCardPurchasePage';
+import { GiftCardBalancePage } from './pages/GiftCardBalancePage';
 import { useAppContext } from './context/AppContext';
 import './App.css';
 
@@ -25,6 +27,8 @@ const Navigation: React.FC = () => {
           <Link to="/user" aria-current={location.pathname === '/user' ? 'page' : undefined}>User</Link>
           <Link to="/products" aria-current={location.pathname === '/products' ? 'page' : undefined}>Products</Link>
           <Link to="/wishlist" aria-current={location.pathname === '/wishlist' ? 'page' : undefined}>Wishlist</Link>
+          <Link to="/gift-cards/purchase" aria-current={location.pathname === '/gift-cards/purchase' ? 'page' : undefined}>Gift Cards</Link>
+          <Link to="/gift-cards/balance" aria-current={location.pathname === '/gift-cards/balance' ? 'page' : undefined}>Check Balance</Link>
           <Link to="/orders" aria-current={location.pathname.startsWith('/orders') ? 'page' : undefined}>
             Orders {cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
           </Link>
@@ -47,6 +51,8 @@ function AppContent() {
           <Route path="/user" element={<UserPage />} />
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/wishlist" element={<WishlistPage />} />
+          <Route path="/gift-cards/purchase" element={<GiftCardPurchasePage />} />
+          <Route path="/gift-cards/balance" element={<GiftCardBalancePage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:orderId/tracking" element={<OrderTrackingPage />} />
         </Routes>
