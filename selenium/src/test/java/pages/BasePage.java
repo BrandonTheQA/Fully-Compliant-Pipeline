@@ -144,7 +144,7 @@ public abstract class BasePage {
      * @param stepName Descriptive name of the step (e.g., "navigate-home", "create-user")
      * @param stepNumber Step number for ordering (e.g., 1, 2, 3)
      */
-    protected void takeScreenshot(String stepName, int stepNumber) {
+    public void takeScreenshot(String stepName, int stepNumber) {
         // Check if screenshots are enabled
         if (!TestConfig.isScreenshotsEnabled()) {
             return;
