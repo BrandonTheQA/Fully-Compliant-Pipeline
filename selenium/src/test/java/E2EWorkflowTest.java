@@ -101,6 +101,7 @@ public class E2EWorkflowTest {
             homePage.navigateToHome();
             homePage.verifyWelcomeHeading();
             System.out.println("✓ Home page loaded successfully");
+            homePage.takeScreenshot("navigate-home", 1);
             
             // Step 1: Create User
             System.out.println("\nStep 2: Creating user...");
@@ -155,6 +156,7 @@ public class E2EWorkflowTest {
             assertFalse(userInfoText.contains(TestConfig.TestData.USER_PASSWORD), 
                 "Password should not be displayed in user info section");
             System.out.println("✓ Password not exposed in UI after user creation");
+            homePage.takeScreenshot("create-user", 2);
             
             // Step 3: Create Product 1 (Laptop)
             System.out.println("\nStep 3: Creating product 1 (Laptop)...");
@@ -170,6 +172,7 @@ public class E2EWorkflowTest {
             productsPage.submitProductForm();
             productsPage.verifySuccessMessage();
             System.out.println("✓ Product 1 (Laptop) created successfully");
+            homePage.takeScreenshot("create-product-1", 3);
             
             // Step 4: Create Product 2 (Mouse)
             System.out.println("\nStep 4: Creating product 2 (Mouse)...");
@@ -184,6 +187,7 @@ public class E2EWorkflowTest {
             productsPage.submitProductForm();
             productsPage.verifySuccessMessage();
             System.out.println("✓ Product 2 (Mouse) created successfully");
+            homePage.takeScreenshot("create-product-2", 4);
             
             // Step 5: Create Product 3 (Keyboard)
             System.out.println("\nStep 5: Creating product 3 (Keyboard)...");
@@ -198,6 +202,7 @@ public class E2EWorkflowTest {
             productsPage.submitProductForm();
             productsPage.verifySuccessMessage();
             System.out.println("✓ Product 3 (Keyboard) created successfully");
+            homePage.takeScreenshot("create-product-3", 5);
             
             /*
              * Step 6: Verifying products in list... (temporarily disabled)
@@ -230,6 +235,7 @@ public class E2EWorkflowTest {
             assertTrue(productsPage.isAddToCartButtonEnabled(product1Name),
                 "Add to Cart button should be enabled for in-stock product: " + product1Name);
             System.out.println("✓ Add to Cart button enabled for in-stock products");
+            homePage.takeScreenshot("stock-status-verification", 6);
             
             // Step 6a-1: Test Shipping Cost Preview on Product Pages (SCRUM-9)
             System.out.println("\nStep 6a-1: Testing shipping cost preview on product pages...");
@@ -307,6 +313,7 @@ public class E2EWorkflowTest {
                     System.out.println("⚠ Product 3 shipping preview not found (may not be implemented in UI)");
                 }
             }
+            homePage.takeScreenshot("shipping-cost-preview", 7);
             
             // Step 6b: Test Wishlist Flow (SCRUM-14)
             System.out.println("\nStep 6b: Testing Wishlist Flow...");
@@ -332,6 +339,7 @@ public class E2EWorkflowTest {
             int cartItemCount = ordersPage.getCartItemCount();
             assertTrue(cartItemCount > 0, "Product should be in cart after moving from wishlist. Cart items: " + cartItemCount);
             System.out.println("✓ Verified product added to cart (cart has " + cartItemCount + " item(s))");
+            homePage.takeScreenshot("wishlist-flow", 8);
             
             // Note: Product may still appear in wishlist due to async UI update timing
             // The important functionality (adding to cart) has been verified
@@ -356,6 +364,7 @@ public class E2EWorkflowTest {
             
             productsPage.addProductToCart(TestConfig.TestData.PRODUCT3_NAME + " " + timestamp);
             System.out.println("✓ Added " + TestConfig.TestData.PRODUCT3_NAME + " to cart");
+            homePage.takeScreenshot("add-products-to-cart", 9);
             
             System.out.println("\nStep 8: Creating order...");
             ordersPage.navigateToOrdersPage();
@@ -523,6 +532,7 @@ public class E2EWorkflowTest {
             assertNotNull(giftCardCode, "Gift card code should be displayed");
             assertTrue(giftCardCode.length() > 0, "Gift card code should not be empty");
             System.out.println("✓ Gift card purchased successfully. Code: " + giftCardCode);
+            homePage.takeScreenshot("gift-card-purchase", 10);
             
             // Verify gift card balance
             System.out.println("\nStep 7b: Verifying gift card balance...");
@@ -546,6 +556,7 @@ public class E2EWorkflowTest {
             } else {
                 System.out.println("⚠ Balance check returned error (may be expected for new card)");
             }
+            homePage.takeScreenshot("gift-card-balance", 11);
             
             // Navigate back to orders page to apply gift card
             System.out.println("\nStep 7c: Applying gift card to order...");
@@ -582,6 +593,7 @@ public class E2EWorkflowTest {
                 System.out.println("⚠ Gift card application check returned false - may need manual verification");
                 // Don't fail the test - gift card functionality is integrated, timing may vary
             }
+            homePage.takeScreenshot("gift-card-application", 12);
             
             // Verify cart total before placing order
             String cartTotalStr = ordersPage.getCartTotal();
@@ -590,6 +602,7 @@ public class E2EWorkflowTest {
             
             // Place the order
             ordersPage.submitOrder();
+            homePage.takeScreenshot("order-creation", 13);
             
             // Step 9: Verify order was created with correct details
             System.out.println("\nStep 9: Verifying order details...");
@@ -608,6 +621,7 @@ public class E2EWorkflowTest {
             assertNotNull(orderStatus, "Order status should be displayed");
             assertFalse(orderStatus.trim().isEmpty(), "Order status should not be empty");
             System.out.println("✓ Order status: " + orderStatus);
+            homePage.takeScreenshot("order-verification", 14);
             
             // Step 10: Test Order Tracking Page (SCRUM-13)
             System.out.println("\nStep 10: Testing order tracking page...");
@@ -698,6 +712,7 @@ public class E2EWorkflowTest {
                     "First timeline status should match current status. Timeline: " + firstTimelineStatus + ", Current: " + trackingStatus);
                 System.out.println("✓ Timeline status matches current status: " + firstTimelineStatus);
             }
+            homePage.takeScreenshot("order-tracking-verification", 15);
             
             System.out.println("\n✅ All workflow steps including order tracking completed successfully!");
             

@@ -38,6 +38,9 @@ webapp_logs.zip
 *.swo
 *~
 
+# Selenium test screenshots
+selenium/screenshots/
+
 # Azure Functions
 bin/
 obj/

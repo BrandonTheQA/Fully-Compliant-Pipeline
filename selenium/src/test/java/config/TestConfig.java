@@ -22,6 +22,14 @@ public class TestConfig {
     public static final Duration IMPLICIT_WAIT = Duration.ofSeconds(10);
     public static final Duration EXPLICIT_WAIT = Duration.ofSeconds(20);
     
+    // Screenshot configuration
+    // Check both system property and environment variable
+    private static final String SCREENSHOT_PROP = System.getProperty("enable.screenshots", 
+        System.getProperty("ENABLE_SCREENSHOTS", 
+            System.getenv().getOrDefault("ENABLE_SCREENSHOTS", "false")));
+    public static final boolean ENABLE_SCREENSHOTS = "true".equalsIgnoreCase(SCREENSHOT_PROP);
+    public static final String SCREENSHOT_DIR = "selenium/screenshots/";
+    
     // Test data constants matching Postman collection variables
     public static class TestData {
         // User data
@@ -107,6 +115,15 @@ public class TestConfig {
         if (driver != null) {
             driver.quit();
         }
+    }
+    
+    /**
+     * Checks if screenshots are enabled via configuration.
+     * 
+     * @return true if screenshots should be taken, false otherwise
+     */
+    public static boolean isScreenshotsEnabled() {
+        return ENABLE_SCREENSHOTS;
     }
 }
 

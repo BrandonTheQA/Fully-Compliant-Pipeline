@@ -2,9 +2,14 @@ package pages;
 
 import config.TestConfig;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.time.Duration;
 
 /**
@@ -129,6 +134,69 @@ public abstract class BasePage {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+    }
+    
+    /**
+     * Takes a screenshot after a test step if screenshots are enabled.
+     * Screenshots are saved to selenium/screenshots/ directory with descriptive filenames.
+     * 
+     * @param stepName Descriptive name of the step (e.g., "navigate-home", "create-user")
+     * @param stepNumber Step number for ordering (e.g., 1, 2, 3)
+     */
+    protected void takeScreenshot(String stepName, int stepNumber) {
+        // Check if screenshots are enabled
+        if (!TestConfig.isScreenshotsEnabled()) {
+            return;
+        }
+        
+        try {
+            // Ensure driver supports screenshots
+            if (!(driver instanceof TakesScreenshot)) {
+                System.out.println("Warning: WebDriver does not support screenshots");
+                return;
+            }
+            
+            TakesScreenshot screenshotDriver = (TakesScreenshot) driver;
+            
+            // Create screenshots directory if it doesn't exist
+            File screenshotDir = new File(TestConfig.SCREENSHOT_DIR);
+            if (!screenshotDir.exists()) {
+                boolean created = screenshotDir.mkdirs();
+                if (!created) {
+                    System.err.println("Warning: Could not create screenshots directory: " + TestConfig.SCREENSHOT_DIR);
+                    return;
+                }
+            }
+            
+            // Sanitize step name for filename (remove special characters, replace spaces with hyphens)
+            String sanitizedStepName = stepName
+                .toLowerCase()
+                .replaceAll("[^a-z0-9-]", "-")
+                .replaceAll("-+", "-")
+                .replaceAll("^-|-$", "");
+            
+            // Generate filename: step-{number:02d}-{stepName}.png
+            String filename = String.format("step-%02d-%s.png", stepNumber, sanitizedStepName);
+            File screenshotFile = new File(screenshotDir, filename);
+            
+            // Take screenshot
+            byte[] screenshotBytes = screenshotDriver.getScreenshotAs(OutputType.BYTES);
+            
+            // Save to file
+            try (FileOutputStream fos = new FileOutputStream(screenshotFile)) {
+                fos.write(screenshotBytes);
+            }
+            
+            // Log screenshot path
+            System.out.println("Screenshot saved: " + screenshotFile.getAbsolutePath());
+            
+        } catch (IOException e) {
+            // Don't fail the test if screenshot fails
+            System.err.println("Warning: Failed to take screenshot for step " + stepNumber + " (" + stepName + "): " + e.getMessage());
+        } catch (Exception e) {
+            // Don't fail the test if screenshot fails
+            System.err.println("Warning: Unexpected error taking screenshot for step " + stepNumber + " (" + stepName + "): " + e.getMessage());
         }
     }
 }
