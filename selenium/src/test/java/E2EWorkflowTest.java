@@ -160,7 +160,7 @@ public class E2EWorkflowTest {
             
             // Step 3: Create Product 1 (Laptop)
             System.out.println("\nStep 3: Creating product 1 (Laptop)...");
-            productsPage.navigateToProductsPage();
+            productsPage.navigateToAdminProductsPage();
             productsPage.clickCreateNewProductButton();
             productsPage.fillProductForm(
                 TestConfig.TestData.PRODUCT1_NAME + " " + timestamp,
@@ -225,6 +225,8 @@ public class E2EWorkflowTest {
             String product2Name = TestConfig.TestData.PRODUCT2_NAME + " " + timestamp;
             String product3Name = TestConfig.TestData.PRODUCT3_NAME + " " + timestamp;
             
+            // Navigate to customer products page to verify stock status and add to cart functionality
+            productsPage.navigateToProductsPage();
             // Verify stock status badge appears on products
             productsPage.waitForProductListToLoad();
             assertTrue(productsPage.isStockStatusBadgeDisplayed(product1Name),

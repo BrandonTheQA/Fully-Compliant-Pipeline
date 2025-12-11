@@ -39,10 +39,17 @@ public class ProductsPage extends BasePage {
     }
 
     /**
-     * Navigates to the products page.
+     * Navigates to the customer products page (for browsing products).
      */
     public void navigateToProductsPage() {
         navigateTo("/products");
+    }
+
+    /**
+     * Navigates to the admin products page (for product management).
+     */
+    public void navigateToAdminProductsPage() {
+        navigateTo("/admin/products");
     }
 
     /**
