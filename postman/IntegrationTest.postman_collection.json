@@ -342,12 +342,16 @@
 							"    pm.expect(jsonData.userId).to.eql(pm.environment.get('userId'));",
 							"});",
 							"",
-							"pm.test(\"Order has items\", function () {",
+						"pm.test(\"Order has items\", function () {",
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('items');",
 							"    pm.expect(jsonData.items).to.be.an('array');",
 							"    pm.expect(jsonData.items.length).to.be.at.least(1);",
-							"});",
+							"    // Save first order item ID for return request",
+							"    if (jsonData.items && jsonData.items.length > 0 && jsonData.items[0].id) {",
+							"        pm.environment.set('orderItemId', jsonData.items[0].id);",
+							"    }",
+						"});",
 							"",
 							"pm.test(\"Order has totalAmount\", function () {",
 							"    var jsonData = pm.response.json();",
@@ -2068,19 +2072,23 @@
 				{
 					"listen": "test",
 					"script": {
-						"exec": [
-							"pm.test(\"Status code is 201\", function () {",
-							"    pm.response.to.have.status(201);",
-							"});",
-							"",
-							"pm.test(\"Response has return ID and RMA number\", function () {",
+					"exec": [
+						"pm.test(\"Status code is 201\", function () {",
+						"    if (pm.response.code !== 201) {",
+						"        console.log('ERROR: Status code is ' + pm.response.code);",
+						"        console.log('Error Response Body:', JSON.stringify(pm.response.json(), null, 2));",
+						"    }",
+						"    pm.response.to.have.status(201);",
+						"});",
+						"",
+						"pm.test(\"Response has return ID and RMA number\", function () {",
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('returnId');",
 							"    pm.expect(jsonData).to.have.property('rmaNumber');",
 							"    pm.expect(jsonData.rmaNumber).to.match(/^RMA-\\d{8}-\\w+$/);",
 							"    pm.environment.set('returnId', jsonData.returnId);",
 							"    pm.environment.set('rmaNumber', jsonData.rmaNumber);",
-							"});",
+						"});",
 							"",
 							"pm.test(\"Response has status\", function () {",
 							"    var jsonData = pm.response.json();",
@@ -2108,7 +2116,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"userId\": \"{{userId}}\",\n    \"returnType\": \"REFUND_TO_PAYMENT\",\n    \"items\": [\n        {\n            \"orderItemId\": 1,\n            \"quantity\": 1,\n            \"returnReason\": \"CHANGED_MIND\",\n            \"comments\": \"No longer needed\"\n        }\n    ],\n    \"comments\": \"Return request for testing\"\n}"
+					"raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"userId\": \"{{userId}}\",\n    \"returnType\": \"REFUND_TO_PAYMENT\",\n    \"items\": [\n        {\n            \"orderItemId\": {{orderItemId}},\n            \"quantity\": 1,\n            \"returnReason\": \"CHANGED_MIND\",\n            \"comments\": \"No longer needed\"\n        }\n    ],\n    \"comments\": \"Return request for testing\"\n}"
 				},
 				"url": {
 					"raw": "{{apiBaseUrl}}/returns",

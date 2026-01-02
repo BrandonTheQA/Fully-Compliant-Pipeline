@@ -68,22 +68,51 @@ public class ReturnController {
     public ResponseEntity<ReturnResponse> createReturnRequest(
         @Parameter(description = "Return creation request", required = true)
         @Valid @RequestBody CreateReturnRequest request) {
-        ReturnResponse returnResponse = returnRequestService.createReturnRequest(request);
+        org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ReturnController.class);
+        logger.info("Received create return request: orderId={}, userId={}, returnType={}", 
+            request.getOrderId(), request.getUserId(), request.getReturnType());
+        
+        ReturnResponse returnResponse;
+        try {
+            returnResponse = returnRequestService.createReturnRequest(request);
+            logger.info("Return request created: returnId={}, rmaNumber={}", 
+                returnResponse.getReturnId(), returnResponse.getRmaNumber());
+        } catch (Exception e) {
+            logger.error("Error creating return request: {}", e.getMessage(), e);
+            logger.error("Exception class: {}", e.getClass().getName());
+            if (e.getCause() != null) {
+                logger.error("Caused by: {}", e.getCause().getMessage(), e.getCause());
+            }
+            throw e;
+        }
         
         // Trigger automatic approval processing
         try {
-            Return returnEntity = returnRepository.findById(returnResponse.getReturnId()).orElse(null);
+            logger.debug("Processing automatic approval for return: {}", returnResponse.getReturnId());
+            // Use the service method to get the return entity (handles transactions properly)
+            Return returnEntity = returnRequestService.getReturnEntityById(returnResponse.getReturnId());
             if (returnEntity != null) {
+                logger.debug("Return entity retrieved for approval processing");
                 returnApprovalService.processAutomaticApproval(returnEntity);
+                logger.debug("Automatic approval processed, refreshing response");
                 // Refresh response after approval processing
                 returnResponse = returnRequestService.getReturnById(returnResponse.getReturnId());
+                logger.debug("Response refreshed after approval");
+            } else {
+                logger.warn("Return entity not found for approval processing: {}", returnResponse.getReturnId());
             }
         } catch (Exception e) {
             // Log but don't fail the request
-            org.slf4j.LoggerFactory.getLogger(ReturnController.class)
-                .warn("Failed to process automatic approval: {}", e.getMessage());
+            logger.warn("Failed to process automatic approval for return {}: {}", 
+                returnResponse.getReturnId(), e.getMessage(), e);
+            logger.warn("Exception class: {}", e.getClass().getName());
+            if (e.getCause() != null) {
+                logger.warn("Caused by: {}", e.getCause().getMessage(), e.getCause());
+            }
         }
         
+        logger.info("Returning response for return: returnId={}, status={}", 
+            returnResponse.getReturnId(), returnResponse.getStatus());
         return ResponseEntity.status(HttpStatus.CREATED).body(returnResponse);
     }
     

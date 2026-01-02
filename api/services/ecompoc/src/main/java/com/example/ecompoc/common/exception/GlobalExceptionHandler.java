@@ -47,6 +47,14 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
+        logger.warn("Invalid argument: {}", ex.getMessage());
+        logger.debug("IllegalArgumentException stack trace:", ex);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     @ExceptionHandler({
         UserNotFoundException.class,
         ProductNotFoundException.class,
@@ -75,8 +83,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
-        logger.error("Unexpected error", ex);
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
+        logger.error("Unexpected error: {}", ex.getMessage(), ex);
+        logger.error("Exception class: {}", ex.getClass().getName());
+        logger.error("Stack trace:", ex);
+        if (ex.getCause() != null) {
+            logger.error("Caused by: {}", ex.getCause().getMessage(), ex.getCause());
+        }
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, 
+            "Internal server error: " + ex.getClass().getSimpleName() + " - " + ex.getMessage());
     }
 
     private ResponseEntity<Map<String, Object>> buildErrorResponse(HttpStatus status, String message) {

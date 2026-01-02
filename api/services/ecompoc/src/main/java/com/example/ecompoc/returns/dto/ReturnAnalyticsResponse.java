@@ -18,6 +18,9 @@ public class ReturnAnalyticsResponse {
     @JsonProperty("averageReturnProcessingTime")
     private Double averageReturnProcessingTime;
     
+    @JsonProperty("averageProcessingTime")
+    private Double averageProcessingTime;
+    
     @JsonProperty("returnRate")
     private Double returnRate;
     
@@ -58,6 +61,16 @@ public class ReturnAnalyticsResponse {
     
     public void setAverageReturnProcessingTime(Double averageReturnProcessingTime) {
         this.averageReturnProcessingTime = averageReturnProcessingTime;
+        this.averageProcessingTime = averageReturnProcessingTime; // Alias for Postman compatibility
+    }
+    
+    public Double getAverageProcessingTime() {
+        return averageProcessingTime != null ? averageProcessingTime : averageReturnProcessingTime;
+    }
+    
+    public void setAverageProcessingTime(Double averageProcessingTime) {
+        this.averageProcessingTime = averageProcessingTime;
+        this.averageReturnProcessingTime = averageProcessingTime; // Keep both in sync
     }
     
     public Double getReturnRate() {

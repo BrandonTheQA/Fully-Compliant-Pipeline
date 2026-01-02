@@ -76,7 +76,7 @@ public class CreateReturnRequest {
      * Inner class for return item request
      */
     public static class ReturnItemRequest {
-        @NotBlank(message = "Order item ID is required")
+        @javax.validation.constraints.NotNull(message = "Order item ID is required")
         private Long orderItemId;
         
         @javax.validation.constraints.Min(value = 1, message = "Quantity must be at least 1")
