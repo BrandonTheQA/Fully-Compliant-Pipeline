@@ -9,6 +9,12 @@
   margin-bottom: 1.5rem;
 }
 
+.return-action {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-color);
+}
+
 .order-info {
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;

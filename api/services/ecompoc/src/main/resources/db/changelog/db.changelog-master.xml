@@ -18,6 +18,7 @@
     <include file="db/changelog/loyalty/create-loyalty-tables.xml"/>
     <include file="db/changelog/stock/create-stock-tables.xml"/>
     <include file="db/changelog/giftcard/create-gift-card-tables.xml"/>
+    <include file="db/changelog/return/create-returns-tables.xml"/>
 
 </databaseChangeLog>
 

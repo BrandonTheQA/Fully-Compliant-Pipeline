@@ -1,0 +1,27 @@
+.return-policy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background-color: #e7f3ff;
+  border: 1px solid #007bff;
+  border-radius: 4px;
+  color: #007bff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.return-policy-badge:hover {
+  background-color: #d0e7ff;
+}
+
+.badge-icon {
+  font-size: 1.2rem;
+}
+
+.badge-text {
+  white-space: nowrap;
+}
+

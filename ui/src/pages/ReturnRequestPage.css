@@ -1,0 +1,106 @@
+.return-form-section {
+  margin-bottom: 2rem;
+}
+
+.return-form-section h2 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+}
+
+.return-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.return-item {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.return-item label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.return-item-details {
+  margin-top: 0.5rem;
+  padding-left: 1.5rem;
+}
+
+.return-item-details label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.return-item-details select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.return-form-section label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.return-form-section input[type="radio"] {
+  margin-right: 0.5rem;
+}
+
+.return-form-section textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.return-success {
+  text-align: center;
+  padding: 2rem;
+}
+
+.return-success .rma-number {
+  font-size: 1.5rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.orders-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.order-card {
+  padding: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+
+.order-card:hover {
+  border-color: #007bff;
+}
+
+.order-card.selected {
+  border-color: #007bff;
+  background-color: #f0f7ff;
+}
+
+.no-orders {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+}
+

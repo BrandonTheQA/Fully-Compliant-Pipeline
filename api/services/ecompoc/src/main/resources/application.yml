@@ -126,3 +126,20 @@ password:
   hashing:
     bcrypt-strength: 10
 
+return:
+  enabled: true
+  policy:
+    return-window-days: 30
+    restocking-fee-percentage: 0
+    free-return-threshold: 0
+    auto-approve-threshold: 100.00
+  email:
+    enabled: true
+  shipping:
+    label-generation:
+      enabled: true
+      carrier: ECOMPOC
+  refund:
+    processing-days: 1
+    auto-process-on-received: true
+

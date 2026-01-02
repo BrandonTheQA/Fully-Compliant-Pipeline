@@ -18,3 +18,8 @@ npm run build
 echo "Starting UI production server on port $UI_PORT..."
 PORT="$UI_PORT" BACKEND_URL="http://localhost:8080" node server.js
 
+
+
+
+
+

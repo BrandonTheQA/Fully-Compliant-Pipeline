@@ -1,0 +1,189 @@
+.admin-returns-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.filters-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filters input,
+.filters select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.returns-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.return-card {
+  padding: 1.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+}
+
+.return-card h3 {
+  margin-top: 0;
+}
+
+.return-details {
+  margin-top: 2rem;
+}
+
+.return-details-content {
+  margin-top: 1rem;
+}
+
+.details-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.details-section h3 {
+  margin-top: 0;
+}
+
+.return-item-detail {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: white;
+  border-radius: 4px;
+}
+
+.status-history-item {
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background-color: white;
+  border-left: 3px solid #007bff;
+  padding-left: 1rem;
+}
+
+.admin-actions {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.admin-actions button {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.status-update {
+  margin-top: 1rem;
+}
+
+.status-update label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.status-update select {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.analytics-dashboard {
+  margin-top: 2rem;
+}
+
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.analytics-card {
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.analytics-card h3 {
+  margin-top: 0;
+  font-size: 1rem;
+  color: #666;
+}
+
+.analytics-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #007bff;
+  margin: 0;
+}
+
+.analytics-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.status-distribution,
+.reasons-distribution {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.status-item,
+.reason-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: white;
+  border-radius: 4px;
+}
+
+.no-returns {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+}
+
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+}
+

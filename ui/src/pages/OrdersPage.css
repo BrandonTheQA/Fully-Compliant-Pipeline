@@ -29,18 +29,31 @@
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: var(--shadow);
-  cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-  border: none;
-  text-align: left;
-  width: 100%;
-  font-family: inherit;
-  font-size: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .order-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
+}
+
+.order-card-button {
+  background: none;
+  border: none;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.return-button {
+  width: 100%;
+  margin-top: 0.5rem;
 }
 
 .order-card h3 {

@@ -464,6 +464,7 @@ public class OrderService {
                 item.getPrice(),
                 item.getSubtotal()
             );
+            itemResponse.setId(item.getId());
             itemResponses.add(itemResponse);
         }
 

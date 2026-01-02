@@ -2021,6 +2021,488 @@
 				"description": "Gets stock analytics for admin dashboard (SCRUM-21)"
 			},
 			"response": []
+		},
+		{
+			"name": "34. SCRUM-24: Get Return Policy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has return policy fields\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('returnWindowDays');",
+							"    pm.expect(jsonData).to.have.property('restockingFeePercentage');",
+							"    pm.expect(jsonData).to.have.property('freeReturnThreshold');",
+							"    pm.expect(jsonData).to.have.property('autoApproveThreshold');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/returns/policy",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"returns",
+						"policy"
+					]
+				},
+				"description": "Gets return policy configuration (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "35. SCRUM-24: Create Return Request",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has return ID and RMA number\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('returnId');",
+							"    pm.expect(jsonData).to.have.property('rmaNumber');",
+							"    pm.expect(jsonData.rmaNumber).to.match(/^RMA-\\d{8}-\\w+$/);",
+							"    pm.environment.set('returnId', jsonData.returnId);",
+							"    pm.environment.set('rmaNumber', jsonData.rmaNumber);",
+							"});",
+							"",
+							"pm.test(\"Response has status\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('status');",
+							"});",
+							"",
+							"pm.test(\"Response has items\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('items');",
+							"    pm.expect(jsonData.items).to.be.an('array');",
+							"    pm.expect(jsonData.items.length).to.be.at.least(1);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"orderId\": \"{{orderId}}\",\n    \"userId\": \"{{userId}}\",\n    \"returnType\": \"REFUND_TO_PAYMENT\",\n    \"items\": [\n        {\n            \"orderItemId\": 1,\n            \"quantity\": 1,\n            \"returnReason\": \"CHANGED_MIND\",\n            \"comments\": \"No longer needed\"\n        }\n    ],\n    \"comments\": \"Return request for testing\"\n}"
+				},
+				"url": {
+					"raw": "{{apiBaseUrl}}/returns",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"returns"
+					]
+				},
+				"description": "Creates a return request (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "36. SCRUM-24: Get Return by RMA Number",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has return details\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('returnId');",
+							"    pm.expect(jsonData).to.have.property('rmaNumber');",
+							"    pm.expect(jsonData.rmaNumber).to.eql(pm.environment.get('rmaNumber'));",
+							"});",
+							"",
+							"pm.test(\"Response has order and user information\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('orderId');",
+							"    pm.expect(jsonData).to.have.property('userId');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/returns/rma/{{rmaNumber}}",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"returns",
+						"rma",
+						"{{rmaNumber}}"
+					]
+				},
+				"description": "Gets return details by RMA number (guest access) (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "37. SCRUM-24: Get User Returns",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is an array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Returns belong to the user\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    jsonData.forEach(function(returnItem) {",
+							"        pm.expect(returnItem.userId).to.eql(pm.environment.get('userId'));",
+							"    });",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/returns/user/{{userId}}",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"returns",
+						"user",
+						"{{userId}}"
+					]
+				},
+				"description": "Gets all returns for a user (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "38. SCRUM-24: Get Return Tracking",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has tracking information\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('returnId');",
+							"    pm.expect(jsonData).to.have.property('rmaNumber');",
+							"    pm.expect(jsonData).to.have.property('status');",
+							"    pm.expect(jsonData).to.have.property('statusHistory');",
+							"    pm.expect(jsonData.statusHistory).to.be.an('array');",
+							"});",
+							"",
+							"pm.test(\"Response has items\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('items');",
+							"    pm.expect(jsonData.items).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/returns/{{returnId}}/tracking",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"returns",
+						"{{returnId}}",
+						"tracking"
+					]
+				},
+				"description": "Gets return tracking information (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "39. SCRUM-24: Admin - List Returns",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is an array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/admin/returns",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"admin",
+						"returns"
+					]
+				},
+				"description": "Gets all returns (admin) (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "40. SCRUM-24: Admin - Get Return Details",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has return details\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('returnId');",
+							"    pm.expect(jsonData.returnId).to.eql(pm.environment.get('returnId'));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/admin/returns/{{returnId}}",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"admin",
+						"returns",
+						"{{returnId}}"
+					]
+				},
+				"description": "Gets return details by ID (admin) (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "41. SCRUM-24: Admin - Approve Return",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"notes\": \"Approved for testing\"\n}"
+				},
+				"url": {
+					"raw": "{{apiBaseUrl}}/admin/returns/{{returnId}}/approve",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"admin",
+						"returns",
+						"{{returnId}}",
+						"approve"
+					]
+				},
+				"description": "Approves a return request (admin) (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "42. SCRUM-24: Admin - Update Return Status",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status\": \"APPROVED\",\n    \"notes\": \"Status updated for testing\"\n}"
+				},
+				"url": {
+					"raw": "{{apiBaseUrl}}/admin/returns/{{returnId}}/status",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"admin",
+						"returns",
+						"{{returnId}}",
+						"status"
+					]
+				},
+				"description": "Updates return status (admin) (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "43. SCRUM-24: Admin - Mark Return as Received",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/admin/returns/{{returnId}}/received?notes=Received for testing",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"admin",
+						"returns",
+						"{{returnId}}",
+						"received"
+					],
+					"query": [
+						{
+							"key": "notes",
+							"value": "Received for testing"
+						}
+					]
+				},
+				"description": "Marks return as received, triggering refund processing (admin) (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "44. SCRUM-24: Admin - Get Return Analytics",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has analytics data\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('totalReturns');",
+							"    pm.expect(jsonData).to.have.property('totalReturnValue');",
+							"    pm.expect(jsonData).to.have.property('averageProcessingTime');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/admin/returns/analytics",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"admin",
+						"returns",
+						"analytics"
+					]
+				},
+				"description": "Gets return analytics and metrics (admin) (SCRUM-24)"
+			},
+			"response": []
 		}
 	],
 	"variable": [

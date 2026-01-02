@@ -7,6 +7,10 @@ import { CustomerProductsPage } from './pages/CustomerProductsPage';
 import { AdminProductsPage } from './pages/AdminProductsPage';
 import { OrdersPage } from './pages/OrdersPage';
 import { OrderTrackingPage } from './pages/OrderTrackingPage';
+import { ReturnRequestPage } from './pages/ReturnRequestPage';
+import { ReturnTrackingPage } from './pages/ReturnTrackingPage';
+import { ReturnPolicyPage } from './pages/ReturnPolicyPage';
+import { AdminReturnsPage } from './pages/AdminReturnsPage';
 import { WishlistPage } from './pages/WishlistPage';
 import { GiftCardPurchasePage } from './pages/GiftCardPurchasePage';
 import { GiftCardBalancePage } from './pages/GiftCardBalancePage';
@@ -28,6 +32,7 @@ const Navigation: React.FC = () => {
           {isAdminRoute ? (
             <>
               <Link to="/admin/products" aria-current={location.pathname === '/admin/products' ? 'page' : undefined}>Admin - Products</Link>
+              <Link to="/admin/returns" aria-current={location.pathname === '/admin/returns' ? 'page' : undefined}>Admin - Returns</Link>
             </>
           ) : (
             <>
@@ -40,6 +45,9 @@ const Navigation: React.FC = () => {
               <Link to="/orders" aria-current={location.pathname.startsWith('/orders') ? 'page' : undefined}>
                 Orders {cart.length > 0 && <span className="cart-badge">{cart.length}</span>}
               </Link>
+              <Link to="/returns/request" aria-current={location.pathname === '/returns/request' ? 'page' : undefined}>Returns</Link>
+              <Link to="/returns/track" aria-current={location.pathname === '/returns/track' ? 'page' : undefined}>Track Return</Link>
+              <Link to="/returns/policy" aria-current={location.pathname === '/returns/policy' ? 'page' : undefined}>Return Policy</Link>
             </>
           )}
         </div>
@@ -66,9 +74,13 @@ function AppContent() {
           <Route path="/gift-cards/balance" element={<GiftCardBalancePage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/orders/:orderId/tracking" element={<OrderTrackingPage />} />
+          <Route path="/returns/request" element={<ReturnRequestPage />} />
+          <Route path="/returns/track" element={<ReturnTrackingPage />} />
+          <Route path="/returns/policy" element={<ReturnPolicyPage />} />
           
           {/* Admin routes */}
           <Route path="/admin/products" element={<AdminProductsPage />} />
+          <Route path="/admin/returns" element={<AdminReturnsPage />} />
         </Routes>
       </main>
     </Router>

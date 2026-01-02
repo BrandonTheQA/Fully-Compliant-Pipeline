@@ -1,0 +1,18 @@
+.return-label-download {
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.return-label-download h3 {
+  margin-top: 0;
+}
+
+.label-instructions {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+}
+

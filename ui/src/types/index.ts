@@ -19,6 +19,7 @@ export interface Product {
 }
 
 export interface OrderItem {
+  id?: number;
   productId: string;
   productName?: string;
   quantity: number;
@@ -194,5 +195,137 @@ export interface RedeemPointsResponse {
   discountAmount: number;
   remainingBalance: number;
   message: string;
+}
+
+// Return Types
+export type ReturnStatus = 
+  | 'PENDING_APPROVAL'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'IN_TRANSIT'
+  | 'RECEIVED'
+  | 'PROCESSING_REFUND'
+  | 'REFUNDED'
+  | 'COMPLETED';
+
+export type ReturnType = 
+  | 'REFUND_TO_PAYMENT'
+  | 'STORE_CREDIT'
+  | 'EXCHANGE';
+
+export type ReturnReason = 
+  | 'DEFECTIVE'
+  | 'WRONG_ITEM'
+  | 'NOT_AS_DESCRIBED'
+  | 'CHANGED_MIND'
+  | 'SIZE_COLOR_ISSUE'
+  | 'OTHER';
+
+export interface ReturnItem {
+  returnItemId?: number;
+  orderItemId: number;
+  productId: string;
+  productName: string;
+  quantity: number;
+  returnReason: ReturnReason;
+  condition?: string;
+  comments?: string;
+  originalPrice: number;
+  refundAmount?: number;
+}
+
+export interface ReturnStatusHistory {
+  historyId?: number;
+  status: ReturnStatus;
+  notes?: string;
+  updatedBy?: string;
+  createdAt: string;
+}
+
+export interface Return {
+  returnId: string;
+  orderId: string;
+  userId: string;
+  rmaNumber: string;
+  status: ReturnStatus;
+  returnType: ReturnType;
+  refundAmount?: number;
+  refundMethod?: string;
+  refundDate?: string;
+  returnTrackingNumber?: string;
+  returnCarrier?: string;
+  returnLabelUrl?: string;
+  items: ReturnItem[];
+  statusHistory: ReturnStatusHistory[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateReturnRequest {
+  orderId: string;
+  userId: string;
+  items: {
+    orderItemId: number;
+    quantity: number;
+    returnReason: ReturnReason;
+    condition?: string;
+    comments?: string;
+  }[];
+  returnType: ReturnType;
+  comments?: string;
+}
+
+export interface ReturnTracking {
+  returnId: string;
+  rmaNumber: string;
+  status: ReturnStatus;
+  returnType: ReturnType;
+  returnTrackingNumber?: string;
+  returnCarrier?: string;
+  returnLabelUrl?: string;
+  refundAmount?: number;
+  refundMethod?: string;
+  refundDate?: string;
+  estimatedRefundDate?: string;
+  statusHistory: ReturnStatusHistory[];
+  items: ReturnItem[];
+}
+
+export interface ReturnPolicy {
+  returnWindowDays: number;
+  restockingFeePercentage?: number;
+  freeReturnThreshold?: number;
+  autoApproveThreshold?: number;
+}
+
+export interface ExchangeRequest {
+  exchangeProductId: string;
+  quantity?: number;
+  notes?: string;
+}
+
+export interface ReturnAnalytics {
+  totalReturns: number;
+  totalReturnValue: number;
+  averageReturnProcessingTime: number;
+  returnRate: number;
+  returnReasonsDistribution: Record<string, number>;
+  returnRateByProduct: ProductReturnRate[];
+  returnsByStatus: Record<string, number>;
+  returnsByMonth: MonthlyReturnStats[];
+}
+
+export interface ProductReturnRate {
+  productId: string;
+  productName: string;
+  returnRate: number;
+  totalReturns: number;
+}
+
+export interface MonthlyReturnStats {
+  month: string;
+  year: number;
+  totalReturns: number;
+  totalValue: number;
 }
 

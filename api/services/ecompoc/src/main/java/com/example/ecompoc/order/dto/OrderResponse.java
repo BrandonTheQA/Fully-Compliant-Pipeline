@@ -104,6 +104,9 @@ public class OrderResponse {
      * Inner class for order item response
      */
     public static class OrderItemResponse {
+        @JsonProperty("id")
+        private Long id;
+        
         @JsonProperty("productId")
         private String productId;
         
@@ -127,6 +130,14 @@ public class OrderResponse {
             this.quantity = quantity;
             this.price = price;
             this.subtotal = subtotal;
+        }
+        
+        public Long getId() {
+            return id;
+        }
+        
+        public void setId(Long id) {
+            this.id = id;
         }
         
         public String getProductId() {

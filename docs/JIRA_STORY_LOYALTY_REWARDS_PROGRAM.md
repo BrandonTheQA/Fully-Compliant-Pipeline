@@ -409,3 +409,8 @@ TBD - To be assigned during sprint planning
 - Consider implementing point purchase option (customers can buy points) for additional revenue stream
 - Loyalty program data can inform personalized marketing campaigns and product recommendations
 
+
+
+
+
+

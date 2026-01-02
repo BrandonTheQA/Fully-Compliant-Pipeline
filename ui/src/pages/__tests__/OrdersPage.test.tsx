@@ -191,11 +191,9 @@ describe('OrdersPage', () => {
       expect(screen.getByText(/Order #order-12/i)).toBeInTheDocument();
     });
 
-    // Order ID is truncated to 8 characters: "order-123" becomes "order-12"
-    const orderCard = screen.getByText(/Order #order-12/i).closest('.order-card');
-    if (orderCard) {
-      fireEvent.click(orderCard);
-    }
+    // Click the order card button directly
+    const orderButton = screen.getByLabelText('View order order-12');
+    fireEvent.click(orderButton);
 
     await waitFor(() => {
       expect(orderService.getOrder).toHaveBeenCalledWith('order-123');
@@ -221,11 +219,9 @@ describe('OrdersPage', () => {
       expect(screen.getByText(/Order #order-12/i)).toBeInTheDocument();
     });
 
-    // Order ID is truncated to 8 characters: "order-123" becomes "order-12"
-    const orderCard = screen.getByText(/Order #order-12/i).closest('.order-card');
-    if (orderCard) {
-      fireEvent.click(orderCard);
-    }
+    // Click the order card button directly
+    const orderButton = screen.getByLabelText('View order order-12');
+    fireEvent.click(orderButton);
 
     await waitFor(() => {
       expect(screen.getByText('← Back to Orders')).toBeInTheDocument();

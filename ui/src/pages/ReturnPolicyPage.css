@@ -1,0 +1,27 @@
+.return-policy-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.policy-section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.policy-section h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.policy-section ul,
+.policy-section ol {
+  margin-left: 1.5rem;
+}
+
+.policy-section li {
+  margin-bottom: 0.5rem;
+}
+

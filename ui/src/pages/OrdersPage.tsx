@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { orderService } from '../services/orderService';
 import { OrderForm } from '../components/OrderForm';
@@ -8,6 +9,7 @@ import './OrdersPage.css';
 
 export const OrdersPage: React.FC = () => {
   const { user, cart } = useAppContext();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(false);
@@ -95,22 +97,37 @@ export const OrdersPage: React.FC = () => {
             <div className="no-orders">No orders found. Create your first order!</div>
           ) : (
             <div className="orders-grid">
-              {orders.map((order) => (
-                <button 
-                  key={order.id} 
-                  className="order-card" 
-                  onClick={() => handleViewOrder(order.id)}
-                  aria-label={`View order ${order.id.slice(0, 8)}`}
-                >
-                  <h3>Order #{order.id.slice(0, 8)}</h3>
-                  <p><strong>Status:</strong> <span aria-label={`Order status: ${order.status}`}>{order.status}</span></p>
-                  <p><strong>Total:</strong> ${order.totalAmount.toFixed(2)}</p>
-                  <p><strong>Items:</strong> {order.items.length}</p>
-                  {order.createdAt && (
-                    <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
-                  )}
-                </button>
-              ))}
+              {orders.map((order) => {
+                const isEligibleForReturn = order.status === 'DELIVERED' || order.status === 'CONFIRMED';
+                return (
+                  <div key={order.id} className="order-card">
+                    <button 
+                      className="order-card-button" 
+                      onClick={() => handleViewOrder(order.id)}
+                      aria-label={`View order ${order.id.slice(0, 8)}`}
+                    >
+                      <h3>Order #{order.id.slice(0, 8)}</h3>
+                      <p><strong>Status:</strong> <span aria-label={`Order status: ${order.status}`}>{order.status}</span></p>
+                      <p><strong>Total:</strong> ${order.totalAmount.toFixed(2)}</p>
+                      <p><strong>Items:</strong> {order.items.length}</p>
+                      {order.createdAt && (
+                        <p><strong>Date:</strong> {new Date(order.createdAt).toLocaleDateString()}</p>
+                      )}
+                    </button>
+                    {isEligibleForReturn && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate('/returns/request', { state: { orderId: order.id } });
+                        }}
+                        className="btn btn-secondary return-button"
+                      >
+                        Return Items
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

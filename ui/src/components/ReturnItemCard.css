@@ -1,0 +1,19 @@
+.return-item-card {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  background-color: #f8f9fa;
+}
+
+.return-item-card h4 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.return-item-details p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+

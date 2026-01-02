@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import type { Order } from '../types';
 import './OrderDetails.css';
 
@@ -7,9 +8,29 @@ interface OrderDetailsProps {
 }
 
 export const OrderDetails: React.FC<OrderDetailsProps> = ({ order }) => {
+  const navigate = useNavigate();
+  
+  // Check if order is eligible for return (delivered or confirmed)
+  const isEligibleForReturn = order.status === 'DELIVERED' || order.status === 'CONFIRMED';
+  
+  const handleReturnItems = () => {
+    navigate('/returns/request', { state: { orderId: order.id } });
+  };
+
   return (
     <div className="order-details-container">
       <h2>Order Details</h2>
+      
+      {isEligibleForReturn && (
+        <div className="return-action">
+          <button
+            onClick={handleReturnItems}
+            className="btn btn-primary"
+          >
+            Return Items
+          </button>
+        </div>
+      )}
       <div className="order-info">
         <div className="info-row">
           <span className="label">Order ID:</span>

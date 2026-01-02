@@ -2,6 +2,7 @@
 import { describe, it, expect } from '@jest/globals';
 import { render } from '@testing-library/react';
 import { screen } from '@testing-library/dom';
+import { BrowserRouter } from 'react-router-dom';
 import { OrderDetails } from '../OrderDetails';
 import type { Order } from '../../types';
 
@@ -31,7 +32,11 @@ describe('OrderDetails', () => {
   };
 
   it('should render order details', () => {
-    render(<OrderDetails order={mockOrder} />);
+    render(
+      <BrowserRouter>
+        <OrderDetails order={mockOrder} />
+      </BrowserRouter>
+    );
 
     expect(screen.getByText('Order Details')).toBeInTheDocument();
     expect(screen.getByText('order-123')).toBeInTheDocument();
@@ -41,7 +46,11 @@ describe('OrderDetails', () => {
   });
 
   it('should render order items table', () => {
-    render(<OrderDetails order={mockOrder} />);
+    render(
+      <BrowserRouter>
+        <OrderDetails order={mockOrder} />
+      </BrowserRouter>
+    );
 
     expect(screen.getByText('Laptop')).toBeInTheDocument();
     expect(screen.getByText('Mouse')).toBeInTheDocument();
@@ -59,7 +68,11 @@ describe('OrderDetails', () => {
   });
 
   it('should render formatted date', () => {
-    render(<OrderDetails order={mockOrder} />);
+    render(
+      <BrowserRouter>
+        <OrderDetails order={mockOrder} />
+      </BrowserRouter>
+    );
 
     const dateString = new Date('2024-01-01T00:00:00').toLocaleString();
     expect(screen.getByText(dateString)).toBeInTheDocument();

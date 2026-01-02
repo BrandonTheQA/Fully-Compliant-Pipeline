@@ -7,6 +7,7 @@ import { WishlistButton } from './WishlistButton';
 import { StockStatusBadge } from './StockStatusBadge';
 import { LowStockWarning } from './LowStockWarning';
 import { NotifyMeButton } from './NotifyMeButton';
+import { ReturnPolicyBadge } from './ReturnPolicyBadge';
 import './ProductList.css';
 
 interface ProductListProps {
@@ -88,6 +89,9 @@ export const ProductList: React.FC<ProductListProps> = ({
             </div>
             <div className="product-stock-status">
               <StockStatusBadge product={product} />
+            </div>
+            <div className="product-return-policy">
+              <ReturnPolicyBadge />
             </div>
             <LowStockWarning product={product} />
             <ProductShippingPreview 

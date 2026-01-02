@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="create-returns-table" author="system">
+        <createTable tableName="returns">
+            <column name="return_id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rma_number" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="status" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="return_type" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="refund_amount" type="DECIMAL(10,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="refund_method" type="NVARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="refund_date" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="return_tracking_number" type="VARCHAR(100)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="return_carrier" type="NVARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="return_label_url" type="NVARCHAR(500)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="returns" 
+            baseColumnNames="order_id"
+            constraintName="fk_returns_order"
+            referencedTableName="orders"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+        
+        <createIndex indexName="idx_returns_rma_number" tableName="returns" unique="true">
+            <column name="rma_number"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_returns_order_id" tableName="returns">
+            <column name="order_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_returns_user_id" tableName="returns">
+            <column name="user_id"/>
+        </createIndex>
+        
+        <createIndex indexName="idx_returns_status" tableName="returns">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create-return-items-table" author="system">
+        <createTable tableName="return_items">
+            <column name="return_item_id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="return_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_item_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_name" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="return_reason" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="condition" type="NVARCHAR(50)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="comments" type="NVARCHAR(1000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="original_price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="refund_amount" type="DECIMAL(10,2)">
+                <constraints nullable="true"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="return_items" 
+            baseColumnNames="return_id"
+            constraintName="fk_return_items_return"
+            referencedTableName="returns"
+            referencedColumnNames="return_id"
+            onDelete="CASCADE"/>
+            
+        <createIndex indexName="idx_return_items_return_id" tableName="return_items">
+            <column name="return_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create-return-status-history-table" author="system">
+        <createTable tableName="return_status_history">
+            <column name="history_id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="return_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="NVARCHAR(1000)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="updated_by" type="NVARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="return_status_history" 
+            baseColumnNames="return_id"
+            constraintName="fk_return_status_history_return"
+            referencedTableName="returns"
+            referencedColumnNames="return_id"
+            onDelete="CASCADE"/>
+            
+        <createIndex indexName="idx_return_status_history_return_id" tableName="return_status_history">
+            <column name="return_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create-return-attachments-table" author="system">
+        <createTable tableName="return_attachments">
+            <column name="attachment_id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="return_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_path" type="NVARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_type" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="return_attachments" 
+            baseColumnNames="return_id"
+            constraintName="fk_return_attachments_return"
+            referencedTableName="returns"
+            referencedColumnNames="return_id"
+            onDelete="CASCADE"/>
+            
+        <createIndex indexName="idx_return_attachments_return_id" tableName="return_attachments">
+            <column name="return_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create-return-policy-config-table" author="system">
+        <createTable tableName="return_policy_config">
+            <column name="policy_id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="return_window_days" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="restocking_fee_percentage" type="DECIMAL(5,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="free_return_threshold" type="DECIMAL(10,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="auto_approve_threshold" type="DECIMAL(10,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <insert tableName="return_policy_config">
+            <column name="return_window_days" value="30"/>
+            <column name="restocking_fee_percentage" value="0"/>
+            <column name="free_return_threshold" value="0"/>
+            <column name="auto_approve_threshold" value="100.00"/>
+            <column name="created_at" valueComputed="GETDATE()"/>
+            <column name="updated_at" valueComputed="GETDATE()"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
+
