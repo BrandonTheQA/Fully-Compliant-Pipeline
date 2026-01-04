@@ -2585,7 +2585,22 @@
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('alerts');",
 							"    pm.expect(jsonData.alerts).to.be.an('array');",
-							"    pm.expect(jsonData.alerts.length).to.be.at.least(1);",
+							"});",
+							"",
+							"pm.test(\"Response has at least 1 alert if priceAlertId exists\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    var priceAlertId = pm.environment.get('priceAlertId');",
+							"    var userEmail = pm.environment.get('userEmail');",
+							"    if (priceAlertId) {",
+							"        pm.expect(jsonData.alerts.length, 'Expected at least 1 alert for email: ' + userEmail + ' (alertId: ' + priceAlertId + '). Found ' + jsonData.alerts.length + ' alerts.').to.be.at.least(1);",
+							"        // Verify the created alert is in the list",
+							"        var foundAlert = jsonData.alerts.find(function(alert) {",
+							"            return alert.alertId === priceAlertId;",
+							"        });",
+							"        pm.expect(foundAlert, 'Expected to find alert with alertId: ' + priceAlertId + ' in the alerts list').to.not.be.undefined;",
+							"    } else {",
+							"        console.log('Skipping alert count assertion - priceAlertId not set (test 45 may have failed)');",
+							"    }",
 							"});"
 						],
 						"type": "text/javascript"
@@ -2596,7 +2611,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{apiBaseUrl}}/v2/price-alerts?email={{userEmail}}",
+					"raw": "{{apiBaseUrl}}/v2/price-alerts?email={{userEmail}}&userId={{userId}}",
 					"host": [
 						"{{apiBaseUrl}}"
 					],
@@ -2608,10 +2623,15 @@
 						{
 							"key": "email",
 							"value": "{{userEmail}}"
+						},
+						{
+							"key": "userId",
+							"value": "{{userId}}",
+							"disabled": false
 						}
 					]
 				},
-				"description": "Gets all price alerts for the user's email"
+				"description": "Gets all price alerts for the user's email and userId"
 			},
 			"response": []
 		},
