@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>5/5</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">94.44% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>17/18</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -124,6 +124,15 @@
 <a name='L59'></a><a href='#L59'>59</a>
 <a name='L60'></a><a href='#L60'>60</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">28x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -131,17 +140,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">36x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -190,8 +190,8 @@ interface OrderDetailsCardProps {
   tracking: OrderTracking;
 }
 &nbsp;
-export const OrderDetailsCard: React.FC&lt;OrderDetailsCardProps&gt; = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >({</span> order, tracking }) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  return (</span>
+export const OrderDetailsCard: React.FC&lt;OrderDetailsCardProps&gt; = ({ order, tracking }) =&gt; {
+  return (
     &lt;div className="order-details-card"&gt;
       &lt;h3&gt;Order Details&lt;/h3&gt;
       
@@ -199,14 +199,14 @@ export const OrderDetailsCard: React.FC&lt;OrderDetailsCardProps&gt; = <span cla
         &lt;div className="order-items-section"&gt;
           &lt;h4&gt;Items&lt;/h4&gt;
           &lt;div className="items-list"&gt;
-            {order.items.map(<span class="fstat-no" title="function not covered" >(i</span>tem, index) =&gt; (
-<span class="cstat-no" title="statement not covered" >              &lt;div key={index} c</span>lassName="order-item"&gt;
+            {order.items.map((item, index) =&gt; (
+              &lt;div key={index} className="order-item"&gt;
                 &lt;div className="item-info"&gt;
                   &lt;span className="item-name"&gt;{item.productName || `Product ${item.productId.slice(0, 8)}`}&lt;/span&gt;
                   &lt;span className="item-quantity"&gt;Qty: {item.quantity}&lt;/span&gt;
                 &lt;/div&gt;
                 &lt;div className="item-price"&gt;
-                  ${item.subtotal ? item.subtotal.toFixed(2) : (item.price ? (item.price * item.quantity).toFixed(2) : '0.00')}
+                  ${item.subtotal ? item.subtotal.toFixed(2) : (item.price ? (item.price * item.quantity).toFixed(2) : <span class="branch-1 cbranch-no" title="branch not covered" >'0.00')</span>}
                 &lt;/div&gt;
               &lt;/div&gt;
             ))}
@@ -247,7 +247,7 @@ export const OrderDetailsCard: React.FC&lt;OrderDetailsCardProps&gt; = <span cla
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-03T21:01:59.491Z
+                at 2026-01-02T23:07:32.159Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

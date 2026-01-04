@@ -96,4 +96,23 @@ describe('App', () => {
     expect(mainContent).toBeInTheDocument();
     expect(mainContent.getAttribute('id')).toBe('main-content');
   });
+
+  // Note: Admin route navigation test removed - App already contains Router
+  // Testing admin routes requires integration testing due to Router nesting
+
+  it('should show cart badge when cart has items', () => {
+    sessionStorage.setItem('cart', JSON.stringify([mockCartItem]));
+    renderApp();
+    
+    const ordersLinks = screen.getAllByText(/Orders/i);
+    const ordersLinkWithBadge = ordersLinks.find(link => 
+      link.textContent?.includes('Orders') && link.querySelector('.cart-badge')
+    );
+    
+    // Cart badge should be present when cart has items
+    expect(ordersLinkWithBadge).toBeTruthy();
+  });
+
+  // Note: Admin route aria-current test removed - App already contains Router
+  // Testing admin routes requires integration testing due to Router nesting
 });
