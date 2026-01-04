@@ -143,3 +143,9 @@ return:
     processing-days: 1
     auto-process-on-received: true
 
+price-alert:
+  enabled: true
+  minimum-drop-percentage: 5.0
+  detection-interval-minutes: 60
+  alert-trigger-delay-hours: 2
+

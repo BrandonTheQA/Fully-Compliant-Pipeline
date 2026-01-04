@@ -1,0 +1,153 @@
+.price-alert-dashboard {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.price-alert-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.price-alert-dashboard-title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.price-alert-dashboard-error-banner {
+  padding: 12px;
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.price-alert-dashboard-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.price-alert-dashboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.price-alert-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.price-alert-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.price-alert-card-info {
+  flex: 1;
+}
+
+.price-alert-card-info h3 {
+  margin: 0 0 10px 0;
+  font-size: 1.25rem;
+}
+
+.price-alert-card-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.price-alert-card-details span {
+  padding: 4px 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.price-alert-card-actions {
+  display: flex;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.price-alert-history {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.price-history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.price-history-table th,
+.price-history-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.price-history-table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+}
+
+.price-history-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.change-type-decrease {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.change-type-increase {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.change-type-no_change {
+  color: #666;
+}
+
+.price-alert-dashboard.loading,
+.price-alert-dashboard.error {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.price-alert-dashboard-retry-btn {
+  margin-top: 10px;
+}
+
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background-color: #c82333;
+}
+
+.btn-danger:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+

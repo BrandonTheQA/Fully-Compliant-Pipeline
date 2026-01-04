@@ -19,6 +19,7 @@
     <include file="db/changelog/stock/create-stock-tables.xml"/>
     <include file="db/changelog/giftcard/create-gift-card-tables.xml"/>
     <include file="db/changelog/return/create-returns-tables.xml"/>
+    <include file="db/changelog/pricealert/create-price-alert-tables.xml"/>
 
 </databaseChangeLog>
 

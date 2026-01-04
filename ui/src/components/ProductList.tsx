@@ -8,6 +8,7 @@ import { StockStatusBadge } from './StockStatusBadge';
 import { LowStockWarning } from './LowStockWarning';
 import { NotifyMeButton } from './NotifyMeButton';
 import { ReturnPolicyBadge } from './ReturnPolicyBadge';
+import { PriceAlertButton } from './PriceAlertButton';
 import './ProductList.css';
 
 interface ProductListProps {
@@ -112,6 +113,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                     Add to Cart
                   </button>
                 )}
+                <PriceAlertButton product={product} />
               </>
             )}
           </div>

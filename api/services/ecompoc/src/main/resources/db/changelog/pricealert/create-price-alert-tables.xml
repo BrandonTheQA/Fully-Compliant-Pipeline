@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="create-price-alerts-table" author="system">
+        <createTable tableName="price_alerts">
+            <column name="alert_id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_email" type="NVARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="VARCHAR(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="target_price" type="DECIMAL(10,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="current_price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notification_frequency" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_triggered_at" type="DATETIME2">
+                <constraints nullable="true"/>
+            </column>
+            <column name="updated_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="price_alerts" 
+            baseColumnNames="product_id"
+            constraintName="fk_price_alerts_product"
+            referencedTableName="products"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+        
+        <createIndex indexName="idx_price_alerts_product_id" tableName="price_alerts">
+            <column name="product_id"/>
+        </createIndex>
+        <createIndex indexName="idx_price_alerts_user_email" tableName="price_alerts">
+            <column name="user_email"/>
+        </createIndex>
+        <createIndex indexName="idx_price_alerts_status" tableName="price_alerts">
+            <column name="status"/>
+        </createIndex>
+        <createIndex indexName="idx_price_alerts_created_at" tableName="price_alerts">
+            <column name="created_at"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="create-price-history-table" author="system">
+        <createTable tableName="price_history">
+            <column name="price_history_id" type="VARCHAR(255)">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="previous_price" type="DECIMAL(10,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="change_type" type="NVARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="change_percentage" type="DECIMAL(5,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="changed_at" type="DATETIME2">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        
+        <addForeignKeyConstraint 
+            baseTableName="price_history" 
+            baseColumnNames="product_id"
+            constraintName="fk_price_history_product"
+            referencedTableName="products"
+            referencedColumnNames="id"
+            onDelete="CASCADE"/>
+        
+        <createIndex indexName="idx_price_history_product_id" tableName="price_history">
+            <column name="product_id"/>
+        </createIndex>
+        <createIndex indexName="idx_price_history_changed_at" tableName="price_history">
+            <column name="changed_at"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
+

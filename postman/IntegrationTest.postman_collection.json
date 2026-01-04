@@ -342,7 +342,7 @@
 							"    pm.expect(jsonData.userId).to.eql(pm.environment.get('userId'));",
 							"});",
 							"",
-						"pm.test(\"Order has items\", function () {",
+							"pm.test(\"Order has items\", function () {",
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('items');",
 							"    pm.expect(jsonData.items).to.be.an('array');",
@@ -351,7 +351,7 @@
 							"    if (jsonData.items && jsonData.items.length > 0 && jsonData.items[0].id) {",
 							"        pm.environment.set('orderItemId', jsonData.items[0].id);",
 							"    }",
-						"});",
+							"});",
 							"",
 							"pm.test(\"Order has totalAmount\", function () {",
 							"    var jsonData = pm.response.json();",
@@ -2072,23 +2072,23 @@
 				{
 					"listen": "test",
 					"script": {
-					"exec": [
-						"pm.test(\"Status code is 201\", function () {",
-						"    if (pm.response.code !== 201) {",
-						"        console.log('ERROR: Status code is ' + pm.response.code);",
-						"        console.log('Error Response Body:', JSON.stringify(pm.response.json(), null, 2));",
-						"    }",
-						"    pm.response.to.have.status(201);",
-						"});",
-						"",
-						"pm.test(\"Response has return ID and RMA number\", function () {",
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    if (pm.response.code !== 201) {",
+							"        console.log('ERROR: Status code is ' + pm.response.code);",
+							"        console.log('Error Response Body:', JSON.stringify(pm.response.json(), null, 2));",
+							"    }",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has return ID and RMA number\", function () {",
 							"    var jsonData = pm.response.json();",
 							"    pm.expect(jsonData).to.have.property('returnId');",
 							"    pm.expect(jsonData).to.have.property('rmaNumber');",
 							"    pm.expect(jsonData.rmaNumber).to.match(/^RMA-\\d{8}-\\w+$/);",
 							"    pm.environment.set('returnId', jsonData.returnId);",
 							"    pm.environment.set('rmaNumber', jsonData.rmaNumber);",
-						"});",
+							"});",
 							"",
 							"pm.test(\"Response has status\", function () {",
 							"    var jsonData = pm.response.json();",
@@ -2509,6 +2509,266 @@
 					]
 				},
 				"description": "Gets return analytics and metrics (admin) (SCRUM-24)"
+			},
+			"response": []
+		},
+		{
+			"name": "45. SCRUM-25: Create Price Alert",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {",
+							"    pm.response.to.have.status(201);",
+							"});",
+							"",
+							"pm.test(\"Response has alertId\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('alertId');",
+							"    pm.environment.set('priceAlertId', jsonData.alertId);",
+							"});",
+							"",
+							"pm.test(\"Response has productId\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('productId');",
+							"    pm.expect(jsonData.productId).to.eql(pm.environment.get('productId1'));",
+							"});",
+							"",
+							"pm.test(\"Response has status ACTIVE\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.status).to.eql('ACTIVE');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"productId\": \"{{productId1}}\",\n    \"email\": \"{{userEmail}}\",\n    \"targetPrice\": 800.0,\n    \"notificationFrequency\": \"IMMEDIATE\",\n    \"userId\": \"{{userId}}\"\n}"
+				},
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/price-alerts",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"price-alerts"
+					]
+				},
+				"description": "Creates a price alert for product 1"
+			},
+			"response": []
+		},
+		{
+			"name": "46. SCRUM-25: Get Price Alerts by Email",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has alerts array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('alerts');",
+							"    pm.expect(jsonData.alerts).to.be.an('array');",
+							"    pm.expect(jsonData.alerts.length).to.be.at.least(1);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/price-alerts?email={{userEmail}}",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"price-alerts"
+					],
+					"query": [
+						{
+							"key": "email",
+							"value": "{{userEmail}}"
+						}
+					]
+				},
+				"description": "Gets all price alerts for the user's email"
+			},
+			"response": []
+		},
+		{
+			"name": "47. SCRUM-25: Get Price Alert by ID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has correct alertId\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.alertId).to.eql(pm.environment.get('priceAlertId'));",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/price-alerts/{{priceAlertId}}",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"price-alerts",
+						"{{priceAlertId}}"
+					]
+				},
+				"description": "Gets a specific price alert by ID"
+			},
+			"response": []
+		},
+		{
+			"name": "48. SCRUM-25: Update Price Alert",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response has updated targetPrice\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.targetPrice).to.eql(750.0);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"targetPrice\": 750.0,\n    \"notificationFrequency\": \"DAILY_DIGEST\"\n}"
+				},
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/price-alerts/{{priceAlertId}}",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"price-alerts",
+						"{{priceAlertId}}"
+					]
+				},
+				"description": "Updates a price alert"
+			},
+			"response": []
+		},
+		{
+			"name": "49. SCRUM-25: Get Price History for Alert",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Response is an array\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.be.an('array');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/price-alerts/{{priceAlertId}}/history",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"price-alerts",
+						"{{priceAlertId}}",
+						"history"
+					]
+				},
+				"description": "Gets price history for the product associated with the alert"
+			},
+			"response": []
+		},
+		{
+			"name": "50. SCRUM-25: Delete Price Alert",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{apiBaseUrl}}/v2/price-alerts/{{priceAlertId}}",
+					"host": [
+						"{{apiBaseUrl}}"
+					],
+					"path": [
+						"v2",
+						"price-alerts",
+						"{{priceAlertId}}"
+					]
+				},
+				"description": "Deletes (cancels) a price alert"
 			},
 			"response": []
 		}
