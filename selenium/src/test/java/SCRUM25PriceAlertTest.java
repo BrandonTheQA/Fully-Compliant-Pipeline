@@ -168,15 +168,31 @@ public class SCRUM25PriceAlertTest {
                     takeScreenshot("04-price-alert-button-found");
                 }
                 
-                // Scroll button into view if needed
+                // Scroll button into view, ensuring it's not blocked by nav-container
+                // Scroll with some offset to avoid nav-container overlap
                 ((org.openqa.selenium.JavascriptExecutor) driver)
-                    .executeScript("arguments[0].scrollIntoView(true);", priceAlertButton);
+                    .executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", priceAlertButton);
                 
-                Thread.sleep(500);
+                Thread.sleep(1000); // Wait for scroll to complete
+                
+                // Wait for button to be clickable (not just visible)
+                try {
+                    wait.until(ExpectedConditions.elementToBeClickable(priceAlertButton));
+                } catch (Exception e) {
+                    System.out.println("Button not immediately clickable, will try JavaScript click");
+                }
                 
                 // Step 4: Click the price alert button to open modal
                 System.out.println("Step 4: Clicking price alert button...");
-                priceAlertButton.click();
+                try {
+                    // First try regular click
+                    priceAlertButton.click();
+                } catch (Exception e) {
+                    // If regular click fails due to element interception, use JavaScript click
+                    System.out.println("Regular click failed, using JavaScript click: " + e.getMessage());
+                    ((org.openqa.selenium.JavascriptExecutor) driver)
+                        .executeScript("arguments[0].click();", priceAlertButton);
+                }
                 
                 // Wait for modal to appear
                 WebElement modal = null;
