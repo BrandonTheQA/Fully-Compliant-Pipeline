@@ -71,16 +71,6 @@ export const PriceAlertDashboard: React.FC = () => {
     }
   };
 
-  const handleUpdateAlert = async (alertId: string, updates: { targetPrice?: number; notificationFrequency?: string }) => {
-    try {
-      await priceAlertService.updateAlert(alertId, updates);
-      await loadAlerts();
-    } catch (err) {
-      setError('Failed to update price alert');
-      console.error('Error updating alert:', err);
-    }
-  };
-
   if (!user) {
     return (
       <div className="price-alert-dashboard">
