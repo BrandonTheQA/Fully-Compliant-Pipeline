@@ -430,6 +430,20 @@ public class E2EWorkflowTest {
                     modal = priceAlertWait.until(ExpectedConditions.presenceOfElementLocated(
                         By.cssSelector(".modal-overlay, .modal-content, [role='dialog']")));
                     System.out.println("Price alert modal opened");
+                    
+                    // Ensure modal is properly positioned and visible (scroll into view if needed)
+                    try {
+                        WebElement modalContent = driver.findElement(By.cssSelector(".modal-content"));
+                        ((org.openqa.selenium.JavascriptExecutor) driver)
+                            .executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", modalContent);
+                        try {
+                            Thread.sleep(500); // Wait for scroll/positioning
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    } catch (Exception e) {
+                        // Modal content might not have that selector, continue anyway
+                    }
                 } catch (Exception e) {
                     // Try alternative selectors
                     try {
@@ -468,7 +482,42 @@ public class E2EWorkflowTest {
                         }
                         
                         if (submitButton != null && submitButton.isEnabled()) {
-                            submitButton.click();
+                            // Scroll modal content into view to avoid nav bar interception
+                            try {
+                                WebElement modalContent = driver.findElement(By.cssSelector(".modal-content"));
+                                ((org.openqa.selenium.JavascriptExecutor) driver)
+                                    .executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", modalContent);
+                                try {
+                                    Thread.sleep(500); // Wait for scroll to complete
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            } catch (Exception e) {
+                                // If modal content not found, scroll the button itself
+                                ((org.openqa.selenium.JavascriptExecutor) driver)
+                                    .executeScript("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center'});", submitButton);
+                                try {
+                                    Thread.sleep(500);
+                                } catch (InterruptedException e2) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
+                            
+                            // Wait for button to be clickable (not intercepted)
+                            try {
+                                priceAlertWait.until(ExpectedConditions.elementToBeClickable(submitButton));
+                            } catch (Exception e) {
+                                System.out.println("Button not immediately clickable, will use JavaScript click");
+                            }
+                            
+                            // Try regular click first, fall back to JavaScript click if intercepted
+                            try {
+                                submitButton.click();
+                            } catch (org.openqa.selenium.ElementClickInterceptedException e) {
+                                System.out.println("Regular click intercepted, using JavaScript click: " + e.getMessage());
+                                ((org.openqa.selenium.JavascriptExecutor) driver)
+                                    .executeScript("arguments[0].click();", submitButton);
+                            }
                             
                             // Wait for success message
                             try {
